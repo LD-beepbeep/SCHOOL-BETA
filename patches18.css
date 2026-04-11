@@ -283,9 +283,14 @@
     color: var(--accent);
 }
 /* Collapse individual ws steps */
-.p18-ws-step-body { transition: max-height .2s; }
+.p18-ws-step-body {
+    overflow: hidden;
+    max-height: 2000px;
+    transition: max-height .25s ease;
+}
 .p18-ws-step.collapsed .p18-ws-step-body {
-    display: none;
+    max-height: 0;
+    overflow: hidden;
 }
 .p18-ws-collapse-btn {
     width: 22px;

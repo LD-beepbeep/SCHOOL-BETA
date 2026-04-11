@@ -283,7 +283,7 @@ function _p18_renderAttWidget() {
         <div class="flex items-end gap-3 mb-2">
             <div>
                 <div class="p18-att-overall" style="color:${pctColor}">${overallPct}%</div>
-                <div class="p18-att-overall-lbl">overall attendance</div>
+                <div class="p18-att-overall-lbl">Overall attendance</div>
             </div>
             <div style="flex:1;padding-bottom:4px;">
                 <div class="p18-att-bar-bg">
@@ -445,7 +445,7 @@ function _p18_enhanceRoutine() {
             const btn = document.createElement('button');
             btn.className = 'p18-rb-done-btn';
             btn.title = 'Mark done today';
-            const id = block.getAttribute('onclick')?.match(/p16_openRoutineEdit\(['"](.+?)['"]\)/)?.[1] || '';
+            const id = block.getAttribute('onclick')?.match(/p16_openRoutineEdit\(['"]([^'"]+)['"]\)/)?.[1] || '';
             btn.dataset.rid = id;
             const isDone = id && doneToday.includes(id);
             if (isDone) { btn.classList.add('done'); btn.innerHTML = '<i class="fa-solid fa-check"></i>'; block.classList.add('p18-done-today'); }
