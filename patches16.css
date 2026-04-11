@@ -274,7 +274,7 @@
 
 /* Responsive */
 @media (max-width: 780px) {
-    .p16-routine-grid { grid-template-columns: repeat(4,1fr); }
+    .p16-routine-grid { grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); }
     .p16-ws-layout    { grid-template-columns: 1fr; }
     .p16-ws-library   { display: none; }
     .p16-var-row      { grid-template-columns: 64px 1fr 70px 26px; }

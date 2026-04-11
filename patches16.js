@@ -86,8 +86,12 @@ function p16_fmt(n) {
     if (!isFinite(n)) return String(n);
     const a = Math.abs(n);
     if (a === 0) return '0';
-    if (a >= 1e7 || (a < 1e-3 && a > 0)) return n.toExponential(4);
+    if (a >= 1e6 || (a < 1e-3 && a > 0)) return n.toExponential(4);
     return parseFloat(n.toPrecision(6)).toString();
+}
+/* Validate a colour is a safe CSS hex literal before embedding in style attributes */
+function _p16safeColor(c) {
+    return typeof c === 'string' && /^#[0-9a-fA-F]{3,8}$/.test(c) ? c : '#3b82f6';
 }
 
 /* ================================================================
@@ -790,13 +794,16 @@ window.p16_renderRoutine = function() {
         const hdr = document.getElementById('p16-dhdr-' + d.key);
         if (hdr) hdr.classList.toggle('today', d.key === todayKey);
         const dayItems = items.filter(x => x.day === d.key).sort((a,b) => a.time.localeCompare(b.time));
-        col.innerHTML = dayItems.map(item =>
-            `<div class="p16-routine-block" style="--bcolor:${item.color}" onclick="p16_openRoutineEdit('${item.id}')">
-                <div class="p16-rb-time"><i class="fa-regular fa-clock" style="margin-right:3px;font-size:.55rem;"></i>${item.time}</div>
+        col.innerHTML = dayItems.map(item => {
+            const safeColor = _p16safeColor(item.color);
+            const safeTime  = _p16esc(item.time || '');
+            const safeDur   = parseInt(item.duration, 10) || 0;
+            return `<div class="p16-routine-block" style="--bcolor:${safeColor}" onclick="p16_openRoutineEdit('${_p16esc(item.id)}')">
+                <div class="p16-rb-time"><i class="fa-regular fa-clock" style="margin-right:3px;font-size:.55rem;"></i>${safeTime}</div>
                 <div class="p16-rb-label">${_p16esc(item.label)}</div>
-                <div class="p16-rb-dur">${item.duration} min</div>
-            </div>`
-        ).join('');
+                <div class="p16-rb-dur">${safeDur} min</div>
+            </div>`;
+        }).join('');
     });
 };
 
@@ -942,20 +949,21 @@ window.p16_renderAttendance = function() {
     }
 
     el.innerHTML = courses.map(course => {
-        const cLog     = log.filter(l => l.courseId === course.id);
-        const total    = cLog.length;
-        const attended = cLog.filter(l => l.status==='attended').length;
-        const pct      = total > 0 ? Math.round(attended/total*100) : 0;
-        const goal     = course.goal || 80;
-        const pctColor = pct >= goal ? '#22c55e' : pct >= goal-10 ? '#f59e0b' : '#ef4444';
-        const todaySt  = cLog.find(l => l.date===today)?.status;
-        const recent   = [...cLog].sort((a,b)=>b.date.localeCompare(a.date)).slice(0,24);
+        const cLog      = log.filter(l => l.courseId === course.id);
+        const total     = cLog.length;
+        const attended  = cLog.filter(l => l.status==='attended').length;
+        const pct       = total > 0 ? Math.round(attended/total*100) : 0;
+        const goal      = Math.max(1, Math.min(100, parseInt(course.goal, 10) || 80));
+        const pctColor  = pct >= goal ? '#22c55e' : pct >= goal-10 ? '#f59e0b' : '#ef4444';
+        const safeColor = _p16safeColor(course.color);
+        const todaySt   = cLog.find(l => l.date===today)?.status;
+        const recent    = [...cLog].sort((a,b)=>b.date.localeCompare(a.date)).slice(0,24);
         return `<div class="p16-course-card">
             <div class="p16-course-hdr">
-                <div class="p16-course-dot" style="background:${course.color}"></div>
+                <div class="p16-course-dot" style="background:${safeColor}"></div>
                 <div class="p16-course-name">${_p16esc(course.name)}</div>
                 ${course.schedule ? `<span style="font-size:.63rem;color:var(--text-muted);"><i class="fa-solid fa-clock" style="margin-right:3px;"></i>${_p16esc(course.schedule)}</span>` : ''}
-                <button onclick="p16_openCourseEdit('${course.id}')" style="background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:.72rem;padding:2px 6px;" class="hover:opacity-70"><i class="fa-solid fa-pencil"></i></button>
+                <button onclick="p16_openCourseEdit('${_p16esc(course.id)}')" style="background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:.72rem;padding:2px 6px;" class="hover:opacity-70"><i class="fa-solid fa-pencil"></i></button>
             </div>
             <div class="p16-attend-bar"><div class="p16-attend-fill" style="width:${pct}%;background:${pctColor}"></div></div>
             <div class="p16-attend-stat">
@@ -964,16 +972,16 @@ window.p16_renderAttendance = function() {
             </div>
             <div class="p16-attend-actions">
                 <button class="p16-att-btn attend${todaySt==='attended' ? ' active-attend' : ''}"
-                    onclick="p16_logAttend('${course.id}','${todaySt==='attended' ? 'remove' : 'attended'}')">
+                    onclick="p16_logAttend('${_p16esc(course.id)}','${todaySt==='attended' ? 'remove' : 'attended'}')">
                     <i class="fa-solid fa-circle-check"></i>${todaySt==='attended' ? 'Attended Today' : 'Mark Attended'}
                 </button>
                 <button class="p16-att-btn miss${todaySt==='missed' ? ' active-miss' : ''}"
-                    onclick="p16_logAttend('${course.id}','${todaySt==='missed' ? 'remove' : 'missed'}')">
+                    onclick="p16_logAttend('${_p16esc(course.id)}','${todaySt==='missed' ? 'remove' : 'missed'}')">
                     <i class="fa-solid fa-circle-xmark"></i>${todaySt==='missed' ? 'Marked Missed' : 'Mark Missed'}
                 </button>
             </div>
             ${recent.length ? `<div class="p16-session-log">${recent.map(l =>
-                `<div class="p16-session-dot" style="background:${l.status==='attended'?'#22c55e':'#ef4444'};opacity:.75;" title="${l.date}: ${l.status}"></div>`
+                `<div class="p16-session-dot" style="background:${l.status==='attended'?'#22c55e':'#ef4444'};opacity:.75;" title="${_p16esc(l.date)}: ${_p16esc(l.status)}"></div>`
             ).join('')}</div>` : ''}
         </div>`;
     }).join('');
@@ -1183,7 +1191,7 @@ window.p16_wsRender = function() {
                     </button>
                 </div>`;
             }).join('')
-            : `<span style="font-size:.72rem;color:var(--text-muted);">Computed results saved here will appear here</span>`;
+            : `<span style="font-size:.72rem;color:var(--text-muted);">Saved values will appear here</span>`;
     }
 
     if (!ws.steps || !ws.steps.length) {
