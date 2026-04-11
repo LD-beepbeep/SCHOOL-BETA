@@ -284,12 +284,11 @@ function _p17_renderHistCal(courseId) {
     const startDow = startDate.getDay();
     startDate.setDate(startDate.getDate() - startDow);
 
-    for (let i = 0; ; i++) {
+    for (let i = 0; i < WEEKS * 7; i++) {
         const d = new Date(startDate);
         d.setDate(startDate.getDate() + i);
         const ds = _p17date(d);
         days.push({ ds, dow: d.getDay(), month: d.getMonth(), date: d.getDate() });
-        if (days.length >= WEEKS * 7) break;
     }
 
     /* Group by month for labels */
@@ -564,10 +563,11 @@ function _p17_augmentRoutineBlocks() {
             n.textContent = item.notes;
             block.appendChild(n);
         }
-        /* Duration bar — show % relative to 120 min max */
+        /* Duration bar — % relative to MAX_DURATION_MINUTES */
         if (!block.querySelector('.p17-rb-durbar')) {
-            const dur  = Math.min(parseInt(item.duration, 10) || 0, 240);
-            const pct  = Math.round(dur / 240 * 100);
+            const MAX_DURATION_MINUTES = 240;
+            const dur  = Math.min(parseInt(item.duration, 10) || 0, MAX_DURATION_MINUTES);
+            const pct  = Math.round(dur / MAX_DURATION_MINUTES * 100);
             const bar  = document.createElement('div');
             bar.className = 'p17-rb-durbar';
             bar.innerHTML = `<div class="p17-rb-durbar-fill" style="width:${pct}%"></div>`;
