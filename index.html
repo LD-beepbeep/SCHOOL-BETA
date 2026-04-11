@@ -21,6 +21,7 @@
     <link rel="icon" type="image/x-icon" href="icon.png">
     <link rel="stylesheet" href="features.css">
     <link rel="stylesheet" href="forum.css">
+    <link rel="stylesheet" href="patches16.css">
 </head>
 <body class="flex h-screen w-screen">
 <!-- ===== LOGIN OVERLAY ===== -->
@@ -1703,6 +1704,18 @@
     <i class="fa-solid fa-comments mbd-tool-icon"></i>
     <span class="mbd-tool-name">Forum</span>
 </button>
+        <button class="mbd-tool" id="mob-btn-routine" style="--c:#8b5cf6" onclick="switchTab('routine');closeMobMenu()">
+            <i class="fa-solid fa-calendar-week mbd-tool-icon"></i>
+            <span class="mbd-tool-name">Routine</span>
+        </button>
+        <button class="mbd-tool" id="mob-btn-attendance" style="--c:#22c55e" onclick="switchTab('attendance');closeMobMenu()">
+            <i class="fa-solid fa-user-check mbd-tool-icon"></i>
+            <span class="mbd-tool-name">Attendance</span>
+        </button>
+        <button class="mbd-tool" id="mob-btn-worksheet" style="--c:#f59e0b" onclick="switchTab('worksheet');closeMobMenu()">
+            <i class="fa-solid fa-layer-group mbd-tool-icon"></i>
+            <span class="mbd-tool-name">Worksheet</span>
+        </button>
     </div>
 
 
@@ -1733,6 +1746,7 @@
 <script type="module" src="widgets_patch.js"></script>
 <script type="module" src="patches14.js"></script>
 <script type="module" src="patches15.js"></script>
+<script type="module" src="patches16.js"></script>
 <script> (function() {
 
     /* ── "More" button rotates when drawer is open ── */
