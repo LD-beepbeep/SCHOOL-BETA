@@ -120,140 +120,286 @@ window.p19_wbRender = function() {
     const raw = _p19_wbGetData();
     const ws  = _p19_wbMigrate(raw);
 
-    /* Saved values bar */
+    /* ── Saved values bar (built with DOM APIs) ─────────────────── */
     const svBar = document.getElementById('p19-ws-sv-bar');
     if (svBar) {
+        svBar.innerHTML = '';
         const entries = Object.entries(ws.savedValues || {});
-        svBar.innerHTML = entries.length
-            ? entries.map(([k, v]) => {
+        if (entries.length) {
+            entries.forEach(([k, v]) => {
                 const val = typeof v === 'object' ? v.value : v;
-                return `<div class="p19-ws-sv-chip">
-                    <i class="fa-solid fa-at" style="font-size:.6rem;"></i>
-                    ${_p19esc(k)} = ${_p19fmt(val)}
-                    <button onclick="p19_wbDeleteSaved('${_p19esc(k)}')" title="Remove">
-                        <i class="fa-solid fa-xmark"></i>
-                    </button>
-                </div>`;
-            }).join('')
-            : `<span style="font-size:.7rem;color:var(--text-muted);">Saved values from formula steps appear here as @name references</span>`;
+                const chip = document.createElement('div');
+                chip.className = 'p19-ws-sv-chip';
+                chip.innerHTML = '<i class="fa-solid fa-at" style="font-size:.6rem;"></i>';
+                const label = document.createTextNode(` ${k} = ${_p19fmt(val)} `);
+                chip.appendChild(label);
+                const delBtn = document.createElement('button');
+                delBtn.title = 'Remove';
+                delBtn.innerHTML = '<i class="fa-solid fa-xmark"></i>';
+                delBtn.dataset.p19action = 'del-saved';
+                delBtn.dataset.name = k;
+                chip.appendChild(delBtn);
+                svBar.appendChild(chip);
+            });
+        } else {
+            const hint = document.createElement('span');
+            hint.style.cssText = 'font-size:.7rem;color:var(--text-muted);';
+            hint.textContent = 'Saved values from formula steps appear here as @name references';
+            svBar.appendChild(hint);
+        }
     }
 
-    /* Blocks — set innerHTML with only escaped user data */
-    board.innerHTML = (ws.blocks || []).map(block => _p19_renderBlock(block, ws)).join('');
+    /* ── Blocks (static structure + DOM-injected values) ─────────── */
+    board.innerHTML = '';
+    (ws.blocks || []).forEach(block => {
+        const el = _p19_buildBlock(block, ws);
+        if (el) board.appendChild(el);
+    });
 
-    /* Add the sticky "Add block" button via createElement (avoids inline onclick in innerHTML) */
+    /* Sticky add button */
     const addBtn = document.createElement('button');
     addBtn.id = 'p19-ws-add-btn-fixed';
     addBtn.innerHTML = '<i class="fa-solid fa-plus"></i> Add block';
     addBtn.addEventListener('click', () => window.p19_wbOpenPicker());
     board.appendChild(addBtn);
 
+    /* Wire event delegation */
+    _p19_wbAttachEvents(board, ws);
+
     /* Re-attach drag handles */
     _p19_wbInitDnD();
 };
 
-/* ── block renderers ─────────────────────────────────────────── */
-function _p19_renderBlock(block, ws) {
-    const handle = `<button class="p19-ws-block-btn handle" data-bid="${_p19esc(block.id)}" title="Drag to reorder">
-        <i class="fa-solid fa-grip-lines"></i></button>`;
-    const del    = `<button class="p19-ws-block-btn del" onclick="p19_wbDeleteBlock('${_p19esc(block.id)}')" title="Delete">
-        <i class="fa-solid fa-xmark"></i></button>`;
-    const actions = `<div class="p19-ws-block-actions">${handle}${del}</div>`;
+/* ── event delegation ────────────────────────────────────────── */
+function _p19_wbAttachEvents(board, ws) {
+    /* Remove old listeners by replacing the board's listener key */
+    if (board._p19clickHandler) board.removeEventListener('click', board._p19clickHandler);
+    if (board._p19inputHandler) board.removeEventListener('input', board._p19inputHandler);
 
-    if (block.type === 'heading') {
-        return `<div class="p19-ws-block heading-block" data-bid="${_p19esc(block.id)}" draggable="false">
-            ${actions}
-            <input class="p19-ws-heading-input" placeholder="Section heading…"
-                value="${_p19esc(block.content || '')}"
-                oninput="p19_wbUpdateText('${_p19esc(block.id)}', this.value)"
-                style="padding-right:64px;">
-        </div>`;
-    }
+    board._p19clickHandler = function(e) {
+        const btn = e.target.closest('[data-p19action]');
+        if (!btn) return;
+        const action = btn.dataset.p19action;
+        const bid    = btn.dataset.bid   || btn.closest('[data-bid]')?.dataset.bid;
+        const sym    = btn.dataset.sym;
+        const name   = btn.dataset.name;
 
-    if (block.type === 'divider') {
-        return `<div class="p19-ws-block divider-block" data-bid="${_p19esc(block.id)}" draggable="false">
-            ${actions}
-            <hr>
-        </div>`;
-    }
+        if (action === 'del-block'   && bid)       window.p19_wbDeleteBlock(bid);
+        if (action === 'del-saved'   && name)      window.p19_wbDeleteSaved(name);
+        if (action === 'compute'     && bid)       window.p19_wbCompute(bid);
+        if (action === 'save-result' && bid)       window.p19_wbSaveResult(bid);
+        if (action === 'solve-for'   && bid && sym) window.p19_wbSetSolveFor(bid, sym);
+    };
 
-    if (block.type === 'text') {
-        return `<div class="p19-ws-block note-block" data-bid="${_p19esc(block.id)}" draggable="false">
-            ${actions}
-            <textarea class="p19-ws-note-textarea" placeholder="Notes, observations, equations…"
-                oninput="p19_wbUpdateText('${_p19esc(block.id)}', this.value)"
-                style="padding-right:64px;">${_p19esc(block.content || '')}</textarea>
-        </div>`;
-    }
+    board._p19inputHandler = function(e) {
+        const el  = e.target;
+        const bid = el.dataset.bid || el.closest('[data-bid]')?.dataset.bid;
+        if (!bid) return;
 
-    if (block.type === 'formula') {
-        return _p19_renderFormulaBlock(block, ws);
-    }
+        if (el.dataset.p19input === 'text')   window.p19_wbUpdateText(bid, el.value);
+        if (el.dataset.p19input === 'var')    window.p19_wbVarInput(bid, el.dataset.sym, el.value);
+        if (el.dataset.p19input === 'saveas') window.p19_wbSetSaveAs(bid, el.value);
+    };
 
-    return '';
+    board.addEventListener('click', board._p19clickHandler);
+    board.addEventListener('input', board._p19inputHandler);
 }
 
-function _p19_renderFormulaBlock(block, ws) {
-    const vars = block.vars || [];
+/* ── block builders (DOM API — no user data in innerHTML) ────── */
+function _p19_buildBlock(block, ws) {
+    if (block.type === 'heading') return _p19_buildHeadingBlock(block);
+    if (block.type === 'divider') return _p19_buildDividerBlock(block);
+    if (block.type === 'text')    return _p19_buildTextBlock(block);
+    if (block.type === 'formula') return _p19_buildFormulaBlock(block, ws);
+    return null;
+}
 
-    const varInputs = vars.map(v => {
+function _p19_makeActions(bid) {
+    const wrap = document.createElement('div');
+    wrap.className = 'p19-ws-block-actions';
+
+    const handle = document.createElement('button');
+    handle.className = 'p19-ws-block-btn handle';
+    handle.dataset.bid = bid;
+    handle.title = 'Drag to reorder';
+    handle.innerHTML = '<i class="fa-solid fa-grip-lines"></i>';
+
+    const del = document.createElement('button');
+    del.className = 'p19-ws-block-btn del';
+    del.dataset.p19action = 'del-block';
+    del.dataset.bid = bid;
+    del.title = 'Delete block';
+    del.innerHTML = '<i class="fa-solid fa-xmark"></i>';
+
+    wrap.appendChild(handle);
+    wrap.appendChild(del);
+    return wrap;
+}
+
+function _p19_buildHeadingBlock(block) {
+    const el = document.createElement('div');
+    el.className = 'p19-ws-block heading-block';
+    el.dataset.bid = block.id;
+
+    el.appendChild(_p19_makeActions(block.id));
+
+    const inp = document.createElement('input');
+    inp.className = 'p19-ws-heading-input';
+    inp.placeholder = 'Section heading\u2026';
+    inp.value = block.content || '';
+    inp.style.paddingRight = '64px';
+    inp.dataset.p19input = 'text';
+    inp.dataset.bid = block.id;
+    el.appendChild(inp);
+    return el;
+}
+
+function _p19_buildDividerBlock(block) {
+    const el = document.createElement('div');
+    el.className = 'p19-ws-block divider-block';
+    el.dataset.bid = block.id;
+    el.appendChild(_p19_makeActions(block.id));
+    el.appendChild(document.createElement('hr'));
+    return el;
+}
+
+function _p19_buildTextBlock(block) {
+    const el = document.createElement('div');
+    el.className = 'p19-ws-block note-block';
+    el.dataset.bid = block.id;
+    el.appendChild(_p19_makeActions(block.id));
+
+    const ta = document.createElement('textarea');
+    ta.className = 'p19-ws-note-textarea';
+    ta.placeholder = 'Notes, observations, equations\u2026';
+    ta.value = block.content || '';
+    ta.style.paddingRight = '64px';
+    ta.dataset.p19input = 'text';
+    ta.dataset.bid = block.id;
+    el.appendChild(ta);
+    return el;
+}
+
+function _p19_buildFormulaBlock(block, ws) {
+    const el = document.createElement('div');
+    el.className = 'p19-ws-block formula-block';
+    el.dataset.bid = block.id;
+    el.appendChild(_p19_makeActions(block.id));
+
+    /* Header: title + expression */
+    const hdr = document.createElement('div');
+    hdr.className = 'p19-ws-formula-header';
+    const hdrInner = document.createElement('div');
+
+    const titleEl = document.createElement('div');
+    titleEl.className = 'p19-ws-formula-title';
+    titleEl.textContent = block.title || 'Formula';
+
+    const exprEl = document.createElement('div');
+    exprEl.className = 'p19-ws-formula-expr';
+    exprEl.textContent = block.formula || '';
+
+    hdrInner.appendChild(titleEl);
+    hdrInner.appendChild(exprEl);
+    hdr.appendChild(hdrInner);
+    el.appendChild(hdr);
+
+    /* Variable inputs */
+    const grid = document.createElement('div');
+    grid.className = 'p19-ws-vars-grid';
+    (block.vars || []).forEach(v => {
         const isSolveFor = v.sym === block.solveFor;
-        const val = isSolveFor
-            ? (block.result !== null ? _p19fmt(block.result) : '')
-            : (v.value !== undefined ? v.value : '');
-        return `<div class="p19-ws-var-row${isSolveFor ? ' solve-for-row' : ''}">
-            <div class="p19-ws-var-sym">${_p19esc(v.sym)}</div>
-            <div class="p19-ws-var-eq">=</div>
-            <input class="p19-ws-var-input" type="text"
-                placeholder="${isSolveFor ? 'solve' : 'value'}"
-                value="${_p19esc(val)}"
-                ${isSolveFor ? 'readonly style="color:var(--accent);font-weight:700;"' : ''}
-                data-wsvar="${_p19esc(v.sym)}"
-                oninput="p19_wbVarInput('${_p19esc(block.id)}','${_p19esc(v.sym)}',this.value)">
-            <div class="p19-ws-var-solve-ring${isSolveFor ? ' active' : ''}"
-                onclick="p19_wbSetSolveFor('${_p19esc(block.id)}','${_p19esc(v.sym)}')"
-                title="Solve for this variable">
-                ${isSolveFor ? '<i class="fa-solid fa-equals"></i>' : ''}
-            </div>
-        </div>`;
-    }).join('');
+        const row = document.createElement('div');
+        row.className = 'p19-ws-var-row' + (isSolveFor ? ' solve-for-row' : '');
 
-    const resultHtml = block.result !== null
-        ? `<div class="p19-ws-result">
-            <div class="p19-ws-result-sym">${_p19esc(block.solveFor)} =</div>
-            <div class="p19-ws-result-val">${_p19fmt(block.result)}</div>
-            <div class="p19-ws-saveas-row">
-                <input class="p19-ws-saveas-inp" placeholder="Save as @name…"
-                    value="${_p19esc(block.savedAs || '')}"
-                    oninput="p19_wbSetSaveAs('${_p19esc(block.id)}',this.value)">
-                <button class="p19-ws-saveas-btn" onclick="p19_wbSaveResult('${_p19esc(block.id)}')">
-                    <i class="fa-solid fa-bookmark"></i> Save
-                </button>
-            </div>
-        </div>`
-        : '';
+        const symEl = document.createElement('div');
+        symEl.className = 'p19-ws-var-sym';
+        symEl.textContent = v.sym;
 
-    return `<div class="p19-ws-block formula-block" data-bid="${_p19esc(block.id)}" draggable="false">
-        <div class="p19-ws-block-actions">
-            <button class="p19-ws-block-btn handle" data-bid="${_p19esc(block.id)}" title="Drag to reorder">
-                <i class="fa-solid fa-grip-lines"></i></button>
-            <button class="p19-ws-block-btn del" onclick="p19_wbDeleteBlock('${_p19esc(block.id)}')" title="Delete">
-                <i class="fa-solid fa-xmark"></i></button>
-        </div>
-        <div class="p19-ws-formula-header">
-            <div>
-                <div class="p19-ws-formula-title">${_p19esc(block.title || 'Formula')}</div>
-                <div class="p19-ws-formula-expr">${_p19esc(block.formula || '')}</div>
-            </div>
-        </div>
-        <div class="p19-ws-vars-grid">${varInputs}</div>
-        <div class="p19-ws-formula-actions">
-            <button class="p19-ws-formula-solve-btn" onclick="p19_wbCompute('${_p19esc(block.id)}')">
-                <i class="fa-solid fa-bolt"></i> Compute
-            </button>
-        </div>
-        ${resultHtml}
-    </div>`;
+        const eqEl = document.createElement('div');
+        eqEl.className = 'p19-ws-var-eq';
+        eqEl.textContent = '=';
+
+        const inp = document.createElement('input');
+        inp.className = 'p19-ws-var-input';
+        inp.type = 'text';
+        inp.placeholder = isSolveFor ? 'solve' : 'value';
+        inp.dataset.p19input = 'var';
+        inp.dataset.bid = block.id;
+        inp.dataset.sym = v.sym;
+        if (isSolveFor) {
+            inp.value = block.result !== null ? _p19fmt(block.result) : '';
+            inp.readOnly = true;
+            inp.style.cssText = 'color:var(--accent);font-weight:700;';
+        } else {
+            inp.value = v.value !== undefined ? String(v.value) : '';
+        }
+
+        const ring = document.createElement('div');
+        ring.className = 'p19-ws-var-solve-ring' + (isSolveFor ? ' active' : '');
+        ring.title = 'Solve for this variable';
+        ring.dataset.p19action = 'solve-for';
+        ring.dataset.bid = block.id;
+        ring.dataset.sym = v.sym;
+        if (isSolveFor) ring.innerHTML = '<i class="fa-solid fa-equals"></i>';
+
+        row.appendChild(symEl);
+        row.appendChild(eqEl);
+        row.appendChild(inp);
+        row.appendChild(ring);
+        grid.appendChild(row);
+    });
+    el.appendChild(grid);
+
+    /* Compute button */
+    const acts = document.createElement('div');
+    acts.className = 'p19-ws-formula-actions';
+    const computeBtn = document.createElement('button');
+    computeBtn.className = 'p19-ws-formula-solve-btn';
+    computeBtn.dataset.p19action = 'compute';
+    computeBtn.dataset.bid = block.id;
+    computeBtn.innerHTML = '<i class="fa-solid fa-bolt"></i> Compute';
+    acts.appendChild(computeBtn);
+    el.appendChild(acts);
+
+    /* Result */
+    if (block.result !== null) {
+        const res = document.createElement('div');
+        res.className = 'p19-ws-result';
+
+        const symLabel = document.createElement('div');
+        symLabel.className = 'p19-ws-result-sym';
+        symLabel.textContent = (block.solveFor || '') + ' =';
+
+        const valEl = document.createElement('div');
+        valEl.className = 'p19-ws-result-val';
+        valEl.textContent = _p19fmt(block.result);
+
+        const saveRow = document.createElement('div');
+        saveRow.className = 'p19-ws-saveas-row';
+
+        const saveInp = document.createElement('input');
+        saveInp.className = 'p19-ws-saveas-inp';
+        saveInp.placeholder = 'Save as @name\u2026';
+        saveInp.value = block.savedAs || '';
+        saveInp.dataset.p19input = 'saveas';
+        saveInp.dataset.bid = block.id;
+
+        const saveBtn = document.createElement('button');
+        saveBtn.className = 'p19-ws-saveas-btn';
+        saveBtn.dataset.p19action = 'save-result';
+        saveBtn.dataset.bid = block.id;
+        saveBtn.innerHTML = '<i class="fa-solid fa-bookmark"></i> Save';
+
+        saveRow.appendChild(saveInp);
+        saveRow.appendChild(saveBtn);
+        res.appendChild(symLabel);
+        res.appendChild(valEl);
+        res.appendChild(saveRow);
+        el.appendChild(res);
+    }
+
+    return el;
 }
 
 /* ── block actions ───────────────────────────────────────────── */
@@ -303,12 +449,12 @@ window.p19_wbCompute = function(bid) {
     const block = (migrated.blocks || []).find(b => b.id === bid);
     if (!block || block.type !== 'formula') return;
 
-    /* Gather input values from DOM (may have been typed without triggering oninput) */
-    const blockEl = document.querySelector(`[data-bid="${bid}"]`);
+    /* Gather input values from DOM (may have been typed without triggering input event) */
+    const blockEl = document.querySelector(`[data-bid="${CSS.escape(bid)}"]`);
     if (blockEl) {
         (block.vars || []).forEach(v => {
             if (v.sym === block.solveFor) return;
-            const inp = blockEl.querySelector(`[data-wsvar="${v.sym}"]`);
+            const inp = blockEl.querySelector(`[data-p19input="var"][data-sym="${CSS.escape(v.sym)}"]`);
             if (inp) v.value = inp.value.trim();
         });
     }
@@ -392,7 +538,8 @@ window.p19_wbSaveResult = function(bid) {
     const migrated = _p19_wbMigrate(ws);
     const block = (migrated.blocks || []).find(b => b.id === bid);
     if (!block || block.result === null) { _p19toast('Compute the step first'); return; }
-    const saveAsInp = document.querySelector(`[data-bid="${bid}"] .p19-ws-saveas-inp`);
+    /* Read from the DOM input (data-p19input="saveas") or fall back to block.savedAs */
+    const saveAsInp = document.querySelector(`[data-bid="${CSS.escape(bid)}"] [data-p19input="saveas"]`);
     const name = (saveAsInp ? saveAsInp.value.trim() : block.savedAs) || '';
     if (!name) { _p19toast('Enter a name to save as'); return; }
     block.savedAs = name;
@@ -513,17 +660,32 @@ window.p19_wbOpenPicker = function() {
     /* Populate formula grid */
     const grid = document.getElementById('p19-picker-formula-grid');
     if (grid) {
+        grid.innerHTML = '';
         const formulas = _p19dbG('os_formulas', []);
         if (!formulas.length) {
-            grid.innerHTML = `<div style="font-size:.75rem;color:var(--text-muted);grid-column:1/-1;">
-                No formulas yet — add some in the Formulas tab first.</div>`;
+            const empty = document.createElement('div');
+            empty.style.cssText = 'font-size:.75rem;color:var(--text-muted);grid-column:1/-1;';
+            empty.textContent = 'No formulas yet — add some in the Formulas tab first.';
+            grid.appendChild(empty);
         } else {
-            grid.innerHTML = formulas.map(f =>
-                `<div class="p19-picker-formula-card" onclick="p19_wbAddBlock('formula','${_p19esc(f.id)}')">
-                    <div class="p19-picker-formula-title">${_p19esc(f.title)}</div>
-                    <div class="p19-picker-formula-expr">${_p19esc(f.formula)}</div>
-                </div>`
-            ).join('');
+            formulas.forEach(f => {
+                const card = document.createElement('div');
+                card.className = 'p19-picker-formula-card';
+                card.dataset.fid = f.id;
+
+                const titleEl = document.createElement('div');
+                titleEl.className = 'p19-picker-formula-title';
+                titleEl.textContent = f.title || '';
+
+                const exprEl = document.createElement('div');
+                exprEl.className = 'p19-picker-formula-expr';
+                exprEl.textContent = f.formula || '';
+
+                card.appendChild(titleEl);
+                card.appendChild(exprEl);
+                card.addEventListener('click', () => window.p19_wbAddBlock('formula', f.id));
+                grid.appendChild(card);
+            });
         }
     }
 
