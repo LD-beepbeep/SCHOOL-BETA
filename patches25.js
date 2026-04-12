@@ -462,12 +462,12 @@ function _p25_attendanceFix() {
             const d = new Date(today);
             d.setDate(today.getDate() - i);
             days.push({
-                str:      _p25date(d),
-                dow:      d.getDay(),
-                day:      d.getDate(),
-                month:    d.getMonth(),
-                isToday:  i === 0,
-                isFuture: i < 0,
+                str:     _p25date(d),
+                dow:     d.getDay(),
+                day:     d.getDate(),
+                month:   d.getMonth(),
+                isToday: i === 0,
+                /* All days in this loop are past or today; never future */
             });
         }
         return days;
@@ -694,18 +694,14 @@ function _p25_attendanceFix() {
             weekDays.forEach(day => {
                 const cell = document.createElement('div');
                 const st   = logMap[day.str];
-                cell.className = 'p25-att-cell' +
-                    (day.isToday  ? ' today'  : '') +
-                    (day.isFuture ? ' future' : '');
+                cell.className = 'p25-att-cell' + (day.isToday ? ' today' : '');
                 if (st) cell.dataset.status = st;
                 cell.title = day.str + (st ? ' — ' + st : '');
 
-                if (!day.isFuture) {
-                    cell.addEventListener('click', e => {
-                        e.stopPropagation();
-                        _showDayPopup(course.id, day.str, st, cell);
-                    });
-                }
+                cell.addEventListener('click', e => {
+                    e.stopPropagation();
+                    _showDayPopup(course.id, day.str, st, cell);
+                });
                 row.appendChild(cell);
             });
             weeksWrap.appendChild(row);
