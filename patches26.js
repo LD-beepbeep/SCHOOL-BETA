@@ -493,7 +493,7 @@ function _p26_formulaLibrary() {
         /* ── Statistics ── */
         { title: 'Mean',                    formula: 'mean = total / n',                       subject: 'Statistics' },
         { title: 'Z-Score',                 formula: 'z = (x - mu) / sigma',                  subject: 'Statistics' },
-        { title: 'Combinations',            formula: 'C = n / (r * (n - r))',                  subject: 'Statistics' },
+        { title: 'Combinations nCr',        formula: 'C = n! / (r! * (n - r)!)',               subject: 'Statistics' },
         { title: 'Probability',             formula: 'p = favorable / total',                  subject: 'Statistics' },
         { title: 'Expected Value',          formula: 'E = p * value',                          subject: 'Statistics' },
         { title: 'Margin of Error',         formula: 'me = z * sigma / sqrt(n)',               subject: 'Statistics' },
