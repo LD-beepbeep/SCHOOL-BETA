@@ -89,15 +89,21 @@ function _p35_watchPdfBtn() {
     /* patches21 uses a MutationObserver to re-inject the button if it
        disappears.  We do the same in reverse: watch for it and remove
        it whenever it appears. */
-    const view = document.getElementById('view-worksheet');
-    if (!view) { setTimeout(_p35_watchPdfBtn, 600); return; }
+    let _retries = 0;
+    (function _findView() {
+        const view = document.getElementById('view-worksheet');
+        if (!view) {
+            if (++_retries < 40) setTimeout(_findView, 600);
+            return;
+        }
 
-    _p35_removePdfBtn(); /* Remove if already present */
+        _p35_removePdfBtn(); /* Remove if already present */
 
-    new MutationObserver(() => {
-        const btn = document.getElementById('p21-ws-print-btn');
-        if (btn) btn.remove();
-    }).observe(view, { childList: true, subtree: true });
+        new MutationObserver(() => {
+            const btn = document.getElementById('p21-ws-print-btn');
+            if (btn) btn.remove();
+        }).observe(view, { childList: true, subtree: true });
+    })();
 }
 
 /* ================================================================
