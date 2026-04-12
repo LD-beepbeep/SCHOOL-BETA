@@ -991,14 +991,15 @@ function _p28_injectEmptyState() {
     const realBlocks = board.querySelectorAll('[data-bid]');
     if (realBlocks.length > 0) return;
 
+    const shortcut = _p28_shortcutLabel();
     const es = document.createElement('div');
     es.id          = 'p28-ws-empty-state';
     es.innerHTML   = '<i class="fa-solid fa-layer-group"></i>'
-                   + '<p>Your worksheet is empty.<br>Click <strong>Add block</strong> or press <kbd>Ctrl+Enter</kbd> to begin.</p>';
+                   + '<p>Your worksheet is empty.<br>Click <strong>Add block</strong> or press <kbd>' + shortcut + '+Enter</kbd> to begin.</p>';
     board.insertBefore(es, board.firstChild);
 }
 
-/* Keyboard shortcut: Ctrl+Enter opens the block picker */
+/* Keyboard shortcut: Ctrl+Enter (or Cmd+Enter on Mac) opens the block picker */
 function _p28_keyboardShortcut() {
     document.addEventListener('keydown', e => {
         if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
@@ -1006,9 +1007,15 @@ function _p28_keyboardShortcut() {
             if (!board) return;
             if (!board.closest('#view-worksheet')) return;
             e.preventDefault();
+            e.stopPropagation();
             if (typeof window.p19_wbOpenPicker === 'function') window.p19_wbOpenPicker();
         }
     });
+}
+
+/* Platform-aware shortcut label (Ctrl on Windows/Linux, Cmd on Mac) */
+function _p28_shortcutLabel() {
+    return /mac/i.test(navigator.platform || navigator.userAgentData?.platform || '') ? 'Cmd' : 'Ctrl';
 }
 
 /* ================================================================
