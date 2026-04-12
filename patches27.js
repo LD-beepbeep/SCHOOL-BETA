@@ -17,6 +17,17 @@
 
 'use strict';
 
+/* ── constants ────────────────────────────────────────────────── */
+const _P27_TIMER_PRESETS  = [
+    { label: '5m',  sec: 300  },
+    { label: '10m', sec: 600  },
+    { label: '25m', sec: 1500 },
+    { label: '45m', sec: 2700 },
+    { label: '60m', sec: 3600 },
+];
+const _P27_TIMER_DEFAULT  = 1500; /* 25 minutes */
+const _P27_MAX_STREAK_DAYS = 365;
+
 /* ── helpers ──────────────────────────────────────────────────── */
 const _p27lsG   = (k, d) => { try { const v = localStorage.getItem(k); return v !== null ? JSON.parse(v) : d; } catch { return d; } };
 const _p27lsS   = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} };
@@ -636,7 +647,7 @@ function _p27_newBlockTypes() {
 
     function _buildTimerBlock(block) {
         const bid      = block.id;
-        const duration = block.duration || 1500;
+        const duration = block.duration || _P27_TIMER_DEFAULT;
 
         /* Initialise or restore in-memory state */
         if (!_timerState[bid]) {
@@ -769,7 +780,7 @@ function _p27_newBlockTypes() {
         resetBtn.innerHTML = '<i class="fa-solid fa-rotate-left"></i> Reset';
         resetBtn.addEventListener('click', () => {
             _pause();
-            state.remaining = block.duration || 1500;
+            state.remaining = block.duration || _P27_TIMER_DEFAULT;
             _updateDisplay();
         });
 
@@ -780,13 +791,7 @@ function _p27_newBlockTypes() {
         /* Duration presets */
         const presets = document.createElement('div');
         presets.className = 'p27-timer-presets';
-        [
-            { label: '5m',  sec: 300  },
-            { label: '10m', sec: 600  },
-            { label: '25m', sec: 1500 },
-            { label: '45m', sec: 2700 },
-            { label: '60m', sec: 3600 },
-        ].forEach(p => {
+        _P27_TIMER_PRESETS.forEach(p => {
             const btn = document.createElement('button');
             btn.type      = 'button';
             btn.className = 'p27-timer-preset-btn' + (p.sec === duration ? ' active' : '');
@@ -918,7 +923,7 @@ function _p27_newBlockTypes() {
             callout:   { id, type: 'callout',   content: '', variant: 'info' },
             flashcard: { id, type: 'flashcard', cards: [{ front: '', back: '' }] },
             calc:      { id, type: 'calc',      lines: [{ expr: '', result: null }] },
-            timer:     { id, type: 'timer',     label: 'Focus', duration: 1500 },
+            timer:     { id, type: 'timer',     label: 'Focus', duration: _P27_TIMER_DEFAULT },
         };
         ws.blocks.push(defaults[type]);
         _p27dbS('os_worksheet', ws);
@@ -1019,7 +1024,7 @@ function _p27_calendarEnhancements() {
         today.setHours(0, 0, 0, 0);
         let streak = 0;
 
-        for (let i = 0; i < 365; i++) {
+        for (let i = 0; i < _P27_MAX_STREAK_DAYS; i++) {
             const d = new Date(today);
             d.setDate(today.getDate() - i);
             const ds = _p27date(d);
