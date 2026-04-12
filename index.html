@@ -5,10 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Student OS</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <script src="https://unpkg.com/@phosphor-icons/web" defer></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Lora:wght@400;600&family=JetBrains+Mono:wght@400;600&family=Nunito:wght@400;600;700&family=Caveat:wght@400;700&display=swap" rel="stylesheet">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js" defer></script>
     <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="patches10.css">
     <link rel="stylesheet" href="patches9.css">
@@ -43,6 +43,7 @@
     <link rel="stylesheet" href="patches35.css">
     <link rel="stylesheet" href="patches36.css">
     <link rel="stylesheet" href="patches37.css">
+    <link rel="stylesheet" href="patches38.css">
 </head>
 <body class="flex h-screen w-screen">
 <!-- ===== LOGIN OVERLAY ===== -->
@@ -133,9 +134,9 @@
     </div>
 
     <!-- Offline -->
-    <button onclick="document.getElementById('login-overlay').classList.add('hidden'); initApp();"
-            class="text-xs hover:underline opacity-40 hover:opacity-70 transition-opacity"
-            style="color: var(--text-muted); background: none; border: none; cursor: pointer;">
+    <button class="text-xs hover:underline opacity-40 hover:opacity-70 transition-opacity"
+            style="color: var(--text-muted); background: none; border: none; cursor: pointer;"
+            onclick="document.getElementById('login-overlay').classList.add('hidden'); if(window.initApp)initApp(); /* offline mode */">
       Continue offline (data won't sync)
     </button>
 
@@ -1789,6 +1790,7 @@
 <script type="module" src="patches35.js"></script>
 <script type="module" src="patches36.js"></script>
 <script type="module" src="patches37.js"></script>
+<script type="module" src="patches38.js"></script>
 <script> (function() {
 
     /* ── "More" button rotates when drawer is open ── */
