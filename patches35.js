@@ -87,8 +87,14 @@ function _p35_removePdfBtn() {
 
 function _p35_watchPdfBtn() {
     /* patches21 uses a MutationObserver to re-inject the button if it
-       disappears.  We do the same in reverse: watch for it and remove
-       it whenever it appears. */
+       disappears.  Setting up a counter-observer that removes it again
+       creates an infinite DOM-mutation loop between the two observers,
+       which saturates the main thread and freezes the browser.
+       The CSS rule  #p21-ws-print-btn { display:none !important }  in
+       patches35.css is the correct mechanism for hiding the button.
+       We only do a single one-shot removal here so the DOM is clean on
+       first load; patches21 will re-inject it once, then CSS keeps it
+       hidden with no further mutations. */
     let _retries = 0;
     (function _findView() {
         const view = document.getElementById('view-worksheet');
@@ -96,13 +102,7 @@ function _p35_watchPdfBtn() {
             if (++_retries < 40) setTimeout(_findView, 600);
             return;
         }
-
-        _p35_removePdfBtn(); /* Remove if already present */
-
-        new MutationObserver(() => {
-            const btn = document.getElementById('p21-ws-print-btn');
-            if (btn) btn.remove();
-        }).observe(view, { childList: true, subtree: true });
+        _p35_removePdfBtn(); /* One-shot removal — CSS hides any re-injection */
     })();
 }
 
