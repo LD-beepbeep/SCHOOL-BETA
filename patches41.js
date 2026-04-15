@@ -512,7 +512,7 @@ function _p41safeColor(c) {
 
         /* Switch to new empty worksheet */
         _p41dbS(WS_ACTIVE_KEY, newId);
-        _p41dbS('os_worksheet', { blocks: [], savedValues: [] });
+        _p41dbS('os_worksheet', { blocks: [], savedValues: {} });
         _p41dbS('os_worksheet_title', '');
 
         _p41wsReloadActive();
@@ -652,7 +652,7 @@ function _p41safeColor(c) {
 
             /* Size SVG to container */
             var con = document.getElementById('wb-container');
-            if (con) {
+            if (con && con.clientWidth > 0 && con.clientHeight > 0) {
                 svg.setAttribute('width', con.clientWidth);
                 svg.setAttribute('height', con.clientHeight);
             }
