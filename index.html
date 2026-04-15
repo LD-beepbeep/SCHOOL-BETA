@@ -4,49 +4,105 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Student OS</title>
+    <!-- Resource hints — resolve DNS + open connections early for all CDN origins -->
+    <link rel="preconnect" href="https://cdn.tailwindcss.com" crossorigin>
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
+    <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin>
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preconnect" href="https://unpkg.com" crossorigin>
+    <link rel="preconnect" href="https://ka-f.fontawesome.com" crossorigin>
+    <link rel="dns-prefetch" href="https://cdn.tailwindcss.com">
+    <link rel="dns-prefetch" href="https://cdnjs.cloudflare.com">
+    <link rel="dns-prefetch" href="https://fonts.googleapis.com">
+    <link rel="dns-prefetch" href="https://fonts.gstatic.com">
+    <link rel="dns-prefetch" href="https://unpkg.com">
+    <link rel="dns-prefetch" href="https://ka-f.fontawesome.com">
+    <!-- Preload Font Awesome so brand icons are available immediately -->
+    <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" as="style">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/@phosphor-icons/web" defer></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Lora:wght@400;600&family=JetBrains+Mono:wght@400;600&family=Nunito:wght@400;600;700&family=Caveat:wght@400;700&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js" defer></script>
+    <!-- Critical CSS — needed for initial paint (login overlay) -->
     <link rel="stylesheet" href="styles.css">
-    <link rel="stylesheet" href="patches10.css">
-    <link rel="stylesheet" href="patches9.css">
     <link rel="stylesheet" href="mobile.css">
-    <link rel="stylesheet" href="patches11.css">
-    <link rel="stylesheet" href="patches12.css">
-    <link rel="stylesheet" href="patches13.css">
-    <link rel="stylesheet" href="patches14.css">
     <link rel="manifest" href="manifest.json"><link rel="apple-touch-icon" href="icon.png"><meta name="theme-color" content="#0f1117">
     <link rel="icon" type="image/x-icon" href="icon.png">
-    <link rel="stylesheet" href="features.css">
-    <link rel="stylesheet" href="forum.css">
-    <link rel="stylesheet" href="patches16.css">
-    <link rel="stylesheet" href="patches17.css">
-    <link rel="stylesheet" href="patches18.css">
-    <link rel="stylesheet" href="patches19.css">
-    <link rel="stylesheet" href="patches20.css">
-    <link rel="stylesheet" href="patches21.css">
-    <link rel="stylesheet" href="patches22.css">
-    <link rel="stylesheet" href="patches23.css">
-    <link rel="stylesheet" href="patches24.css">
-    <link rel="stylesheet" href="patches25.css">
-    <link rel="stylesheet" href="patches26.css">
-    <link rel="stylesheet" href="patches27.css">
-    <link rel="stylesheet" href="patches28.css">
-    <link rel="stylesheet" href="patches29.css">
-    <link rel="stylesheet" href="patches30.css">
-    <link rel="stylesheet" href="patches31.css">
-    <link rel="stylesheet" href="patches32.css">
-    <link rel="stylesheet" href="patches33.css">
-    <link rel="stylesheet" href="patches34.css">
-    <link rel="stylesheet" href="patches35.css">
-    <link rel="stylesheet" href="patches36.css">
-    <link rel="stylesheet" href="patches37.css">
-    <link rel="stylesheet" href="patches38.css">
-    <link rel="stylesheet" href="patches39.css">
-    <link rel="stylesheet" href="patches41.css">
-    <link rel="stylesheet" href="patches42.css">
+    <!-- Deferred CSS — loaded async so they don't block first paint -->
+    <link rel="stylesheet" href="patches9.css"   media="print" onload="this.media='all'">
+    <link rel="stylesheet" href="patches10.css"  media="print" onload="this.media='all'">
+    <link rel="stylesheet" href="patches11.css"  media="print" onload="this.media='all'">
+    <link rel="stylesheet" href="patches12.css"  media="print" onload="this.media='all'">
+    <link rel="stylesheet" href="patches13.css"  media="print" onload="this.media='all'">
+    <link rel="stylesheet" href="patches14.css"  media="print" onload="this.media='all'">
+    <link rel="stylesheet" href="features.css"   media="print" onload="this.media='all'">
+    <link rel="stylesheet" href="forum.css"      media="print" onload="this.media='all'">
+    <link rel="stylesheet" href="patches16.css"  media="print" onload="this.media='all'">
+    <link rel="stylesheet" href="patches17.css"  media="print" onload="this.media='all'">
+    <link rel="stylesheet" href="patches18.css"  media="print" onload="this.media='all'">
+    <link rel="stylesheet" href="patches19.css"  media="print" onload="this.media='all'">
+    <link rel="stylesheet" href="patches20.css"  media="print" onload="this.media='all'">
+    <link rel="stylesheet" href="patches21.css"  media="print" onload="this.media='all'">
+    <link rel="stylesheet" href="patches22.css"  media="print" onload="this.media='all'">
+    <link rel="stylesheet" href="patches23.css"  media="print" onload="this.media='all'">
+    <link rel="stylesheet" href="patches24.css"  media="print" onload="this.media='all'">
+    <link rel="stylesheet" href="patches25.css"  media="print" onload="this.media='all'">
+    <link rel="stylesheet" href="patches26.css"  media="print" onload="this.media='all'">
+    <link rel="stylesheet" href="patches27.css"  media="print" onload="this.media='all'">
+    <link rel="stylesheet" href="patches28.css"  media="print" onload="this.media='all'">
+    <link rel="stylesheet" href="patches29.css"  media="print" onload="this.media='all'">
+    <link rel="stylesheet" href="patches30.css"  media="print" onload="this.media='all'">
+    <link rel="stylesheet" href="patches31.css"  media="print" onload="this.media='all'">
+    <link rel="stylesheet" href="patches32.css"  media="print" onload="this.media='all'">
+    <link rel="stylesheet" href="patches33.css"  media="print" onload="this.media='all'">
+    <link rel="stylesheet" href="patches34.css"  media="print" onload="this.media='all'">
+    <link rel="stylesheet" href="patches35.css"  media="print" onload="this.media='all'">
+    <link rel="stylesheet" href="patches36.css"  media="print" onload="this.media='all'">
+    <link rel="stylesheet" href="patches37.css"  media="print" onload="this.media='all'">
+    <link rel="stylesheet" href="patches38.css"  media="print" onload="this.media='all'">
+    <link rel="stylesheet" href="patches39.css"  media="print" onload="this.media='all'">
+    <link rel="stylesheet" href="patches41.css"  media="print" onload="this.media='all'">
+    <link rel="stylesheet" href="patches42.css"  media="print" onload="this.media='all'">
+    <link rel="stylesheet" href="patches43.css"  media="print" onload="this.media='all'">
+    <!-- No-JS fallback for deferred CSS -->
+    <noscript>
+        <link rel="stylesheet" href="patches9.css">
+        <link rel="stylesheet" href="patches10.css">
+        <link rel="stylesheet" href="patches11.css">
+        <link rel="stylesheet" href="patches12.css">
+        <link rel="stylesheet" href="patches13.css">
+        <link rel="stylesheet" href="patches14.css">
+        <link rel="stylesheet" href="features.css">
+        <link rel="stylesheet" href="forum.css">
+        <link rel="stylesheet" href="patches16.css">
+        <link rel="stylesheet" href="patches17.css">
+        <link rel="stylesheet" href="patches18.css">
+        <link rel="stylesheet" href="patches19.css">
+        <link rel="stylesheet" href="patches20.css">
+        <link rel="stylesheet" href="patches21.css">
+        <link rel="stylesheet" href="patches22.css">
+        <link rel="stylesheet" href="patches23.css">
+        <link rel="stylesheet" href="patches24.css">
+        <link rel="stylesheet" href="patches25.css">
+        <link rel="stylesheet" href="patches26.css">
+        <link rel="stylesheet" href="patches27.css">
+        <link rel="stylesheet" href="patches28.css">
+        <link rel="stylesheet" href="patches29.css">
+        <link rel="stylesheet" href="patches30.css">
+        <link rel="stylesheet" href="patches31.css">
+        <link rel="stylesheet" href="patches32.css">
+        <link rel="stylesheet" href="patches33.css">
+        <link rel="stylesheet" href="patches34.css">
+        <link rel="stylesheet" href="patches35.css">
+        <link rel="stylesheet" href="patches36.css">
+        <link rel="stylesheet" href="patches37.css">
+        <link rel="stylesheet" href="patches38.css">
+        <link rel="stylesheet" href="patches39.css">
+        <link rel="stylesheet" href="patches41.css">
+        <link rel="stylesheet" href="patches42.css">
+        <link rel="stylesheet" href="patches43.css">
+    </noscript>
 </head>
 <body class="flex h-screen w-screen">
 <!-- ===== LOGIN OVERLAY ===== -->
@@ -1271,8 +1327,36 @@
         <div class="overflow-y-auto flex-1 px-8 py-5 space-y-0">
             <div class="settings-section">
                 <div class="text-xs text-[var(--text-muted)] uppercase tracking-widest font-bold mb-3">Identity</div>
-                <div class="settings-row"><span class="text-sm">Student Name</span><input type="text" id="student-name-input" placeholder="Your name" class="bare-input text-sm text-right w-32" oninput="setStudentName(this.value)"></div>
-                <div class="settings-row"><span class="text-sm">Profile Picture</span><button onclick="closeModals();setTimeout(()=>openModal('modal-profile'),100)" class="text-xs text-[var(--accent)] hover:underline">Edit →</button></div>
+                <!-- Inline profile editor (same as profile modal) -->
+                <div class="p43-settings-profile">
+                    <div class="flex items-center gap-4 mb-3">
+                        <div class="avatar-preview flex-shrink-0" id="settings-avatar-preview" style="background:var(--accent);">🎓</div>
+                        <div class="flex-1">
+                            <input type="text" id="student-name-input" placeholder="Your name…" class="bare-input text-sm w-full" oninput="setStudentName(this.value)">
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-2 flex-wrap mb-3">
+                        <span class="text-xs text-[var(--text-muted)]">Background:</span>
+                        <button onclick="setAvatarBg('#3b82f6')" class="w-6 h-6 rounded-full bg-blue-500 hover:scale-110 transition border-2 border-transparent hover:border-white/40"></button>
+                        <button onclick="setAvatarBg('#8b5cf6')" class="w-6 h-6 rounded-full bg-violet-500 hover:scale-110 transition border-2 border-transparent hover:border-white/40"></button>
+                        <button onclick="setAvatarBg('#ec4899')" class="w-6 h-6 rounded-full bg-pink-500 hover:scale-110 transition border-2 border-transparent hover:border-white/40"></button>
+                        <button onclick="setAvatarBg('#10b981')" class="w-6 h-6 rounded-full bg-emerald-500 hover:scale-110 transition border-2 border-transparent hover:border-white/40"></button>
+                        <button onclick="setAvatarBg('#f59e0b')" class="w-6 h-6 rounded-full bg-amber-500 hover:scale-110 transition border-2 border-transparent hover:border-white/40"></button>
+                        <button onclick="setAvatarBg('#ef4444')" class="w-6 h-6 rounded-full bg-red-500 hover:scale-110 transition border-2 border-transparent hover:border-white/40"></button>
+                        <button onclick="setAvatarBg('#1a1a2e')" class="w-6 h-6 rounded-full bg-[#1a1a2e] hover:scale-110 transition border-2 border-transparent hover:border-white/40"></button>
+                        <input type="color" onchange="setAvatarBg(this.value)" title="Custom bg" style="width:24px;height:24px;border-radius:50%;padding:0;cursor:pointer;border:2px solid rgba(255,255,255,.2);">
+                    </div>
+                    <div class="text-xs text-[var(--text-muted)] uppercase tracking-widest font-bold mb-2">Choose Emoji</div>
+                    <div class="emoji-grid" id="settings-emoji-grid">
+                        <div class="emoji-opt" onclick="setProfileEmoji('🎓')">🎓</div><div class="emoji-opt" onclick="setProfileEmoji('📚')">📚</div><div class="emoji-opt" onclick="setProfileEmoji('🧑‍💻')">🧑‍💻</div><div class="emoji-opt" onclick="setProfileEmoji('✏️')">✏️</div><div class="emoji-opt" onclick="setProfileEmoji('🦊')">🦊</div><div class="emoji-opt" onclick="setProfileEmoji('🐱')">🐱</div><div class="emoji-opt" onclick="setProfileEmoji('🐼')">🐼</div><div class="emoji-opt" onclick="setProfileEmoji('🦁')">🦁</div>
+                        <div class="emoji-opt" onclick="setProfileEmoji('🌟')">🌟</div><div class="emoji-opt" onclick="setProfileEmoji('🚀')">🚀</div><div class="emoji-opt" onclick="setProfileEmoji('🎯')">🎯</div><div class="emoji-opt" onclick="setProfileEmoji('💡')">💡</div><div class="emoji-opt" onclick="setProfileEmoji('🎮')">🎮</div><div class="emoji-opt" onclick="setProfileEmoji('🔥')">🔥</div><div class="emoji-opt" onclick="setProfileEmoji('⚡')">⚡</div><div class="emoji-opt" onclick="setProfileEmoji('🧠')">🧠</div>
+                        <div class="emoji-opt" onclick="setProfileEmoji('🎸')">🎸</div><div class="emoji-opt" onclick="setProfileEmoji('🌈')">🌈</div><div class="emoji-opt" onclick="setProfileEmoji('🦋')">🦋</div><div class="emoji-opt" onclick="setProfileEmoji('🌺')">🌺</div><div class="emoji-opt" onclick="setProfileEmoji('🐉')">🐉</div><div class="emoji-opt" onclick="setProfileEmoji('🦄')">🦄</div><div class="emoji-opt" onclick="setProfileEmoji('🏆')">🏆</div><div class="emoji-opt" onclick="setProfileEmoji('🎨')">🎨</div>
+                        <div class="emoji-opt" onclick="setProfileEmoji('🧩')">🧩</div><div class="emoji-opt" onclick="setProfileEmoji('🎭')">🎭</div><div class="emoji-opt" onclick="setProfileEmoji('🌙')">🌙</div><div class="emoji-opt" onclick="setProfileEmoji('☀️')">☀️</div><div class="emoji-opt" onclick="setProfileEmoji('🍀')">🍀</div><div class="emoji-opt" onclick="setProfileEmoji('🦅')">🦅</div><div class="emoji-opt" onclick="setProfileEmoji('🐬')">🐬</div><div class="emoji-opt" onclick="setProfileEmoji('🌵')">🌵</div>
+                    </div>
+                    <div class="mt-3">
+                        <button onclick="document.getElementById('profile-img-input').click()" class="px-3 py-1.5 bg-[var(--glass-panel)] border border-[var(--glass-border)] rounded-xl text-xs hover:bg-[var(--glass-hover)] transition flex items-center gap-2"><i class="ph-bold ph-upload"></i> Upload Photo</button>
+                    </div>
+                </div>
             </div>
             <div class="settings-section">
                 <div class="text-xs text-[var(--text-muted)] uppercase tracking-widest font-bold mb-3">Appearance</div>
@@ -1798,6 +1882,7 @@
 <script type="module" src="patches40.js"></script>
 <script type="module" src="patches41.js"></script>
 <script type="module" src="patches42.js"></script>
+<script type="module" src="patches43.js"></script>
 <script> (function() {
 
     /* ── "More" button rotates when drawer is open ── */
