@@ -3,8 +3,17 @@
    Handles: offline caching, push notifications, background sync
    ================================================================ */
 
-const CACHE     = 'studentos-v3';
+const CACHE     = 'studentos-v4';
 const ICON      = '/icon.png';
+
+/* Trusted CDN origins whose CORS responses we cache */
+const TRUSTED_CDN = [
+  'cdnjs.cloudflare.com',
+  'fonts.googleapis.com',
+  'fonts.gstatic.com',
+  'ka-f.fontawesome.com',
+  'unpkg.com'
+];
 
 /* Files to pre-cache on install */
 const PRECACHE = [
@@ -12,7 +21,11 @@ const PRECACHE = [
   '/index.html',
   '/styles.css',
   '/mobile.css',
+  '/features.css',
+  '/forum.css',
   '/script.js',
+  '/features.js',
+  '/forum.js',
   '/icon.png'
 ];
 
@@ -42,16 +55,23 @@ self.addEventListener('fetch', e => {
   /* Skip non-GET and cross-origin Firebase/API requests */
   if (request.method !== 'GET') return;
   if (url.hostname.includes('firebaseio.com'))    return;
-  if (url.hostname.includes('googleapis.com'))    return;
-  if (url.hostname.includes('gstatic.com'))       return;
+  if (url.hostname.includes('googleapis.com') &&
+      !url.hostname.includes('fonts.googleapis.com'))    return;
+  if (url.hostname.includes('gstatic.com') &&
+      !url.hostname.includes('fonts.gstatic.com'))       return;
   if (url.hostname.includes('calendar.google.com')) return;
+
+  /* Determine if this is a trusted CDN response (CORS) */
+  const isTrustedCDN = TRUSTED_CDN.some(h => url.hostname.includes(h));
 
   e.respondWith(
     caches.match(request).then(cached => {
       /* Return cached instantly, then refresh in background */
       const fetchPromise = fetch(request)
         .then(res => {
-          if (res && res.status === 200 && res.type === 'basic') {
+          /* Cache same-origin (basic) and trusted CDN (cors) responses */
+          if (res && res.status === 200 &&
+              (res.type === 'basic' || (res.type === 'cors' && isTrustedCDN))) {
             const clone = res.clone();
             caches.open(CACHE).then(c => c.put(request, clone));
           }
