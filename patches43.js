@@ -2,6 +2,8 @@
    StudentOS — patches43.js
    1.  Settings inline profile — keep the settings-embedded profile
        editor in sync with profile state (avatar, emoji, name).
+       Also inject collapsible Emoji + Icon sections (matching
+       patches42's profile modal upgrade).
    2.  Font Awesome brands preload — ensure FA webfont files are
        fetched early so brand icons render on first paint.
    ================================================================ */
@@ -31,8 +33,139 @@
         }, interval);
     }
 
+    /* Collapsible section builder (same UX as patches42) */
+    function _p43buildCollapsible(title, iconHTML, startOpen) {
+        var section = document.createElement('div');
+        section.className = 'p42-profile-section';
+
+        var header = document.createElement('div');
+        header.className = 'p42-profile-section-header';
+        header.innerHTML =
+            '<span class="p42-section-title">' + iconHTML + ' ' + title + '</span>'
+            + '<i class="fa-solid fa-chevron-down p42-chevron' + (startOpen ? ' open' : '') + '"></i>';
+
+        var body = document.createElement('div');
+        body.className = 'p42-profile-section-body' + (startOpen ? ' open' : '');
+
+        header.addEventListener('click', function() {
+            var isOpen = body.classList.contains('open');
+            body.classList.toggle('open', !isOpen);
+            header.querySelector('.p42-chevron').classList.toggle('open', !isOpen);
+        });
+
+        section.appendChild(header);
+        section.appendChild(body);
+        return { el: section, header: header, body: body };
+    }
+
+    /* Same emoji + icon data as patches42 */
+    var FA_AVATARS = [
+        ['fa-user-graduate', 'Graduate'],   ['fa-book',          'Reader'],
+        ['fa-laptop-code',   'Coder'],       ['fa-pen-nib',       'Writer'],
+        ['fa-flask',         'Scientist'],   ['fa-music',         'Musician'],
+        ['fa-palette',       'Artist'],      ['fa-chess',         'Strategist'],
+        ['fa-rocket',        'Explorer'],    ['fa-brain',         'Thinker'],
+        ['fa-star',          'Star'],        ['fa-fire',          'On fire'],
+        ['fa-trophy',        'Champion'],    ['fa-dumbbell',      'Athlete'],
+        ['fa-gamepad',       'Gamer'],       ['fa-guitar',        'Guitarist'],
+        ['fa-headphones',    'Listener'],    ['fa-leaf',          'Nature'],
+        ['fa-mountain',      'Hiker'],       ['fa-paw',           'Animal lover'],
+        ['fa-camera',        'Photographer'],['fa-code',          'Developer'],
+        ['fa-atom',          'Physicist'],   ['fa-infinity',      'Math'],
+        ['fa-crow',          'Night owl'],   ['fa-sun',           'Morning person'],
+        ['fa-heart',         'Kind'],        ['fa-bolt',          'Fast'],
+        ['fa-shield-halved', 'Defender'],    ['fa-crown',         'Leader'],
+    ];
+
+    var EMOJIS = [
+        '🎓', '📚', '🧑‍💻', '✏️',
+        '🦊', '🐱', '🐼', '🦁',
+        '🌟', '🚀', '🎯', '💡',
+        '🎮', '🔥', '⚡', '🧠',
+        '🎸', '🌈', '🦋', '🌺',
+        '🐉', '🦄', '🏆', '🎨',
+        '🧩', '🎭', '🌙', '☀️',
+        '🍀', '🦅', '🐬', '🌵',
+    ];
+
     /* ================================================================
-       1.  SETTINGS INLINE PROFILE SYNC
+       1A.  INJECT COLLAPSIBLE EMOJI + ICON SECTIONS IN SETTINGS
+       ================================================================ */
+
+    _p43waitFor(function() {
+        var settingsGrid = document.getElementById('settings-emoji-grid');
+        if (!settingsGrid) return false;
+        if (document.getElementById('p43-settings-profile-sections')) return true;
+
+        var profile = _p43dbG('os_profile', {});
+        var currentEmoji = profile.emoji || '';
+
+        var wrapper = document.createElement('div');
+        wrapper.id = 'p43-settings-profile-sections';
+
+        /* -- Emoji section -- */
+        var emojiSection = _p43buildCollapsible('Emojis', '<i class="fa-solid fa-face-smile" style="font-size:.7rem;"></i>', true);
+        var emojiGrid = document.createElement('div');
+        emojiGrid.className = 'p42-emoji-grid';
+
+        EMOJIS.forEach(function(em) {
+            var opt = document.createElement('div');
+            opt.className = 'emoji-opt' + (currentEmoji === em ? ' selected' : '');
+            opt.textContent = em;
+            opt.addEventListener('click', function() {
+                if (typeof window.setProfileEmoji === 'function') {
+                    window.setProfileEmoji(em);
+                }
+                emojiGrid.querySelectorAll('.emoji-opt').forEach(function(o) {
+                    o.classList.toggle('selected', o.textContent === em);
+                });
+                iconGrid.querySelectorAll('.p42-icon-opt').forEach(function(o) {
+                    o.classList.remove('selected');
+                });
+            });
+            emojiGrid.appendChild(opt);
+        });
+        emojiSection.body.appendChild(emojiGrid);
+
+        /* -- Icon section -- */
+        var iconSection = _p43buildCollapsible('Icons', '<i class="fa-solid fa-icons" style="font-size:.7rem;"></i>', false);
+        var iconGrid = document.createElement('div');
+        iconGrid.className = 'p42-icon-grid';
+
+        FA_AVATARS.forEach(function(av) {
+            var opt = document.createElement('button');
+            opt.className = 'p42-icon-opt' + (currentEmoji === '__fa:fa-solid ' + av[0] ? ' selected' : '');
+            opt.title = av[1];
+            opt.type = 'button';
+            opt.innerHTML = '<i class="fa-solid ' + av[0] + '"></i>';
+            opt.addEventListener('click', function() {
+                var iconClass = 'fa-solid ' + av[0];
+                if (typeof window._p39setFaAvatar === 'function') {
+                    window._p39setFaAvatar(iconClass);
+                }
+                iconGrid.querySelectorAll('.p42-icon-opt').forEach(function(o) {
+                    o.classList.toggle('selected', o === opt);
+                });
+                emojiGrid.querySelectorAll('.emoji-opt').forEach(function(o) {
+                    o.classList.remove('selected');
+                });
+            });
+            iconGrid.appendChild(opt);
+        });
+        iconSection.body.appendChild(iconGrid);
+
+        wrapper.appendChild(emojiSection.el);
+        wrapper.appendChild(iconSection.el);
+
+        /* Replace the plain emoji grid with the enhanced version */
+        settingsGrid.parentNode.insertBefore(wrapper, settingsGrid);
+        settingsGrid.style.display = 'none';
+
+        return true;
+    }, 80, 5000);
+
+    /* ================================================================
+       1B.  SETTINGS INLINE PROFILE SYNC
        ================================================================ */
 
     /*
@@ -58,7 +191,7 @@
     /* Sync the inline profile editor inside settings */
     function _p43syncSettingsProfile() {
         var profile = _p43dbG('os_profile', { type: 'emoji', emoji: '🎓', bg: '#3b82f6' });
-        var name    = _p43dbG('os_student_name', '');
+        var name    = _p43dbG('os_name', '');
 
         /* Name input */
         var nameInp = document.getElementById('student-name-input');
@@ -88,12 +221,19 @@
             }
         }
 
-        /* Highlight selected emoji */
-        var grid = document.getElementById('settings-emoji-grid');
-        if (grid) {
+        /* Highlight selected emoji/icon in settings sections */
+        var wrapper = document.getElementById('p43-settings-profile-sections');
+        if (wrapper) {
             var currentEmoji = profile.emoji || '🎓';
-            grid.querySelectorAll('.emoji-opt').forEach(function(opt) {
+            wrapper.querySelectorAll('.emoji-opt').forEach(function(opt) {
                 opt.classList.toggle('selected', opt.textContent.trim() === currentEmoji);
+            });
+            wrapper.querySelectorAll('.p42-icon-opt').forEach(function(opt) {
+                var iEl = opt.querySelector('i');
+                if (iEl) {
+                    var cls = iEl.className.replace(/\s*text-.*$/, '').trim();
+                    opt.classList.toggle('selected', currentEmoji === '__fa:' + cls);
+                }
             });
         }
     }
