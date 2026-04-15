@@ -842,10 +842,12 @@ function _p25_attendanceFix() {
 (function _p25_init() {
     const _go = () => {
         _p25_resizableBlocks();
-        _p25_customFormulaPicker();
-        _p25_worksheetPDF();
+        /* _p25_customFormulaPicker() — removed: custom formula is now
+           integrated into the formula block via the picker (patches27) */
+        /* _p25_worksheetPDF() — removed: PDF export replaced by
+           window.print() (patches35) */
         _p25_attendanceFix();
-        console.log('[patches25] loaded — block resize, custom formula, blob PDF, attendance UI overhaul');
+        console.log('[patches25] loaded — block resize, attendance UI overhaul');
     };
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', () => setTimeout(_go, 200));

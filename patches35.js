@@ -83,6 +83,9 @@ function _p35_hookSvBar() {
 function _p35_removePdfBtn() {
     const btn = document.getElementById('p21-ws-print-btn');
     if (btn) btn.remove();
+    /* Also remove the patches25 PDF/export button */
+    const pdfBtn = document.getElementById('p25-ws-pdf-btn');
+    if (pdfBtn) pdfBtn.remove();
 }
 
 function _p35_watchPdfBtn() {
@@ -163,6 +166,11 @@ function _p35_hookSwitchTab() {
                 /* Give patches30 time to inject its button first */
                 setTimeout(_p35_fixPrintBtn, 400);
                 setTimeout(_p35_removePdfBtn,  300);
+                /* Remove p25 PDF button after it may have been re-injected */
+                setTimeout(() => {
+                    const pdfBtn = document.getElementById('p25-ws-pdf-btn');
+                    if (pdfBtn) pdfBtn.remove();
+                }, 500);
                 setTimeout(_p35_svBarClean,    300);
             }
         };
