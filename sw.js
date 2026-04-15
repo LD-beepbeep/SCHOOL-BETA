@@ -54,15 +54,16 @@ self.addEventListener('fetch', e => {
 
   /* Skip non-GET and cross-origin Firebase/API requests */
   if (request.method !== 'GET') return;
-  if (url.hostname.includes('firebaseio.com'))    return;
-  if (url.hostname.includes('googleapis.com') &&
-      !url.hostname.includes('fonts.googleapis.com'))    return;
-  if (url.hostname.includes('gstatic.com') &&
-      !url.hostname.includes('fonts.gstatic.com'))       return;
-  if (url.hostname.includes('calendar.google.com')) return;
+  if (url.hostname === 'firebaseio.com' || url.hostname.endsWith('.firebaseio.com'))   return;
+  if (url.hostname === 'calendar.google.com') return;
+  /* Allow fonts through, skip other googleapis/gstatic */
+  if ((url.hostname.endsWith('.googleapis.com') || url.hostname === 'googleapis.com') &&
+      url.hostname !== 'fonts.googleapis.com')   return;
+  if ((url.hostname.endsWith('.gstatic.com') || url.hostname === 'gstatic.com') &&
+      url.hostname !== 'fonts.gstatic.com')      return;
 
   /* Determine if this is a trusted CDN response (CORS) */
-  const isTrustedCDN = TRUSTED_CDN.some(h => url.hostname.includes(h));
+  const isTrustedCDN = TRUSTED_CDN.some(h => url.hostname === h || url.hostname.endsWith('.' + h));
 
   e.respondWith(
     caches.match(request).then(cached => {

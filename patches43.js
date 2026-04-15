@@ -204,7 +204,16 @@
             var bg    = profile.bg || profile.avatarBg || '#3b82f6';
 
             if (profile.type === 'image' && profile.img) {
-                ap.innerHTML = '<img src="' + profile.img + '" style="width:100%;height:100%;object-fit:cover;border-radius:16px;">';
+                var img = document.createElement('img');
+                img.style.cssText = 'width:100%;height:100%;object-fit:cover;border-radius:16px;';
+                img.alt = '';
+                /* Only allow data: and https: URLs to prevent XSS */
+                var imgSrc = String(profile.img || '');
+                if (imgSrc.indexOf('data:image/') === 0 || imgSrc.indexOf('https://') === 0) {
+                    img.src = imgSrc;
+                }
+                ap.innerHTML = '';
+                ap.appendChild(img);
                 ap.style.background = '';
             } else if (typeof emoji === 'string' && emoji.indexOf('__fa:') === 0) {
                 var iconClass = _p43safeIconClass(emoji.slice(5));
@@ -277,5 +286,49 @@
             if (probe.parentNode) probe.parentNode.removeChild(probe);
         }, 5000);
     })();
+
+    /* ================================================================
+       3.  WORKSHEET — ADD .p43-has-height CLASS FOR RESIZED BLOCKS
+       ================================================================ */
+
+    /*
+     * patches28.js sets el.style.minHeight on resized blocks.
+     * We observe the board and tag blocks that have a custom height
+     * with .p43-has-height so CSS can apply overflow:hidden.
+     */
+    _p43waitFor(function() {
+        var board = document.getElementById('p19-ws-board');
+        if (!board) return false;
+        if (window._p43heightObsDone) return true;
+        window._p43heightObsDone = true;
+
+        function _tagResizedBlocks() {
+            board.querySelectorAll('.p19-ws-block').forEach(function(block) {
+                block.classList.toggle('p43-has-height', !!block.style.minHeight);
+            });
+        }
+
+        var obs = new MutationObserver(_tagResizedBlocks);
+        obs.observe(board, { childList: true, subtree: true, attributes: true, attributeFilter: ['style'] });
+        _tagResizedBlocks();
+        return true;
+    }, 200, 10000);
+
+    /* ================================================================
+       4.  SETTINGS NAME → PROFILE NAME SYNC
+       ================================================================ */
+
+    _p43waitFor(function() {
+        var inp = document.getElementById('student-name-input');
+        if (!inp) return false;
+        if (window._p43nameSyncDone) return true;
+        window._p43nameSyncDone = true;
+
+        inp.addEventListener('input', function() {
+            var pi = document.getElementById('profile-name-input');
+            if (pi) pi.value = inp.value;
+        });
+        return true;
+    });
 
 })();

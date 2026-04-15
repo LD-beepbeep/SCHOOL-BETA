@@ -27,11 +27,11 @@
 }
 
 /*
- * For the outer .p19-ws-block container: if it has a user-set
- * min-height (applied via JS on resize), ensure content doesn't
+ * For the outer .p19-ws-block container: when it has a user-set
+ * height (JS adds .p43-has-height), ensure content doesn't
  * overflow the block boundary.
  */
-.p19-ws-block[style*="min-height"] {
+.p19-ws-block.p43-has-height {
     overflow: hidden;
 }
 
@@ -39,7 +39,7 @@
  * Note blocks can also overflow when resized.  Their textarea
  * should scroll.
  */
-.p19-ws-block.note-block[style*="min-height"] .p19-ws-note-textarea {
+.p19-ws-block.note-block.p43-has-height .p19-ws-note-textarea {
     overflow-y: auto;
 }
 
