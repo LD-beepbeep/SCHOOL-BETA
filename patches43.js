@@ -207,9 +207,10 @@
                 var img = document.createElement('img');
                 img.style.cssText = 'width:100%;height:100%;object-fit:cover;border-radius:16px;';
                 img.alt = '';
-                /* Only allow data: and https: URLs to prevent XSS */
+                /* Only allow safe image data: URIs and https: URLs */
                 var imgSrc = String(profile.img || '');
-                if (imgSrc.indexOf('data:image/') === 0 || imgSrc.indexOf('https://') === 0) {
+                var safeDataUri = /^data:image\/(png|jpeg|jpg|gif|webp|bmp)(;base64)?,/.test(imgSrc);
+                if (safeDataUri || imgSrc.indexOf('https://') === 0) {
                     img.src = imgSrc;
                 }
                 ap.innerHTML = '';
