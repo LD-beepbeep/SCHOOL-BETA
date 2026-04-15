@@ -569,11 +569,22 @@ function _p21_habitWidget() {
     }
     _patchSwitch();
 
-    /* Initial render */
+    /* Initial render — retry with increasing intervals up to 30 attempts */
+    let _habitRetries = 0;
     function _tryInit() {
         const inner = document.querySelector('#widget-habits .habit-inner');
-        if (!inner) { setTimeout(_tryInit, 800); return; }
+        if (!inner) {
+            if (++_habitRetries < 30) {
+                setTimeout(_tryInit, _habitRetries < 5 ? 300 : 800);
+            }
+            return;
+        }
         _renderHabits(inner);
+        /* Re-render after DB may have loaded data */
+        setTimeout(() => {
+            const inner2 = document.querySelector('#widget-habits .habit-inner');
+            if (inner2) _renderHabits(inner2);
+        }, 2000);
     }
     _tryInit();
 
@@ -583,6 +594,9 @@ function _p21_habitWidget() {
             const d = _p21lsG('p9_habits', []);
             if (d.length) window.DB.set('os_habit_log', d);
         }
+        /* Re-render after sync in case data changed */
+        const inner = document.querySelector('#widget-habits .habit-inner');
+        if (inner) _renderHabits(inner);
     }, 3000);
 }
 

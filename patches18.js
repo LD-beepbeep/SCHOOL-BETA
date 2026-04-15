@@ -205,6 +205,7 @@ function _p18_initTaskDnD() {
    3.  ATTENDANCE DASHBOARD WIDGET
    ================================================================ */
 function _p18_injectAttendanceWidget() {
+    let _retries = 0;
     function _tryInject() {
         if (document.getElementById('widget-attendance')) {
             _p18_renderAttWidget();
@@ -214,7 +215,10 @@ function _p18_injectAttendanceWidget() {
         const grid = document.querySelector('.widgets-grid')
             || document.getElementById('widget-habits')?.parentElement
             || document.getElementById('widget-links')?.parentElement;
-        if (!grid) { setTimeout(_tryInject, 1000); return; }
+        if (!grid) {
+            if (++_retries < 30) setTimeout(_tryInject, 500);
+            return;
+        }
 
         const w = document.createElement('div');
         w.id = 'widget-attendance';
@@ -249,8 +253,38 @@ function _p18_injectAttendanceWidget() {
         if (typeof window._wpApplyOnLoad === 'function') setTimeout(window._wpApplyOnLoad, 100);
 
         _p18_renderAttWidget();
+
+        /* Re-render after a short delay to pick up DB data that may
+           not have been ready on the very first call */
+        setTimeout(_p18_renderAttWidget, 1500);
+        setTimeout(_p18_renderAttWidget, 3500);
     }
     _tryInject();
+
+    /* Re-render on every dashboard switch so the widget updates
+       even if the initial render happened before DB was ready */
+    function _hookDashSwitch() {
+        if (typeof window.switchTab !== 'function' || window._p18_dashAttDone) {
+            if (!window._p18_dashAttDone) setTimeout(_hookDashSwitch, 400);
+            return;
+        }
+        window._p18_dashAttDone = true;
+        const _origST = window.switchTab;
+        window.switchTab = function(name) {
+            _origST.apply(this, arguments);
+            if (name === 'dashboard') {
+                setTimeout(() => {
+                    if (!document.getElementById('widget-attendance')) {
+                        _retries = 0;
+                        _tryInject();
+                    } else {
+                        _p18_renderAttWidget();
+                    }
+                }, 150);
+            }
+        };
+    }
+    _hookDashSwitch();
 }
 
 function _p18_renderAttWidget() {

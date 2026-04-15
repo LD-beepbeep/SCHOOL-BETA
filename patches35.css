@@ -42,9 +42,10 @@
 }
 
 /* ================================================================
-   3.  TOOLBAR — REMOVE PDF BUTTON
+   3.  TOOLBAR — REMOVE PDF BUTTONS
    ================================================================ */
-#p21-ws-print-btn {
+#p21-ws-print-btn,
+#p25-ws-pdf-btn {
     display: none !important;
 }
 
@@ -131,6 +132,11 @@
     /* Inside the app, hide non-worksheet panels */
     #app > *:not([id="view-worksheet"]) { display: none !important; }
 
+    /* Override patches21.css visibility:hidden rule */
+    body *,
+    #view-worksheet *,
+    #p19-ws-board * { visibility: visible !important; }
+
     /* Make the worksheet view fill the page */
     #view-worksheet {
         display: flex !important;
@@ -152,10 +158,12 @@
     /* Hide all interactive chrome */
     #p19-ws-toolbar,
     #p21-ws-print-btn,
+    #p25-ws-pdf-btn,
     #p19-ws-add-btn-fixed,
     #p19-ws-picker,
     .p19-ws-block-actions,
     .p28-resize-handle,
+    .p25-block-resize,
     .p29-var-ref-btn,
     .p33-formula-edit-toggle,
     .p33-formula-edit-panel,
@@ -164,7 +172,8 @@
     #p28-ws-empty-state,
     .p29-formula-btn-row,
     .p29-saveas-row,
-    .p29-result-copy-btn {
+    .p29-result-copy-btn,
+    .p24-draw-toolbar button {
         display: none !important;
     }
 
@@ -176,13 +185,15 @@
         padding-bottom: 0 !important;
     }
 
-    /* Blocks */
+    /* All blocks — ensure they are visible and print cleanly */
     .p19-ws-block {
         border: 1px solid #d1d5db !important;
         box-shadow: none !important;
         animation: none !important;
         break-inside: avoid;
         background: #fff !important;
+        display: block !important;
+        visibility: visible !important;
     }
     .p19-ws-block.heading-block { border-left: 3px solid #3b82f6 !important; }
 
@@ -208,4 +219,64 @@
     .p29-var-inp-wrap { background: #f8fafc !important; border-color: #e2e8f0 !important; }
     .p29-var-input { color: #111 !important; }
     .p29-solve-for-chip.active { background: #eff6ff !important; color: #1e40af !important; border-color: #bfdbfe !important; }
+
+    /* Tables — ensure they print */
+    .p27-table-wrap,
+    .p27-table-wrap table {
+        color: #111 !important;
+        border-color: #d1d5db !important;
+    }
+    .p27-table-wrap th,
+    .p27-table-wrap td {
+        border: 1px solid #d1d5db !important;
+        background: #fff !important;
+        color: #111 !important;
+    }
+    .p27-table-wrap th { background: #f3f4f6 !important; }
+
+    /* Callout blocks */
+    .p27-callout-body {
+        background: #f0fdf4 !important;
+        border-left: 4px solid #22c55e !important;
+        color: #111 !important;
+    }
+
+    /* Flashcard blocks */
+    .p27-fc-card {
+        border: 1px solid #e5e7eb !important;
+        background: #fff !important;
+        color: #111 !important;
+    }
+
+    /* Calculator blocks */
+    .p27-calc-line {
+        color: #111 !important;
+    }
+
+    /* Timer blocks */
+    .p27-timer-block {
+        color: #111 !important;
+    }
+
+    /* Code blocks */
+    .p23-ws-code-body {
+        background: #f3f4f6 !important;
+        color: #111 !important;
+    }
+
+    /* Drawing blocks — canvas to visible */
+    .p24-draw-canvas {
+        border: 1px solid #e5e7eb !important;
+        display: block !important;
+    }
+
+    /* Checklist blocks */
+    .checklist-block .p22-checklist-item {
+        color: #111 !important;
+    }
+
+    /* Image blocks */
+    .p23-ws-img-display {
+        max-width: 100% !important;
+    }
 }

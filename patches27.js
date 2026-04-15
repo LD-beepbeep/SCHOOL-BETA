@@ -899,6 +899,7 @@ function _p27_newBlockTypes() {
                     { type: 'flashcard', icon: 'layer-group',    label: 'Flashcards' },
                     { type: 'calc',      icon: 'calculator',     label: 'Calculator' },
                     { type: 'timer',     icon: 'stopwatch',      label: 'Timer'      },
+                    { type: 'formula',   icon: 'square-root-variable', label: 'Formula' },
                 ].forEach(({ type, icon, label }) => {
                     const btn = document.createElement('button');
                     btn.type      = 'button';
@@ -924,6 +925,7 @@ function _p27_newBlockTypes() {
             flashcard: { id, type: 'flashcard', cards: [{ front: '', back: '' }] },
             calc:      { id, type: 'calc',      lines: [{ expr: '', result: null }] },
             timer:     { id, type: 'timer',     label: 'Focus', duration: _P27_TIMER_DEFAULT },
+            formula:   { id, type: 'formula',   formulaId: null, title: 'New Formula', formula: '', vars: [], solveFor: '', result: null, savedAs: '' },
         };
         ws.blocks.push(defaults[type]);
         _p27dbS('os_worksheet', ws);

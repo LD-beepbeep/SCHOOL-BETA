@@ -1846,6 +1846,34 @@ function showStudyCard() {
     document.getElementById('card-back').innerText = a;
     document.getElementById('card-front-label').innerText = isReverse ? 'Answer' : 'Question';
     document.getElementById('card-back-label').innerText = isReverse ? 'Question' : 'Answer';
+
+    /* Show starred / hard / easy badges on the study card */
+    var badgeContainer = document.getElementById('study-card-badges');
+    if (!badgeContainer) {
+        var frontLabel = document.getElementById('card-front-label');
+        if (frontLabel) {
+            badgeContainer = document.createElement('div');
+            badgeContainer.id = 'study-card-badges';
+            badgeContainer.style.cssText = 'display:flex;gap:6px;justify-content:center;margin-bottom:6px;flex-wrap:wrap;';
+            frontLabel.parentElement.insertBefore(badgeContainer, frontLabel);
+        }
+    }
+    if (badgeContainer) {
+        badgeContainer.innerHTML = '';
+        var statKey = activeDeckId + '_' + card.id;
+        var hardCount = cardStats[statKey] || 0;
+        var cardEasySet = typeof _cardEasySet !== 'undefined' ? _cardEasySet : (typeof DB !== 'undefined' ? DB.get('os_card_easy', {}) : {});
+        var isEasy = cardEasySet[statKey] === true;
+        if (card.starred) {
+            badgeContainer.innerHTML += '<span class="card-diff-badge starred"><i class="fa-solid fa-star" style="font-size:.55rem"></i> Starred</span>';
+        }
+        if (hardCount >= 2) {
+            badgeContainer.innerHTML += '<span class="card-diff-badge hard"><i class="fa-solid fa-fire" style="font-size:.55rem"></i> Hard</span>';
+        } else if (isEasy) {
+            badgeContainer.innerHTML += '<span class="card-diff-badge easy"><i class="fa-solid fa-check" style="font-size:.55rem"></i> Easy</span>';
+        }
+    }
+
     var hintBtn = document.getElementById('hint-btn');
     var hintArea = document.getElementById('card-hint-area');
     if (hintBtn) hintBtn.classList.toggle('hidden', !card.tip);
@@ -4362,12 +4390,17 @@ var _cardEasySet = DB.get('os_card_easy', {});
             } else if (isEasy) {
                 diffBadge = '<span class="card-diff-badge easy"><i class="fa-solid fa-check" style="font-size:.55rem"></i> Easy</span>';
             }
+            var starBadge = '';
+            if (card.starred) {
+                starBadge = '<span class="card-diff-badge starred"><i class="fa-solid fa-star" style="font-size:.55rem"></i> Starred</span>';
+            }
             var div = document.createElement('div');
             div.className = 'flex items-center justify-between py-2.5 px-3 rounded-xl hover:bg-[var(--glass-hover)] group transition';
             div.innerHTML = '<div class="flex-1 min-w-0">'
                 + '<div class="flex items-center gap-2">'
                 + '<div class="text-sm font-medium truncate">' + card.q + '</div>'
                 + diffBadge
+                + starBadge
                 + '</div>'
                 + '<div class="text-xs text-[var(--text-muted)] truncate">' + card.a + '</div>'
                 + (card.tip ? '<div class="text-[10px] text-yellow-400/70 truncate"><i class="fa-solid fa-lightbulb" style="font-size:.6rem"></i> ' + card.tip + '</div>' : '')
