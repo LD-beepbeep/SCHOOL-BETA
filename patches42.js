@@ -466,6 +466,7 @@ function _p42safeIconClass(raw) {
     function _p42addBlock(type) {
         var ws = _p42dbG('os_worksheet', { blocks: [], savedValues: {} });
         ws.blocks = ws.blocks || [];
+        if (ws.blocks.some(function(b) { return b.type === type; })) return;
         var id = Math.random().toString(36).slice(2, 10);
 
         var defaults = {

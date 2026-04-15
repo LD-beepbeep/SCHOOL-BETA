@@ -918,6 +918,7 @@ function _p27_newBlockTypes() {
     function _addBlock(type) {
         const ws = _p27dbG('os_worksheet', { blocks: [], savedValues: {} });
         ws.blocks = ws.blocks || [];
+        if (ws.blocks.some(b => b.type === type)) return;
         const id  = _p27id();
         const defaults = {
             table:     { id, type: 'table',     rows: [['Column A', 'Column B'], ['', '']], hasHeader: true },

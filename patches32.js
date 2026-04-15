@@ -171,7 +171,9 @@ function _p32waitFor(fn, interval) {
             '  </div>',
             '</div>',
         ].join('');
-        document.body.appendChild(m);
+        var overlay = document.getElementById('modal-overlay');
+        if (overlay) overlay.appendChild(m);
+        else document.body.appendChild(m);
         return true;
     });
 

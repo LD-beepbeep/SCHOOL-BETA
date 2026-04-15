@@ -618,7 +618,7 @@ function _p21_sidebarSettingsTab() {
         { id:'calc',       label:'Calculator',   icon:'fa-calculator'     },
         { id:'focus',      label:'Focus Timer',  icon:'fa-hourglass-half' },
         { id:'music',      label:'Music',        icon:'fa-music'          },
-        { id:'formulas',   label:'Formulas',     icon:'fa-square-root-variable' },
+        { id:'formulas',   label:'Custom Formula', icon:'fa-square-root-variable' },
         { id:'forum',      label:'Forum',        icon:'fa-comments'       },
         { id:'routine',    label:'Routine',      icon:'fa-calendar-week'  },
         { id:'attendance', label:'Attendance',   icon:'fa-user-check'     },

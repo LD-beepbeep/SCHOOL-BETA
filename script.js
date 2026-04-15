@@ -1686,6 +1686,7 @@ function renderDecks() {
 function deckCard(d) {
     var count = (d.cards || []).length;
     var hardCount = (d.cards || []).filter(function(c) { return (cardStats[d.id + '_' + c.id] || 0) > 0; }).length;
+    var starredCount = (d.cards || []).filter(function(c) { return c.starred; }).length;
     return '<div class="min-card p-4 hover-effect cursor-pointer" onclick="openDeck(' + d.id + ')">'
         + '<div class="flex justify-between items-start mb-3">'
         + '<div class="text-2xl">' + (d.emoji || '📖') + '</div>'
@@ -1693,7 +1694,8 @@ function deckCard(d) {
         + '</div>'
         + '<h3 class="font-semibold text-sm mb-1 truncate">' + d.name + '</h3>'
         + '<div class="text-xs text-[var(--text-muted)]">' + count + ' cards'
-        + (hardCount > 0 ? ' · <span class="text-red-400">' + hardCount + ' hard</span>' : '') + '</div>'
+        + (hardCount > 0 ? ' · <span class="text-red-400">' + hardCount + ' hard</span>' : '')
+        + (starredCount > 0 ? ' · <span class="text-yellow-400"><i class="fa-solid fa-star" style="font-size:.55rem"></i> ' + starredCount + ' starred</span>' : '') + '</div>'
         + '<button onclick="event.stopPropagation();p4OpenImport(' + d.id + ',\'' + d.name.replace(/'/g,"\\'") + '\')" style="margin-top:8px;width:100%;display:flex;align-items:center;justify-content:center;gap:5px;padding:5px 0;border-radius:8px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);color:var(--text-muted);font-size:.68rem;font-weight:700;cursor:pointer;" onmouseenter="this.style.background=\'rgba(255,255,255,.1)\';this.style.color=\'var(--text-main)\'" onmouseleave="this.style.background=\'rgba(255,255,255,.05)\';this.style.color=\'var(--text-muted)\'"><i class="fa-solid fa-file-import"></i> Import</button>'
         + '</div>';
 }
@@ -2710,7 +2712,15 @@ function noteTextColor(c) {
     document.execCommand('foreColor', false, c); saveNote();
 }
 function setNoteFont(font, cls, silent) {
-    document.getElementById('note-editor').style.fontFamily = font;
+    var editor = document.getElementById('note-editor');
+    var sel = window.getSelection();
+    /* If there is a text selection inside the editor, apply font to selection only */
+    if (!silent && sel && sel.rangeCount > 0 && !sel.isCollapsed && editor.contains(sel.anchorNode)) {
+        editor.focus();
+        document.execCommand('fontName', false, font.split(',')[0].trim().replace(/'/g, ''));
+    } else {
+        editor.style.fontFamily = font;
+    }
     noteFontActive = cls;
     document.querySelectorAll('.font-opt').forEach(function(b) { b.classList.remove('active-font'); });
     var btn = document.getElementById(cls);
