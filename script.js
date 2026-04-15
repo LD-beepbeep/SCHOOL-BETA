@@ -1862,15 +1862,15 @@ function showStudyCard() {
         badgeContainer.innerHTML = '';
         var statKey = activeDeckId + '_' + card.id;
         var hardCount = cardStats[statKey] || 0;
-        var _easySet = typeof _cardEasySet !== 'undefined' ? _cardEasySet : (typeof DB !== 'undefined' ? DB.get('os_card_easy', {}) : {});
-        var isEasy = _easySet[statKey] === true;
+        var cardEasySet = typeof _cardEasySet !== 'undefined' ? _cardEasySet : (typeof DB !== 'undefined' ? DB.get('os_card_easy', {}) : {});
+        var isEasy = cardEasySet[statKey] === true;
         if (card.starred) {
-            badgeContainer.innerHTML += '<span class="card-diff-badge starred" style="background:rgba(234,179,8,.15);color:#eab308;display:inline-flex;align-items:center;gap:2px;padding:1px 6px;border-radius:99px;font-size:.6rem;font-weight:800;letter-spacing:.02em;"><i class="fa-solid fa-star" style="font-size:.55rem"></i> Starred</span>';
+            badgeContainer.innerHTML += '<span class="card-diff-badge starred"><i class="fa-solid fa-star" style="font-size:.55rem"></i> Starred</span>';
         }
         if (hardCount >= 2) {
-            badgeContainer.innerHTML += '<span class="card-diff-badge hard" style="display:inline-flex;align-items:center;gap:2px;padding:1px 6px;border-radius:99px;font-size:.6rem;font-weight:800;letter-spacing:.02em;"><i class="fa-solid fa-fire" style="font-size:.55rem"></i> Hard</span>';
+            badgeContainer.innerHTML += '<span class="card-diff-badge hard"><i class="fa-solid fa-fire" style="font-size:.55rem"></i> Hard</span>';
         } else if (isEasy) {
-            badgeContainer.innerHTML += '<span class="card-diff-badge easy" style="display:inline-flex;align-items:center;gap:2px;padding:1px 6px;border-radius:99px;font-size:.6rem;font-weight:800;letter-spacing:.02em;"><i class="fa-solid fa-check" style="font-size:.55rem"></i> Easy</span>';
+            badgeContainer.innerHTML += '<span class="card-diff-badge easy"><i class="fa-solid fa-check" style="font-size:.55rem"></i> Easy</span>';
         }
     }
 
@@ -4392,7 +4392,7 @@ var _cardEasySet = DB.get('os_card_easy', {});
             }
             var starBadge = '';
             if (card.starred) {
-                starBadge = '<span class="card-diff-badge starred" style="background:rgba(234,179,8,.15);color:#eab308;"><i class="fa-solid fa-star" style="font-size:.55rem"></i> Starred</span>';
+                starBadge = '<span class="card-diff-badge starred"><i class="fa-solid fa-star" style="font-size:.55rem"></i> Starred</span>';
             }
             var div = document.createElement('div');
             div.className = 'flex items-center justify-between py-2.5 px-3 rounded-xl hover:bg-[var(--glass-hover)] group transition';
