@@ -314,10 +314,14 @@ function _p42safeIconClass(raw) {
                     avgNum.textContent = window._p42avgToDisplay(avg);
                 }
 
-                /* Fix the "/ 20" under it */
-                var scaleDiv = card.querySelector('.text-xs.text-\\[var\\(--text-muted\\)\\]');
-                if (scaleDiv && scaleDiv.textContent.trim().indexOf('/') !== -1) {
-                    scaleDiv.textContent = window._p42getScaleLabel();
+                /* Fix the "/ 20" scale label under the average number */
+                var scaleDivs = card.querySelectorAll('.text-xs');
+                for (var si = 0; si < scaleDivs.length; si++) {
+                    var txt = scaleDivs[si].textContent.trim();
+                    if (txt === '/ 20' || txt === '/ 10' || txt === '%' || txt === 'Letter') {
+                        scaleDivs[si].textContent = window._p42getScaleLabel();
+                        break;
+                    }
                 }
 
                 /* Fix individual test scores */
