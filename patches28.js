@@ -962,6 +962,7 @@ function _p28_newBlockTypes() {
     function _addBlock(type) {
         const ws = _p28dbG('os_worksheet', { blocks: [], savedValues: {} });
         ws.blocks = ws.blocks || [];
+        if (ws.blocks.some(b => b.type === type)) return;
         const id  = _p28id();
         if (type === 'checklist') {
             ws.blocks.push({ id, type: 'checklist', title: '', items: [] });
