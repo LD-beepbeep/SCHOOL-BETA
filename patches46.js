@@ -217,10 +217,6 @@
 
     /* Keep p46 pomo inputs in sync when the focus view changes the same setting */
     _wait(function() {
-        if (typeof window.setPomodoro !== 'function' &&
-            typeof window._p46pomoHooked === 'undefined') {
-            window._p46pomoHooked = false;
-        }
         if (window._p46pomoSyncHooked) return true;
         window._p46pomoSyncHooked = true;
 
