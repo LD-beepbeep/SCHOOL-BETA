@@ -53,14 +53,12 @@
     }
 
     /* Strip HTML tags for text-only search matching.
-       Result is only used as a search corpus, never inserted into DOM. */
+       Result is only used as a search corpus, never inserted into DOM.
+       Entity decoding is intentionally omitted to avoid double-escaping. */
     function _stripHtml(html) {
         return String(html || '')
             .replace(/<[^>]*>/g, ' ')   /* remove complete tags */
             .replace(/<[^>]*/g, ' ')    /* remove any unclosed tag fragment */
-            .replace(/&nbsp;/gi, ' ').replace(/&amp;/gi, '&')
-            .replace(/&lt;/gi, '<').replace(/&gt;/gi, '>')
-            .replace(/&quot;/gi, '"').replace(/&#39;/gi, "'")
             .replace(/\s+/g, ' ').trim();
     }
 
