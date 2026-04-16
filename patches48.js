@@ -52,6 +52,13 @@
         return d.innerHTML;
     }
 
+    /* Strip HTML tags safely using a detached element */
+    function _stripHtml(html) {
+        var tmp = document.createElement('div');
+        tmp.innerHTML = html;
+        return tmp.textContent || tmp.innerText || '';
+    }
+
     /* ── toggle builder ──────────────────────────────────────── */
     function _makeToggle(key, defaultOn, onToggle) {
         var btn = document.createElement('button');
@@ -629,8 +636,8 @@
                     if (!d || !Array.isArray(d.cards)) return;
                     d.cards.forEach(function(c) {
                         if (!c) return;
-                        var front = (c.front || c.q || '').replace(/<[^>]+>/g, '');
-                        var back  = (c.back  || c.a || '').replace(/<[^>]+>/g, '');
+                        var front = _stripHtml(c.front || c.q || '');
+                        var back  = _stripHtml(c.back  || c.a || '');
                         if (!front) return;
                         items.push({
                             type: 'card',
@@ -686,7 +693,7 @@
                 });
                 /* Notes */
                 (_db('os_notes', [])).forEach(function(n) {
-                    baseItems.push({ type:'note', title:n.title||'Untitled Note', sub:(n.body||'').replace(/<[^>]+>/g,'').slice(0,60), icon:'ph-notebook', color:'#f59e0b', id:n.id, action:function(){window.switchTab&&window.switchTab('notes');setTimeout(function(){if(typeof window.loadNote==='function')window.loadNote(n.id);},200);} });
+                    baseItems.push({ type:'note', title:n.title||'Untitled Note', sub:_stripHtml(n.body||'').slice(0,60), icon:'ph-notebook', color:'#f59e0b', id:n.id, action:function(){window.switchTab&&window.switchTab('notes');setTimeout(function(){if(typeof window.loadNote==='function')window.loadNote(n.id);},200);} });
                 });
                 /* Formulas */
                 (_db('os_formulas', [])).forEach(function(f) {
