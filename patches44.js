@@ -116,9 +116,9 @@
         if (window._p44formulaRenameDone) return true;
         window._p44formulaRenameDone = true;
 
-        var _orig2 = window.p19_wbOpenPicker;
+        var _origPicker = window.p19_wbOpenPicker;
         window.p19_wbOpenPicker = function () {
-            _orig2.apply(this, arguments);
+            _origPicker.apply(this, arguments);
             setTimeout(function () {
                 var sheet = document.getElementById('p19-ws-picker-sheet');
                 _p44renameFormulaBtn(sheet);
@@ -174,7 +174,7 @@
                             + '<i class="fa-solid fa-star" style="font-size:.55rem"></i> '
                             + starredCount + ' starred</span>';
 
-            var deckName = d.name.replace(/'/g, "\\'");
+            var deckName = d.name.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
 
             return '<div class="min-card p-4 hover-effect cursor-pointer" onclick="openDeck(' + d.id + ')">'
                 + '<div class="flex justify-between items-start mb-3">'
@@ -253,7 +253,7 @@
                     var sel = window.getSelection();
                     sel.removeAllRanges();
                     sel.addRange(_p44savedRange);
-                } catch (_) { /* ignore */ }
+                } catch (e) { /* Range restoration can fail if DOM changed since save; fall through to original behaviour */ }
             }
 
             _origSetFont.apply(this, arguments);
