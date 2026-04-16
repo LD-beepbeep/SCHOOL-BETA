@@ -19,6 +19,8 @@
     <link rel="dns-prefetch" href="https://ka-f.fontawesome.com">
     <!-- Preload Font Awesome so brand icons are available immediately -->
     <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" as="style">
+    <!-- Preload main app script so it starts downloading as early as possible -->
+    <link rel="modulepreload" href="script.js?v=3">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/@phosphor-icons/web" defer></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -68,6 +70,7 @@
     <link rel="stylesheet" href="patches44.css"  media="print" onload="this.media='all'">
     <link rel="stylesheet" href="patches45.css"  media="print" onload="this.media='all'">
     <link rel="stylesheet" href="patches46.css"  media="print" onload="this.media='all'">
+    <link rel="stylesheet" href="patches47.css"  media="print" onload="this.media='all'">
     <!-- No-JS fallback for deferred CSS -->
     <noscript>
         <link rel="stylesheet" href="patches9.css">
@@ -108,6 +111,7 @@
         <link rel="stylesheet" href="patches44.css">
         <link rel="stylesheet" href="patches45.css">
         <link rel="stylesheet" href="patches46.css">
+        <link rel="stylesheet" href="patches47.css">
     </noscript>
 </head>
 <body class="flex h-screen w-screen">
@@ -1892,6 +1896,7 @@
 <script type="module" src="patches44.js"></script>
 <script type="module" src="patches45.js"></script>
 <script type="module" src="patches46.js"></script>
+<script type="module" src="patches47.js"></script>
 <script> (function() {
 
     /* ── "More" button rotates when drawer is open ── */
