@@ -4074,6 +4074,7 @@ window.syncSettingsName         = syncSettingsName;
 window.setProfileEmoji          = setProfileEmoji;
 window.setAvatarBg              = setAvatarBg;
 window.handleProfileImage       = handleProfileImage;
+window.renderProfileDisplay     = renderProfileDisplay;
 
 // Data
 window.exportAllData            = exportAllData;
