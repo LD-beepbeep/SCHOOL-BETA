@@ -290,8 +290,12 @@ function _p18_injectAttendanceWidget() {
 function _p18_renderAttWidget() {
     const el = document.getElementById('p18-att-widget-body');
     if (!el) return;
-    const att = _p18dbG('os_attendance', []);
-    if (!att || !att.length) {
+
+    /* Read from the canonical keys used by patches16/17 */
+    const courses = _p18dbG('os_attend_courses', []);
+    const log     = _p18dbG('os_attend_log',     []);
+
+    if (!courses || !courses.length) {
         el.innerHTML = `<div style="font-size:.75rem;color:var(--text-muted);text-align:center;padding:8px 0;">
             No courses tracked yet.<br>
             <button onclick="typeof switchTab==='function'&&switchTab('attendance')"
@@ -303,16 +307,16 @@ function _p18_renderAttWidget() {
 
     /* Compute overall % */
     let totalAtt = 0, totalSess = 0;
-    att.forEach(c => {
-        const sessions = c.sessions || [];
-        totalSess += sessions.length;
-        totalAtt  += sessions.filter(s => s.status === 'attended').length;
+    courses.forEach(c => {
+        const cLog = log.filter(l => l.courseId === c.id);
+        totalSess += cLog.length;
+        totalAtt  += cLog.filter(l => l.status === 'attended').length;
     });
     const overallPct = totalSess > 0 ? Math.round(totalAtt / totalSess * 100) : 0;
     const pctColor = overallPct >= 75 ? '#22c55e' : overallPct >= 60 ? '#f59e0b' : '#ef4444';
 
     /* Show overall stat + top 4 courses */
-    const topCourses = att.slice(0, 4);
+    const topCourses = courses.slice(0, 4);
     el.innerHTML = `
         <div class="flex items-end gap-3 mb-2">
             <div>
@@ -327,9 +331,9 @@ function _p18_renderAttWidget() {
             </div>
         </div>
         ${topCourses.map(c => {
-            const sessions = c.sessions || [];
-            const attended = sessions.filter(s => s.status === 'attended').length;
-            const total    = sessions.length;
+            const cLog     = log.filter(l => l.courseId === c.id);
+            const attended = cLog.filter(l => l.status === 'attended').length;
+            const total    = cLog.length;
             const pct      = total > 0 ? Math.round(attended / total * 100) : 0;
             const cColor   = _p18safeColor(c.color);
             const barColor = pct >= 75 ? '#22c55e' : pct >= 60 ? '#f59e0b' : '#ef4444';
@@ -343,8 +347,8 @@ function _p18_renderAttWidget() {
 
 /* Quick attendance log modal */
 window._p18_openQuickAttModal = function() {
-    const att = _p18dbG('os_attendance', []);
-    if (!att || !att.length) {
+    const courses = _p18dbG('os_attend_courses', []);
+    if (!courses || !courses.length) {
         _p18toast('No courses set up — go to the Attendance tab first.');
         if (typeof switchTab === 'function') switchTab('attendance');
         return;
@@ -379,8 +383,9 @@ function _p18_injectQuickAttModal() {
 }
 
 function _p18_renderQuickAttModal() {
-    const att = _p18dbG('os_attendance', []);
-    const today = _p18date();
+    const courses = _p18dbG('os_attend_courses', []);
+    const log     = _p18dbG('os_attend_log',     []);
+    const today   = _p18date();
 
     const dateEl = document.getElementById('p18-qatt-date');
     if (dateEl) dateEl.textContent = new Date().toLocaleDateString(undefined, { weekday:'long', month:'long', day:'numeric' });
@@ -388,19 +393,19 @@ function _p18_renderQuickAttModal() {
     const list = document.getElementById('p18-qatt-list');
     if (!list) return;
 
-    list.innerHTML = att.map(c => {
-        const sessions = c.sessions || [];
-        const todaySess = sessions.find(s => s.date === today);
-        const cColor = _p18safeColor(c.color);
+    list.innerHTML = courses.map(c => {
+        const cLog      = log.filter(l => l.courseId === c.id);
+        const todayLog  = cLog.find(l => l.date === today);
+        const cColor    = _p18safeColor(c.color);
         return `<div class="p18-qatt-course-card" id="p18-qatt-card-${_p18esc(c.id)}">
             <div class="p18-qatt-dot" style="background:${cColor};"></div>
             <div class="p18-qatt-name">${_p18esc(c.name)}</div>
             <div class="p18-qatt-btns">
-                <button class="p18-qatt-btn attend${todaySess?.status==='attended' ? ' active' : ''}"
+                <button class="p18-qatt-btn attend${todayLog?.status==='attended' ? ' active' : ''}"
                     onclick="_p18_quickLog('${_p18esc(c.id)}','attended',this)">
                     <i class="fa-solid fa-check"></i> Attended
                 </button>
-                <button class="p18-qatt-btn miss${todaySess?.status==='missed' ? ' active' : ''}"
+                <button class="p18-qatt-btn miss${todayLog?.status==='missed' ? ' active' : ''}"
                     onclick="_p18_quickLog('${_p18esc(c.id)}','missed',this)">
                     <i class="fa-solid fa-xmark"></i> Missed
                 </button>
@@ -410,15 +415,10 @@ function _p18_renderQuickAttModal() {
 }
 
 window._p18_quickLog = function(cid, status, btn) {
-    const att = _p18dbG('os_attendance', []);
-    const course = att.find(c => c.id === cid);
-    if (!course) return;
-    course.sessions = course.sessions || [];
-    const today = _p18date();
-    const idx = course.sessions.findIndex(s => s.date === today);
-    if (idx >= 0) course.sessions[idx].status = status;
-    else course.sessions.push({ date: today, status });
-    _p18dbS('os_attendance', att);
+    const today  = _p18date();
+    let   log    = _p18dbG('os_attend_log', []).filter(l => !(l.courseId === cid && l.date === today));
+    if (status !== 'remove') log.push({ courseId: cid, date: today, status });
+    _p18dbS('os_attend_log', log);
 
     /* Update button states in modal */
     const card = btn.closest('.p18-qatt-course-card');
@@ -434,10 +434,10 @@ window._p18_quickLog = function(cid, status, btn) {
     /* Update p16 attendance stat row if visible */
     const statEl = document.getElementById('p16-att-stat-' + cid);
     if (statEl) {
-        const sessions = course.sessions;
-        const attended = sessions.filter(s => s.status === 'attended').length;
-        const total = sessions.length;
-        const pct = total > 0 ? Math.round(attended / total * 100) : 0;
+        const allLog   = _p18dbG('os_attend_log', []).filter(l => l.courseId === cid);
+        const attended = allLog.filter(l => l.status === 'attended').length;
+        const total    = allLog.length;
+        const pct      = total > 0 ? Math.round(attended / total * 100) : 0;
         statEl.textContent = `${attended} attended, ${total - attended} missed — ${pct}% attendance`;
     }
 };
@@ -792,7 +792,7 @@ function _p18_patchReRenders() {
                 const _origSet = window.DB.set.bind(window.DB);
                 window.DB.set = function(key, val) {
                     const result = _origSet(key, val);
-                    if (key === 'os_attendance') {
+                    if (key === 'os_attend_courses' || key === 'os_attend_log') {
                         _p18_renderAttWidget();
                     }
                     return result;
