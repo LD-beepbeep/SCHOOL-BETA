@@ -52,11 +52,16 @@
         return d.innerHTML;
     }
 
-    /* Strip HTML tags safely using a detached element */
+    /* Strip HTML tags for text-only search matching.
+       Result is only used as a search corpus, never inserted into DOM. */
     function _stripHtml(html) {
-        var tmp = document.createElement('div');
-        tmp.innerHTML = html;
-        return tmp.textContent || tmp.innerText || '';
+        return String(html || '')
+            .replace(/<[^>]*>/g, ' ')   /* remove complete tags */
+            .replace(/<[^>]*/g, ' ')    /* remove any unclosed tag fragment */
+            .replace(/&nbsp;/gi, ' ').replace(/&amp;/gi, '&')
+            .replace(/&lt;/gi, '<').replace(/&gt;/gi, '>')
+            .replace(/&quot;/gi, '"').replace(/&#39;/gi, "'")
+            .replace(/\s+/g, ' ').trim();
     }
 
     /* ── toggle builder ──────────────────────────────────────── */
