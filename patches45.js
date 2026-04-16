@@ -109,16 +109,21 @@
             var sap2 = document.getElementById('settings-avatar-preview');
             if (sap2) {
                 if (profile.type === 'image' && profile.img) {
-                    var safeData = /^data:image\/(png|jpe?g|gif|webp|bmp)(;base64)?,/.test(profile.img);
-                    var safeHttps = profile.img.indexOf('https://') === 0;
+                    var imgSrc    = String(profile.img);
+                    var safeData  = /^data:image\/(png|jpe?g|gif|webp|bmp);base64,[A-Za-z0-9+/]+=*$/.test(imgSrc);
+                    var safeHttps = imgSrc.indexOf('https://') === 0;
                     if (safeData || safeHttps) {
-                        sap2.innerHTML = '<img src="' + profile.img +
-                            '" style="width:100%;height:100%;object-fit:cover;border-radius:16px;" alt="">';
+                        sap2.innerHTML = '';
+                        var simg = document.createElement('img');
+                        simg.src   = imgSrc;
+                        simg.alt   = '';
+                        simg.style.cssText = 'width:100%;height:100%;object-fit:cover;border-radius:16px;';
+                        sap2.appendChild(simg);
                         sap2.style.background = '';
                         sap2.style.fontSize   = '';
                     }
                 } else {
-                    sap2.textContent  = profile.emoji || '🎓';
+                    sap2.textContent      = profile.emoji || '🎓';
                     sap2.style.background = profile.bg || '#3b82f6';
                     sap2.style.fontSize   = '1.6rem';
                 }
@@ -148,6 +153,11 @@
 
         var _mmSave    = window.wbMmSave;
         var _mmAddNode = typeof window.wbMmAddNode === 'function' ? window.wbMmAddNode : null;
+
+        /* Constants used inside wbMmRender */
+        var DRAG_THRESHOLD   = 4;   /* px before a move is counted as a drag */
+        var CLICK_DEBOUNCE   = 220; /* ms to wait before a single-click re-renders,
+                                       giving dblclick time to cancel it */
 
         window.wbMmRender = function() {
             var svg = document.getElementById('wb-mindmap-svg');
@@ -212,10 +222,9 @@
 
                 /* ── Per-node event handling ──────────────────────── */
                 (function(n) {
-                    var _isDragging   = false;
-                    var _didMove      = false;
+                    var _isDragging = false;
+                    var _didMove    = false;
                     var _dsx = 0, _dsy = 0, _nsx = 0, _nsy = 0;
-                    var DRAG_THRESHOLD = 4;
 
                     /* Debounce token: cancel single-click re-render when
                        dblclick fires on the same node. */
@@ -253,15 +262,15 @@
                     g.addEventListener('click', function(e) {
                         e.stopPropagation();
                         if (_didMove) { _didMove = false; return; }
-                        /* Defer re-render by 220 ms so a following dblclick
-                           can cancel it before the DOM is rebuilt. */
+                        /* Defer re-render by CLICK_DEBOUNCE ms so a following
+                           dblclick can cancel it before the DOM is rebuilt. */
                         clearTimeout(_clickTimer);
                         var nid = n.id;
                         _clickTimer = setTimeout(function() {
                             window.wbMindMapSelected =
                                 (window.wbMindMapSelected === nid) ? null : nid;
                             window.wbMmRender();
-                        }, 220);
+                        }, CLICK_DEBOUNCE);
                     });
 
                     g.addEventListener('dblclick', function(e) {
