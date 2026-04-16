@@ -3,7 +3,7 @@
    Handles: offline caching, push notifications, background sync
    ================================================================ */
 
-const CACHE     = 'studentos-v5';
+const CACHE     = 'studentos-v6';
 const ICON      = '/icon.png';
 
 /* Trusted CDN origins whose CORS responses we cache */
@@ -17,8 +17,6 @@ const TRUSTED_CDN = [
 
 /* Files to pre-cache on install */
 const PRECACHE = [
-  '/',
-  '/index.html',
   '/styles.css',
   '/mobile.css',
   '/features.css',
@@ -26,15 +24,22 @@ const PRECACHE = [
   '/script.js',
   '/features.js',
   '/forum.js',
+  '/patches49.css',
+  '/patches49.js',
   '/icon.png'
 ];
 
 /* ── Install: pre-cache shell ── */
 self.addEventListener('install', e => {
   e.waitUntil(
-    caches.open(CACHE)
-      .then(c => c.addAll(PRECACHE))
-      .then(() => self.skipWaiting())
+    caches.open(CACHE).then(c => Promise.all([
+      /* Always fetch index.html fresh so stale HTTP caches don't hide new patches */
+      fetch(new Request('/index.html', { cache: 'no-cache' }))
+        .then(res => res.ok ? c.put('/index.html', res) : null),
+      fetch(new Request('/', { cache: 'no-cache' }))
+        .then(res => res.ok ? c.put('/', res) : null),
+      c.addAll(PRECACHE)
+    ])).then(() => self.skipWaiting())
   );
 });
 
