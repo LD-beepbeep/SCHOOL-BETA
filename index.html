@@ -74,6 +74,7 @@
     <link rel="stylesheet" href="patches48.css"  media="print" onload="this.media='all'">
     <link rel="stylesheet" href="patches49.css"  media="print" onload="this.media='all'">
     <link rel="stylesheet" href="patches50.css"  media="print" onload="this.media='all'">
+    <link rel="stylesheet" href="patches51.css"  media="print" onload="this.media='all'">
     <!-- No-JS fallback for deferred CSS -->
     <noscript>
         <link rel="stylesheet" href="patches9.css">
@@ -118,6 +119,7 @@
         <link rel="stylesheet" href="patches48.css">
         <link rel="stylesheet" href="patches49.css">
         <link rel="stylesheet" href="patches50.css">
+        <link rel="stylesheet" href="patches51.css">
     </noscript>
 </head>
 <body class="flex h-screen w-screen">
@@ -1343,35 +1345,8 @@
         <div class="overflow-y-auto flex-1 px-8 py-5 space-y-0">
             <div class="settings-section">
                 <div class="text-xs text-[var(--text-muted)] uppercase tracking-widest font-bold mb-3">Identity</div>
-                <!-- Inline profile editor (same as profile modal) -->
                 <div class="p43-settings-profile">
-                    <div class="flex items-center gap-4 mb-3">
-                        <div class="avatar-preview flex-shrink-0" id="settings-avatar-preview" style="background:var(--accent);">🎓</div>
-                        <div class="flex-1">
-                            <input type="text" id="student-name-input" placeholder="Your name…" class="bare-input text-sm w-full" oninput="setStudentName(this.value)">
-                        </div>
-                    </div>
-                    <div style="display:none" class="flex items-center gap-2 flex-wrap mb-3">
-                        <span class="text-xs text-[var(--text-muted)]">Background:</span>
-                        <button onclick="setAvatarBg('#3b82f6')" class="w-6 h-6 rounded-full bg-blue-500 hover:scale-110 transition border-2 border-transparent hover:border-white/40"></button>
-                        <button onclick="setAvatarBg('#8b5cf6')" class="w-6 h-6 rounded-full bg-violet-500 hover:scale-110 transition border-2 border-transparent hover:border-white/40"></button>
-                        <button onclick="setAvatarBg('#ec4899')" class="w-6 h-6 rounded-full bg-pink-500 hover:scale-110 transition border-2 border-transparent hover:border-white/40"></button>
-                        <button onclick="setAvatarBg('#10b981')" class="w-6 h-6 rounded-full bg-emerald-500 hover:scale-110 transition border-2 border-transparent hover:border-white/40"></button>
-                        <button onclick="setAvatarBg('#f59e0b')" class="w-6 h-6 rounded-full bg-amber-500 hover:scale-110 transition border-2 border-transparent hover:border-white/40"></button>
-                        <button onclick="setAvatarBg('#ef4444')" class="w-6 h-6 rounded-full bg-red-500 hover:scale-110 transition border-2 border-transparent hover:border-white/40"></button>
-                        <button onclick="setAvatarBg('#1a1a2e')" class="w-6 h-6 rounded-full bg-[#1a1a2e] hover:scale-110 transition border-2 border-transparent hover:border-white/40"></button>
-                        <input type="color" onchange="setAvatarBg(this.value)" title="Custom bg" style="width:24px;height:24px;border-radius:50%;padding:0;cursor:pointer;border:2px solid rgba(255,255,255,.2);">
-                    </div>
-                    <div style="display:none" class="text-xs text-[var(--text-muted)] uppercase tracking-widest font-bold mb-2">Choose Emoji</div>
-                    <div class="emoji-grid" id="settings-emoji-grid">
-                        <div class="emoji-opt" onclick="setProfileEmoji('🎓')">🎓</div><div class="emoji-opt" onclick="setProfileEmoji('📚')">📚</div><div class="emoji-opt" onclick="setProfileEmoji('🧑‍💻')">🧑‍💻</div><div class="emoji-opt" onclick="setProfileEmoji('✏️')">✏️</div><div class="emoji-opt" onclick="setProfileEmoji('🦊')">🦊</div><div class="emoji-opt" onclick="setProfileEmoji('🐱')">🐱</div><div class="emoji-opt" onclick="setProfileEmoji('🐼')">🐼</div><div class="emoji-opt" onclick="setProfileEmoji('🦁')">🦁</div>
-                        <div class="emoji-opt" onclick="setProfileEmoji('🌟')">🌟</div><div class="emoji-opt" onclick="setProfileEmoji('🚀')">🚀</div><div class="emoji-opt" onclick="setProfileEmoji('🎯')">🎯</div><div class="emoji-opt" onclick="setProfileEmoji('💡')">💡</div><div class="emoji-opt" onclick="setProfileEmoji('🎮')">🎮</div><div class="emoji-opt" onclick="setProfileEmoji('🔥')">🔥</div><div class="emoji-opt" onclick="setProfileEmoji('⚡')">⚡</div><div class="emoji-opt" onclick="setProfileEmoji('🧠')">🧠</div>
-                        <div class="emoji-opt" onclick="setProfileEmoji('🎸')">🎸</div><div class="emoji-opt" onclick="setProfileEmoji('🌈')">🌈</div><div class="emoji-opt" onclick="setProfileEmoji('🦋')">🦋</div><div class="emoji-opt" onclick="setProfileEmoji('🌺')">🌺</div><div class="emoji-opt" onclick="setProfileEmoji('🐉')">🐉</div><div class="emoji-opt" onclick="setProfileEmoji('🦄')">🦄</div><div class="emoji-opt" onclick="setProfileEmoji('🏆')">🏆</div><div class="emoji-opt" onclick="setProfileEmoji('🎨')">🎨</div>
-                        <div class="emoji-opt" onclick="setProfileEmoji('🧩')">🧩</div><div class="emoji-opt" onclick="setProfileEmoji('🎭')">🎭</div><div class="emoji-opt" onclick="setProfileEmoji('🌙')">🌙</div><div class="emoji-opt" onclick="setProfileEmoji('☀️')">☀️</div><div class="emoji-opt" onclick="setProfileEmoji('🍀')">🍀</div><div class="emoji-opt" onclick="setProfileEmoji('🦅')">🦅</div><div class="emoji-opt" onclick="setProfileEmoji('🐬')">🐬</div><div class="emoji-opt" onclick="setProfileEmoji('🌵')">🌵</div>
-                    </div>
-                    <div style="display:none" class="mt-3">
-                        <button onclick="document.getElementById('profile-img-input').click()" class="px-3 py-1.5 bg-[var(--glass-panel)] border border-[var(--glass-border)] rounded-xl text-xs hover:bg-[var(--glass-hover)] transition flex items-center gap-2"><i class="ph-bold ph-upload"></i> Upload Photo</button>
-                    </div>
+                    <input type="text" id="student-name-input" placeholder="Your name…" class="bare-input text-sm w-full mb-3" oninput="setStudentName(this.value)">
                     <button id="p49-edit-profile-btn" type="button" class="p49-edit-profile-btn" onclick="if(typeof openModal==='function')openModal('modal-profile')"><i class="ph-bold ph-pencil-simple"></i> Edit Profile</button>
                 </div>
             </div>
@@ -1907,6 +1882,7 @@
 <script type="module" src="patches48.js"></script>
 <script type="module" src="patches49.js"></script>
 <script type="module" src="patches50.js"></script>
+<script type="module" src="patches51.js"></script>
 <script> (function() {
 
     /* ── "More" button rotates when drawer is open ── */
