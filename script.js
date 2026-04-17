@@ -657,8 +657,29 @@ function renderProfileDisplay() {
     } else {
         var em = profileData.emoji || '🎓';
         var bg = profileData.bg || '#3b82f6';
-        pd.innerHTML = '<span style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;border-radius:14px;background:' + bg + ';font-size:1.3rem;">' + em + '</span>';
-        if (ap) { ap.innerHTML = em; ap.style.background = bg; ap.style.fontSize = '1.8rem'; }
+        if (em.indexOf('__fa:') === 0) {
+            var iconClass = em.slice(5).replace(/[^a-zA-Z0-9\- ]/g, '');
+            pd.innerHTML = '';
+            var span = document.createElement('span');
+            span.style.cssText = 'width:100%;height:100%;display:flex;align-items:center;justify-content:center;border-radius:14px;background:' + bg + ';';
+            var icon = document.createElement('i');
+            icon.className = iconClass + ' text-xl text-white';
+            icon.setAttribute('aria-hidden', 'true');
+            span.appendChild(icon);
+            pd.appendChild(span);
+            if (ap) {
+                ap.innerHTML = '';
+                var icon2 = document.createElement('i');
+                icon2.className = iconClass + ' text-4xl text-white';
+                icon2.setAttribute('aria-hidden', 'true');
+                ap.appendChild(icon2);
+                ap.style.background = bg;
+                ap.style.fontSize = '';
+            }
+        } else {
+            pd.innerHTML = '<span style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;border-radius:14px;background:' + bg + ';font-size:1.3rem;">' + em + '</span>';
+            if (ap) { ap.innerHTML = em; ap.style.background = bg; ap.style.fontSize = '1.8rem'; }
+        }
     }
 }
 function setProfileEmoji(em) {
