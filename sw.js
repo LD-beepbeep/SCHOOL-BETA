@@ -3,7 +3,7 @@
    Handles: offline caching, push notifications, background sync
    ================================================================ */
 
-const CACHE     = 'studentos-v6';
+const CACHE     = 'studentos-v7';
 const ICON      = '/icon.png';
 
 /* Trusted CDN origins whose CORS responses we cache */
@@ -69,6 +69,24 @@ self.addEventListener('fetch', e => {
 
   /* Determine if this is a trusted CDN response (CORS) */
   const isTrustedCDN = TRUSTED_CDN.some(h => url.hostname === h || url.hostname.endsWith('.' + h));
+
+  /* Network-first for HTML navigation so new patches are always picked up */
+  const isNavigation = request.mode === 'navigate' || request.destination === 'document';
+
+  if (isNavigation) {
+    e.respondWith(
+      fetch(request)
+        .then(res => {
+          if (res && res.status === 200 && res.type === 'basic') {
+            const clone = res.clone();
+            caches.open(CACHE).then(c => c.put(request, clone));
+          }
+          return res;
+        })
+        .catch(() => caches.match(request))
+    );
+    return;
+  }
 
   e.respondWith(
     caches.match(request).then(cached => {
