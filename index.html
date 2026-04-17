@@ -1940,8 +1940,8 @@
 })();</script>
 <script>
 if ('serviceWorker' in navigator) {
-    fetch('/sw.js', { method: 'HEAD' }).then(function(r) {
-        if (r.ok) navigator.serviceWorker.register('/sw.js', { scope: '/' }).catch(function(){});
+    fetch('./sw.js', { method: 'HEAD' }).then(function(r) {
+        if (r.ok) navigator.serviceWorker.register('./sw.js').catch(function(){});
     }).catch(function(){});
 }
 </script>

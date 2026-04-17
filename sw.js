@@ -3,8 +3,8 @@
    Handles: offline caching, push notifications, background sync
    ================================================================ */
 
-const CACHE     = 'studentos-v6';
-const ICON      = '/icon.png';
+const CACHE     = 'studentos-v7';
+const ICON      = './icon.png';
 
 /* Trusted CDN origins whose CORS responses we cache */
 const TRUSTED_CDN = [
@@ -17,16 +17,16 @@ const TRUSTED_CDN = [
 
 /* Files to pre-cache on install */
 const PRECACHE = [
-  '/styles.css',
-  '/mobile.css',
-  '/features.css',
-  '/forum.css',
-  '/script.js',
-  '/features.js',
-  '/forum.js',
-  '/patches49.css',
-  '/patches49.js',
-  '/icon.png'
+  './styles.css',
+  './mobile.css',
+  './features.css',
+  './forum.css',
+  './script.js',
+  './features.js',
+  './forum.js',
+  './patches49.css',
+  './patches49.js',
+  './icon.png'
 ];
 
 /* ── Install: pre-cache shell ── */
@@ -34,10 +34,10 @@ self.addEventListener('install', e => {
   e.waitUntil(
     caches.open(CACHE).then(c => Promise.all([
       /* Always fetch index.html fresh so stale HTTP caches don't hide new patches */
-      fetch(new Request('/index.html', { cache: 'no-cache' }))
-        .then(res => res.ok ? c.put('/index.html', res) : null),
-      fetch(new Request('/', { cache: 'no-cache' }))
-        .then(res => res.ok ? c.put('/', res) : null),
+      fetch(new Request('./index.html', { cache: 'no-cache' }))
+        .then(res => res.ok ? c.put(new URL('./index.html', self.location).href, res) : null),
+      fetch(new Request('./', { cache: 'no-cache' }))
+        .then(res => res.ok ? c.put(new URL('./', self.location).href, res) : null),
       c.addAll(PRECACHE)
     ])).then(() => self.skipWaiting())
   );
@@ -69,6 +69,24 @@ self.addEventListener('fetch', e => {
 
   /* Determine if this is a trusted CDN response (CORS) */
   const isTrustedCDN = TRUSTED_CDN.some(h => url.hostname === h || url.hostname.endsWith('.' + h));
+
+  /* Network-first for HTML navigation so new patches are always picked up */
+  const isNavigation = request.mode === 'navigate';
+
+  if (isNavigation) {
+    e.respondWith(
+      fetch(request)
+        .then(res => {
+          if (res && res.status === 200 && res.type === 'basic') {
+            const clone = res.clone();
+            caches.open(CACHE).then(c => c.put(request, clone));
+          }
+          return res;
+        })
+        .catch(() => caches.match(request))
+    );
+    return;
+  }
 
   e.respondWith(
     caches.match(request).then(cached => {
