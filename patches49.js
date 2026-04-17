@@ -232,11 +232,17 @@
                     }
                     contentSec.remove();
                 }
+
+                /* 5. Remove the patches22 duplicate Checklist button — patches22 added
+                      it to the content-blocks grid at 60 ms; after the merge above it
+                      ends up inside p42grid alongside patches42's own Checklist entry. */
+                var p22cl = p42grid.querySelector('[data-p22cl]');
+                if (p22cl) p22cl.remove();
             }, 400);
         };
 
         return true;
     });
 
-    console.log('[patches49] loaded — icon colour row, settings edit button, unified picker');
+    console.log('[patches49] loaded — icon colour row, settings edit button, unified picker, checklist dedup');
 }());
