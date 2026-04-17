@@ -332,4 +332,5 @@
         return true;
     });
 
+    console.log('[patches43] loaded — settings profile sync, FA brands preload');
 })();
