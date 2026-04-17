@@ -4,7 +4,7 @@
    ================================================================ */
 
 const CACHE     = 'studentos-v7';
-const ICON      = '/icon.png';
+const ICON      = './icon.png';
 
 /* Trusted CDN origins whose CORS responses we cache */
 const TRUSTED_CDN = [
@@ -17,16 +17,16 @@ const TRUSTED_CDN = [
 
 /* Files to pre-cache on install */
 const PRECACHE = [
-  '/styles.css',
-  '/mobile.css',
-  '/features.css',
-  '/forum.css',
-  '/script.js',
-  '/features.js',
-  '/forum.js',
-  '/patches49.css',
-  '/patches49.js',
-  '/icon.png'
+  './styles.css',
+  './mobile.css',
+  './features.css',
+  './forum.css',
+  './script.js',
+  './features.js',
+  './forum.js',
+  './patches49.css',
+  './patches49.js',
+  './icon.png'
 ];
 
 /* ── Install: pre-cache shell ── */
@@ -34,10 +34,10 @@ self.addEventListener('install', e => {
   e.waitUntil(
     caches.open(CACHE).then(c => Promise.all([
       /* Always fetch index.html fresh so stale HTTP caches don't hide new patches */
-      fetch(new Request('/index.html', { cache: 'no-cache' }))
-        .then(res => res.ok ? c.put('/index.html', res) : null),
-      fetch(new Request('/', { cache: 'no-cache' }))
-        .then(res => res.ok ? c.put('/', res) : null),
+      fetch(new Request('./index.html', { cache: 'no-cache' }))
+        .then(res => res.ok ? c.put(new URL('./index.html', self.location).href, res) : null),
+      fetch(new Request('./', { cache: 'no-cache' }))
+        .then(res => res.ok ? c.put(new URL('./', self.location).href, res) : null),
       c.addAll(PRECACHE)
     ])).then(() => self.skipWaiting())
   );
