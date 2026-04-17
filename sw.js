@@ -71,7 +71,7 @@ self.addEventListener('fetch', e => {
   const isTrustedCDN = TRUSTED_CDN.some(h => url.hostname === h || url.hostname.endsWith('.' + h));
 
   /* Network-first for HTML navigation so new patches are always picked up */
-  const isNavigation = request.mode === 'navigate' || request.destination === 'document';
+  const isNavigation = request.mode === 'navigate';
 
   if (isNavigation) {
     e.respondWith(
