@@ -1854,7 +1854,7 @@ function startStudy(mode) {
         if (writeMode) writeMode.classList.add('hidden');
         if (flipMode) flipMode.classList.remove('hidden');
     }
-    showStudyCard();
+    (window.showStudyCard || showStudyCard)();
 }
 function showStudyCard() {
     if (studyIdx >= studyQueue.length) { finishStudy(); return; }
@@ -1933,7 +1933,7 @@ function rateCard(rating) {
     studyIdx++;
     var fi = document.getElementById('flashcard-inner');
     if (fi) fi.classList.remove('rotate-y-180');
-    setTimeout(showStudyCard, 100);
+    setTimeout(function() { (window.showStudyCard || showStudyCard)(); }, 100);
 }
 function showHint() {
     var card = studyQueue[studyIdx];
@@ -1968,7 +1968,7 @@ function checkWriteAnswer() {
     updateStudyProgress();
     setTimeout(function() {
         studyIdx++;
-        showStudyCard();
+        (window.showStudyCard || showStudyCard)();
     }, 1200);
 }
 function updateStudyProgress() {
@@ -4132,6 +4132,12 @@ window.checkWriteAnswer         = checkWriteAnswer;
 window.startMatchGame           = startMatchGame;
 window.matchClick               = matchClick;
 window.startWordSearch          = startWordSearch;
+window.showStudyCard            = showStudyCard;
+// Export flashcard internals so patches can access and hook shared state
+Object.defineProperty(window, 'decks',        { configurable: true, enumerable: true, get: function() { return decks; },        set: function(v) { decks = v; } });
+Object.defineProperty(window, 'activeDeckId', { configurable: true, enumerable: true, get: function() { return activeDeckId; }, set: function(v) { activeDeckId = v; } });
+Object.defineProperty(window, 'studyQueue',   { configurable: true, enumerable: true, get: function() { return studyQueue; },   set: function(v) { studyQueue = v; } });
+Object.defineProperty(window, 'studyIdx',     { configurable: true, enumerable: true, get: function() { return studyIdx; },     set: function(v) { studyIdx = v; } });
 
 // Grades
 window.renderGrades             = renderGrades;          // ✅ was renderSubjects

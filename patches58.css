@@ -25,14 +25,19 @@
 }
 
 /* Result panel container */
-.p29-result-panel {
+.p19-ws-result {
     background:   var(--glass-hover)   !important;
     border-color: var(--glass-border)  !important;
 }
 
 /* Result value (the large computed number) */
-.p29-result-val {
+.p19-ws-result-val {
     color: var(--text-main) !important;
+}
+
+/* Variable symbol labels */
+.p19-ws-var-sym {
+    color: var(--text-muted) !important;
 }
 
 /* Belt-and-braces border-left fix (also in patches57.css) */
