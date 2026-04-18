@@ -1389,6 +1389,8 @@
                 <div class="settings-row"><div><span class="text-sm block">Font Scale</span><span class="text-xs text-[var(--text-muted)]">App text size</span></div><div class="flex items-center gap-2"><button onclick="setFontScale(.85)" class="text-xs px-2 py-1 rounded-lg bg-[var(--glass-hover)] hover:bg-[var(--accent)] hover:text-white transition">S</button><button onclick="setFontScale(1)" class="text-xs px-2 py-1 rounded-lg bg-[var(--glass-hover)] hover:bg-[var(--accent)] hover:text-white transition">M</button><button onclick="setFontScale(1.12)" class="text-xs px-2 py-1 rounded-lg bg-[var(--glass-hover)] hover:bg-[var(--accent)] hover:text-white transition">L</button></div></div>
                 <div class="settings-row"><div><span class="text-sm block">Clock Color</span></div><input type="color" id="clock-color-picker" value="#ffffff" onchange="setClockColor(this.value)" style="width:32px;height:32px;border-radius:50%;padding:0;cursor:pointer;"></div>
                 <div class="settings-row"><span class="text-sm">Background Gradient</span><input type="color" onchange="setBg(this.value)" title="Pick bg color" style="width:32px;height:32px;border-radius:50%;padding:0;cursor:pointer;"></div>
+                <div class="settings-row"><div><span class="text-sm block">Whiteboard Background</span><span class="text-xs text-[var(--text-muted)]">Default colour for new boards</span></div><div class="flex items-center gap-1.5 flex-wrap" id="wb-bg-swatches"><button onclick="window._setWbDefaultBg('#1a1a1a')" title="Dark" style="width:22px;height:22px;border-radius:50%;background:#1a1a1a;border:2px solid rgba(255,255,255,.2);cursor:pointer;flex-shrink:0;"></button><button onclick="window._setWbDefaultBg('#0f172a')" title="Navy" style="width:22px;height:22px;border-radius:50%;background:#0f172a;border:2px solid rgba(255,255,255,.2);cursor:pointer;flex-shrink:0;"></button><button onclick="window._setWbDefaultBg('#ffffff')" title="White" style="width:22px;height:22px;border-radius:50%;background:#ffffff;border:2px solid rgba(255,255,255,.2);cursor:pointer;flex-shrink:0;"></button><button onclick="window._setWbDefaultBg('#fef9ef')" title="Notebook" style="width:22px;height:22px;border-radius:50%;background:#fef9ef;border:2px solid rgba(255,255,255,.2);cursor:pointer;flex-shrink:0;"></button><button onclick="window._setWbDefaultBg('#1e3a5f')" title="Ocean" style="width:22px;height:22px;border-radius:50%;background:#1e3a5f;border:2px solid rgba(255,255,255,.2);cursor:pointer;flex-shrink:0;"></button><button onclick="window._setWbDefaultBg('#14532d')" title="Forest" style="width:22px;height:22px;border-radius:50%;background:#14532d;border:2px solid rgba(255,255,255,.2);cursor:pointer;flex-shrink:0;"></button><input type="color" id="wb-default-bg-picker" onchange="window._setWbDefaultBg(this.value)" title="Custom colour" style="width:22px;height:22px;border-radius:50%;padding:0;border:2px solid rgba(255,255,255,.2);cursor:pointer;"></div></div>
+                <div class="settings-row"><span class="text-sm">Whiteboard Grid by Default</span><button id="wb-grid-default-toggle" onclick="window._toggleWbGridDefault()" class="w-12 h-6 rounded-full bg-[var(--glass-hover)] relative transition border border-[var(--glass-border)]"><div id="wb-grid-default-dot" class="w-4 h-4 bg-[var(--text-main)] rounded-full absolute top-1 left-1 transition-transform"></div></button></div>
             </div>
             <div class="settings-section">
                 <div class="text-xs text-[var(--text-muted)] uppercase tracking-widest font-bold mb-3">Focus Timer</div>
@@ -1912,6 +1914,70 @@
 <script type="module" src="patches/patches60.js"></script>
 <script type="module" src="patches/patches61.js"></script>
 <script> (function() {
+
+    /* ── Whiteboard default background & grid settings ── */
+    window._setWbDefaultBg = function(color) {
+        if (window.DB && typeof window.DB.set === 'function') window.DB.set('os_wb_default_bg', color);
+        else try { localStorage.setItem('os_wb_default_bg', JSON.stringify(color)); } catch(_) {}
+        var picker = document.getElementById('wb-default-bg-picker');
+        if (picker) picker.value = color;
+        /* Also sync older patches46 picker if present */
+        var p46 = document.getElementById('p46-wb-default-bg');
+        if (p46) p46.value = color;
+    };
+
+    window._toggleWbGridDefault = function() {
+        var current = false;
+        try {
+            if (window.DB && typeof window.DB.get === 'function') current = window.DB.get('os_wb_grid_default', false);
+            else current = JSON.parse(localStorage.getItem('os_wb_grid_default') || 'false');
+        } catch(_) {}
+        var next = !current;
+        if (window.DB && typeof window.DB.set === 'function') window.DB.set('os_wb_grid_default', next);
+        else try { localStorage.setItem('os_wb_grid_default', JSON.stringify(next)); } catch(_) {}
+        var toggle = document.getElementById('wb-grid-default-toggle');
+        var dot    = document.getElementById('wb-grid-default-dot');
+        if (toggle) toggle.style.background = next ? 'var(--accent)' : '';
+        if (dot)    dot.style.transform     = next ? 'translateX(24px)' : '';
+        /* Sync patches46/53 toggle if present */
+        var p46t = document.getElementById('p46-wb-grid-toggle');
+        if (p46t) p46t.classList.toggle('on', next);
+    };
+
+    /* Sync toggle visual state on settings open */
+    function _syncWbSettings() {
+        var gridOn = false;
+        var bgVal  = '#1a1a1a';
+        try {
+            if (window.DB && typeof window.DB.get === 'function') {
+                gridOn = window.DB.get('os_wb_grid_default', false);
+                bgVal  = window.DB.get('os_wb_default_bg',   '#1a1a1a');
+            } else {
+                gridOn = JSON.parse(localStorage.getItem('os_wb_grid_default') || 'false');
+                bgVal  = JSON.parse(localStorage.getItem('os_wb_default_bg')   || '"#1a1a1a"');
+            }
+        } catch(_) {}
+        var toggle = document.getElementById('wb-grid-default-toggle');
+        var dot    = document.getElementById('wb-grid-default-dot');
+        if (toggle) toggle.style.background = gridOn ? 'var(--accent)' : '';
+        if (dot)    dot.style.transform     = gridOn ? 'translateX(24px)' : '';
+        var picker = document.getElementById('wb-default-bg-picker');
+        if (picker) picker.value = bgVal;
+    }
+
+    /* Hook openModal to sync state when settings opens */
+    var _prevOpen = window.openModal;
+    window.openModal = function(id) {
+        if (_prevOpen) _prevOpen.apply(this, arguments);
+        if (id === 'modal-settings') setTimeout(_syncWbSettings, 50);
+    };
+
+    /* Also sync on DOMContentLoaded in case settings is shown on load */
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', function() { setTimeout(_syncWbSettings, 500); });
+    } else {
+        setTimeout(_syncWbSettings, 500);
+    }
 
     /* ── "More" button rotates when drawer is open ── */
     var _origToggle = window.toggleMobMenu;
