@@ -4214,8 +4214,8 @@ window.wbMmRender               = wbMmRender;
 window.wbMmSave                 = wbMmSave;
 window.wbMmDeleteNode           = wbMmDeleteNode;
 window.wbMmAddNode              = wbMmAddNode;
-Object.defineProperty(window, 'wbMindMapNodes',    { configurable: true, enumerable: true, get: function() { return wbMindMapNodes;    }, set: function(v) { wbMindMapNodes    = v; } });
-Object.defineProperty(window, 'wbMindMapEdges',    { configurable: true, enumerable: true, get: function() { return wbMindMapEdges;    }, set: function(v) { wbMindMapEdges    = v; } });
+Object.defineProperty(window, 'wbMindMapNodes',    { configurable: true, enumerable: true, get: function() { return wbMindMapNodes; },    set: function(v) { wbMindMapNodes = v; } });
+Object.defineProperty(window, 'wbMindMapEdges',    { configurable: true, enumerable: true, get: function() { return wbMindMapEdges; },    set: function(v) { wbMindMapEdges = v; } });
 Object.defineProperty(window, 'wbMindMapSelected', { configurable: true, enumerable: true, get: function() { return wbMindMapSelected; }, set: function(v) { wbMindMapSelected = v; } });
 
 // Focus / Pomodoro

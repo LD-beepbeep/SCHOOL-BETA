@@ -146,7 +146,7 @@
                     var dx = e.clientX - _dsx;
                     var dy = e.clientY - _dsy;
                     /* Only count as drag after crossing the 5 px threshold;
-                       this prevents micro-trembles from moving nodes. */
+                       this prevents micro-tremors from moving nodes. */
                     if (!_didDrag &&
                             (Math.abs(dx) > 5 || Math.abs(dy) > 5)) {
                         _didDrag = true;
