@@ -121,8 +121,8 @@
         var deck = decks.find(function(d) { return d.id === deckId; });
         if (!deck || !deck.cards || deck.cards.length === 0) return;
 
-        /* Select direct-child card rows */
-        var rows = container.querySelectorAll(':scope > div');
+        /* Select card rows — mirrors the selector used by patches54 */
+        var rows = container.querySelectorAll('.flex.items-center.justify-between');
         deck.cards.forEach(function(card, i) {
             var row = rows[i];
             if (!row) return;
@@ -139,13 +139,13 @@
                 ? '<i class="fa-solid fa-star"></i>'
                 : '<i class="fa-regular fa-star"></i>';
 
-            /* Capture index by value so the closure is correct */
-            (function(idx) {
-                btn.addEventListener('click', function(e) {
+            /* Capture index by value so the async click closure is correct */
+            btn.addEventListener('click', (function(idx) {
+                return function(e) {
                     e.stopPropagation();
                     window._p56toggleCardStar(idx);
-                });
-            })(i);
+                };
+            })(i));
 
             /* Insert the star button immediately before the
                hover-only edit/delete action group */
