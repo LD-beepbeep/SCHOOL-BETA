@@ -24,8 +24,8 @@ const PRECACHE = [
   './script.js',
   './features.js',
   './forum.js',
-  './patches49.css',
-  './patches49.js',
+  './patches/patches49.css',
+  './patches/patches49.js',
   './icon.png'
 ];
 
