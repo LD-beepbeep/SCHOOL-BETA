@@ -3411,7 +3411,7 @@ function wbSwitchBoard(id) {
         wbPushHistory();
     }
     wbRenderTabs();
-    if (wbMindMapMode) wbMmRender();
+    if (wbMindMapMode) (window.wbMmRender || wbMmRender)();
 }
 function wbNewBoard() {
     wbSaveBoard();
@@ -3478,7 +3478,7 @@ function wbMmLoad() {
     var saved = DB.get('os_mm_' + wbActiveBoardId, { nodes: [], edges: [] });
     wbMindMapNodes = saved.nodes || [];
     wbMindMapEdges = saved.edges || [];
-    if (wbMindMapMode) wbMmRender();
+    if (wbMindMapMode) (window.wbMmRender || wbMmRender)();
 }
 
 function wbMmSave() {
@@ -3632,7 +3632,7 @@ function confirmMmNode() {
     wbMindMapSelected = newNode.id;
     wbMmSave();
     closeModals();
-    wbMmRender();
+    (window.wbMmRender || wbMmRender)();
 }
 
 function setMmNodeColor(c) {
@@ -3652,7 +3652,7 @@ function wbMmDeleteNode(id) {
         wbMindMapEdges = wbMindMapEdges.filter(function(e) { return e.from !== id && e.to !== id; });
         if (wbMindMapSelected === id) wbMindMapSelected = null;
         wbMmSave();
-        wbMmRender();
+        (window.wbMmRender || wbMmRender)();
     });
 }
 
@@ -4209,6 +4209,14 @@ window.wbMmLoad                 = wbMmLoad;
 window.wbMindMapExport          = wbMindMapExport;
 window.confirmMmNode            = confirmMmNode;
 window.setMmNodeColor           = setMmNodeColor;
+// Export mindmap internals so patches can replace wbMmRender and access shared state
+window.wbMmRender               = wbMmRender;
+window.wbMmSave                 = wbMmSave;
+window.wbMmDeleteNode           = wbMmDeleteNode;
+window.wbMmAddNode              = wbMmAddNode;
+Object.defineProperty(window, 'wbMindMapNodes',    { configurable: true, enumerable: true, get: function() { return wbMindMapNodes; },    set: function(v) { wbMindMapNodes = v; } });
+Object.defineProperty(window, 'wbMindMapEdges',    { configurable: true, enumerable: true, get: function() { return wbMindMapEdges; },    set: function(v) { wbMindMapEdges = v; } });
+Object.defineProperty(window, 'wbMindMapSelected', { configurable: true, enumerable: true, get: function() { return wbMindMapSelected; }, set: function(v) { wbMindMapSelected = v; } });
 
 // Focus / Pomodoro
 window.toggleTimer              = toggleTimer;
