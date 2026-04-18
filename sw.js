@@ -3,7 +3,7 @@
    Handles: offline caching, push notifications, background sync
    ================================================================ */
 
-const CACHE     = 'studentos-v9';
+const CACHE     = 'studentos-v10';
 const ICON      = './icon.png';
 
 /* Trusted CDN origins whose CORS responses we cache */
