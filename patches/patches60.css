@@ -3,13 +3,43 @@
    1.  Formula block — strip ALL remaining accent colours from the
        worksheet formula block so it looks identical to every other
        block.  patches58.css covered the p19-ws-* elements; this
-       file covers the p29-* elements introduced in patches29.
+       file covers the p29-* elements (patches29) and the remaining
+       p19-ws-* selectors not yet neutralised (solve-ring, focus
+       border, block outer background).
    2.  Whiteboard settings — belt-and-braces CSS hide of every
        possible whiteboard node inside #p46-widgets-section.
    ================================================================ */
 
 /* ================================================================
-   1.  FORMULA BLOCK — NEUTRAL COLOURS FOR ALL p29-* ELEMENTS
+   1a. FORMULA BLOCK — p19-ws-* REMAINING ACCENT SELECTORS
+       (patches58.css missed: outer block tint, focus border,
+        solve-ring active state, solve-ring hover, solve-btn)
+   ================================================================ */
+
+/* Outer block: ensure no accent background leaks in */
+.p19-ws-block.formula-block {
+    background: var(--glass-panel) !important;
+}
+
+/* Variable row focus ring: neutral instead of accent */
+.p19-ws-var-row:focus-within {
+    border-color: var(--glass-border) !important;
+}
+
+/* "Solve for" ring — active state */
+.p19-ws-var-solve-ring.active {
+    background:   var(--glass-hover)  !important;
+    border-color: var(--glass-border) !important;
+    color:        var(--text-muted)   !important;
+}
+
+/* "Solve for" ring — hover state */
+.p19-ws-var-solve-ring:hover:not(.active) {
+    border-color: var(--glass-border) !important;
+}
+
+/* ================================================================
+   1b. FORMULA BLOCK — NEUTRAL COLOURS FOR ALL p29-* ELEMENTS
    ================================================================ */
 
 /* Result panel: remove accent tint */
@@ -79,7 +109,8 @@
 /* ================================================================
    2.  WHITEBOARD SETTINGS SECTION — BELT-AND-BRACES CSS HIDE
        Cover every known pattern by which whiteboard rows can end up
-       inside the widgets settings section.
+       inside the widgets settings section (modal-settings or
+       modal-widgets).
    ================================================================ */
 
 /* Known standalone whiteboard-section IDs */
