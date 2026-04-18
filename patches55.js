@@ -81,8 +81,8 @@
     /* Also re-run whenever settings modal opens */
     _wait(function() {
         if (typeof window.openModal !== 'function') return false;
-        if (window._p55settingsHooked) return true;
-        window._p55settingsHooked = true;
+        if (window._p55openModalHooked) return true;
+        window._p55openModalHooked = true;
 
         var _prev = window.openModal;
         window.openModal = function(id) {
@@ -90,12 +90,13 @@
             if (id === 'modal-settings') {
                 setTimeout(_removeWbSettingsSection, 600);
             }
-            /* ── 2. Remove overflow-hidden from profile modal ── */
             if (id === 'modal-profile') {
+                /* ── 2. Remove overflow-hidden from profile modal ── */
                 var modal = document.getElementById('modal-profile');
-                if (modal) {
-                    modal.classList.remove('overflow-hidden');
-                }
+                if (modal) modal.classList.remove('overflow-hidden');
+                /* ── 3. Build + sync extra customisation rows ── */
+                setTimeout(_buildExtraRows, 100);
+                setTimeout(_syncExtraRows,  200);
             }
         };
         return true;
@@ -170,6 +171,7 @@
         var motionToggle = _makeToggle('os_reduce_motion', false, function(on) {
             document.documentElement.classList.toggle('reduce-motion', on);
         });
+        motionToggle.id = 'p55-motion-toggle';
 
         motionRow.appendChild(motionLeft);
         motionRow.appendChild(motionToggle);
@@ -190,6 +192,7 @@
         var compactToggle = _makeToggle('os_compact_mode', false, function(on) {
             document.documentElement.classList.toggle('compact-mode', on);
         });
+        compactToggle.id = 'p55-compact-toggle';
 
         compactRow.appendChild(compactLeft);
         compactRow.appendChild(compactToggle);
@@ -241,15 +244,15 @@
      */
     function _syncExtraRows() {
         /* Reduce Motion toggle */
-        var motionToggle = document.querySelector('#p55-extra-rows .p51-theme-toggle');
+        var motionToggle = document.getElementById('p55-motion-toggle');
         if (motionToggle) {
             motionToggle.classList.toggle('on', !!_db('os_reduce_motion', false));
         }
 
         /* Compact Mode toggle */
-        var compactToggles = document.querySelectorAll('#p55-extra-rows .p51-theme-toggle');
-        if (compactToggles[1]) {
-            compactToggles[1].classList.toggle('on', !!_db('os_compact_mode', false));
+        var compactToggle = document.getElementById('p55-compact-toggle');
+        if (compactToggle) {
+            compactToggle.classList.toggle('on', !!_db('os_compact_mode', false));
         }
 
         /* Startup Tab select */
@@ -261,23 +264,6 @@
     _wait(function() {
         return _buildExtraRows();
     }, 100, 14000);
-
-    /* Sync state + rebuild every time the profile modal opens */
-    _wait(function() {
-        if (typeof window.openModal !== 'function') return false;
-        if (window._p55profileHooked) return true;
-        window._p55profileHooked = true;
-
-        var _prevOpen = window.openModal;
-        window.openModal = function(id) {
-            _prevOpen.apply(this, arguments);
-            if (id === 'modal-profile') {
-                setTimeout(_buildExtraRows, 100);
-                setTimeout(_syncExtraRows,  200);
-            }
-        };
-        return true;
-    });
 
     console.log('[patches55] loaded — whiteboard section hidden, profile modal scrollable, extra customisation rows');
 }());
