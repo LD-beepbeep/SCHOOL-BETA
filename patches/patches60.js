@@ -59,7 +59,7 @@
         return true;
     }, 100, 20000);
 
-    /* Hook openModal so removal re-runs on every settings open */
+    /* Hook openModal so removal re-runs on every settings/widgets open */
     _wait(function() {
         if (typeof window.openModal !== 'function') return false;
         if (window._p60modalHooked) return true;
@@ -68,7 +68,7 @@
         var _prev = window.openModal;
         window.openModal = function(id) {
             _prev.apply(this, arguments);
-            if (id === 'modal-settings') {
+            if (id === 'modal-settings' || id === 'modal-widgets') {
                 setTimeout(_nukeWb, 100);
                 setTimeout(_nukeWb, 300);
                 setTimeout(_nukeWb, 700);
@@ -77,6 +77,17 @@
         };
         return true;
     });
+
+    /* Also run on DOMContentLoaded to catch nodes injected before openModal exists */
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', function() {
+            setTimeout(_nukeWb, 200);
+            setTimeout(_nukeWb, 600);
+            setTimeout(_nukeWb, 1500);
+        });
+    } else {
+        setTimeout(_nukeWb, 200);
+    }
 
     console.log('[patches60] loaded — formula colours neutralised, whiteboard section removed');
 }());
