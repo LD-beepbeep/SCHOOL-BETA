@@ -432,6 +432,7 @@ function initApp() {
     quickNote           = DB.get('os_quick_note',    '');
     wbBoards            = DB.get('os_wb_boards',     []);
     wbActiveBoardId     = DB.get('os_wb_active',     null);
+    cardStats           = DB.get('os_card_stats',    {});
 
     // Apply accent / font / clock / bg that were previously self-invoking
     var accent = DB.get('os_accent', '#3b82f6');

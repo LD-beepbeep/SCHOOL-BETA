@@ -212,8 +212,8 @@
             grid.appendChild(imgBtn);
         }
 
-        /* Canvas (draw) block */
-        if (!grid.querySelector('[data-p61draw]')) {
+        /* Canvas (draw) block — skip if patches24 already added a Whiteboard button */
+        if (!grid.querySelector('[data-p61draw]') && !grid.querySelector('[data-p24draw]')) {
             var drawBtn = document.createElement('button');
             drawBtn.type      = 'button';
             drawBtn.className = 'p19-picker-type-btn';

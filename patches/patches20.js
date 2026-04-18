@@ -394,8 +394,10 @@ function _p20_routineOverhaul() {
         const now      = new Date();
         const dow      = now.getDay();
         const todayKey = ['sun','mon','tue','wed','thu','fri','sat'][dow];
-        const todayItems = items.filter(x => x.day === todayKey)
-                                .sort((a, b) => (a.time || '').localeCompare(b.time || ''));
+        const todayItems = items.filter(x =>
+                                x.day === todayKey ||
+                                (x.recurring && Array.isArray(x.recurDays) && x.recurDays.includes(todayKey))
+                            ).sort((a, b) => (a.time || '').localeCompare(b.time || ''));
         const doneToday  = _p20_getDoneToday();
         const totalMins  = todayItems.reduce((s, x) => s + (parseInt(x.duration, 10) || 0), 0);
         const doneCount  = todayItems.filter(x => doneToday.includes(x.id)).length;
@@ -537,7 +539,10 @@ function _p20_routineOverhaul() {
         const items     = _p20dbG('os_routine', []);
         const dow       = new Date().getDay();
         const todayKey  = ['sun','mon','tue','wed','thu','fri','sat'][dow];
-        const todayItems = items.filter(x => x.day === todayKey);
+        const todayItems = items.filter(x =>
+                                x.day === todayKey ||
+                                (x.recurring && Array.isArray(x.recurDays) && x.recurDays.includes(todayKey))
+                            );
         const doneCount  = todayItems.filter(x => doneToday.includes(x.id)).length;
         const pct        = todayItems.length > 0 ? Math.round(doneCount / todayItems.length * 100) : 0;
 
@@ -582,8 +587,10 @@ function _p20_routineOverhaul() {
             const blocks = document.createElement('div');
             blocks.className = 'p20-day-blocks';
 
-            const dayItems = items.filter(x => x.day === d.key)
-                                  .sort((a, b) => (a.time || '').localeCompare(b.time || ''));
+            const dayItems = items.filter(x =>
+                                   x.day === d.key ||
+                                   (x.recurring && Array.isArray(x.recurDays) && x.recurDays.includes(d.key))
+                               ).sort((a, b) => (a.time || '').localeCompare(b.time || ''));
 
             dayItems.forEach(item => {
                 const sc     = _p20safeColor(item.color);
