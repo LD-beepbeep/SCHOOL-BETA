@@ -812,6 +812,9 @@ function initPomoTimer() {
     if (pw) pw.value = pomodoroTimes.focus;
     if (ps) ps.value = pomodoroTimes.short;
     if (pl) pl.value = pomodoroTimes.long;
+    // Also sync the old settings-modal input
+    var cp = document.getElementById('custom-pomodoro');
+    if (cp) cp.value = pomodoroTimes.focus;
 
     // Check sessions today reset
     var today = new Date().toDateString();
@@ -887,9 +890,11 @@ function skipPomodoroSession() {
 
 function onPomodoroComplete() {
     playBeep();
+    var _sess = 4;
+    try { var _sv = localStorage.getItem('p9_pomo_sessions'); if (_sv) _sess = parseInt(JSON.parse(_sv)) || 4; } catch(_) {}
     // Count completed focus sessions
     if (pomodoroMode === 'focus') {
-        pomodoroSession = (pomodoroSession % 4) + 1;
+        pomodoroSession = (pomodoroSession % _sess) + 1;
         DB.set('os_pomo_session', pomodoroSession);
         var today = new Date().toDateString();
         if (pomodoroSessionsToday.date !== today) {
@@ -905,10 +910,9 @@ function onPomodoroComplete() {
     // Determine next mode
     var nextMode = 'focus';
     if (pomodoroMode === 'focus') {
-        nextMode = (pomodoroSession === 1) ? 'long' : 'short'; // after 4 sessions → long
-        // Actually: after completing session 4 (which just became 1 after mod), do long
-        // Simple logic: every 4 focus sessions, suggest long break
-        if (pomodoroSessionsToday.count > 0 && pomodoroSessionsToday.count % 4 === 0) {
+        nextMode = (pomodoroSession === 1) ? 'long' : 'short'; // after N sessions → long
+        // Simple logic: every N focus sessions, suggest long break
+        if (pomodoroSessionsToday.count > 0 && pomodoroSessionsToday.count % _sess === 0) {
             nextMode = 'long';
         } else {
             nextMode = 'short';
@@ -995,12 +999,14 @@ function renderSessionDots() {
     var c = document.getElementById('session-dots');
     if (!c) return;
     c.innerHTML = '';
-    for (var i = 1; i <= 4; i++) {
+    var _sess = 4;
+    try { var _sv = localStorage.getItem('p9_pomo_sessions'); if (_sv) _sess = parseInt(JSON.parse(_sv)) || 4; } catch(_) {}
+    for (var i = 1; i <= _sess; i++) {
         var dot = document.createElement('div');
         var today = new Date().toDateString();
         var todayCount = (pomodoroSessionsToday.date === today) ? pomodoroSessionsToday.count : 0;
         var filled = todayCount >= i;
-        var isCurrent = (pomodoroMode === 'focus') && ((todayCount % 4) + 1 === i) && !filled;
+        var isCurrent = (pomodoroMode === 'focus') && ((todayCount % _sess) + 1 === i) && !filled;
         dot.className = 'session-dot' + (filled ? ' filled' : '') + (isCurrent ? ' current' : '');
         c.appendChild(dot);
     }
@@ -1011,8 +1017,10 @@ function updatePomoSessionInfo() {
     if (!el) return;
     var today = new Date().toDateString();
     var count = (pomodoroSessionsToday.date === today) ? pomodoroSessionsToday.count : 0;
-    var next = (count % 4) + 1;
-    el.innerText = 'Session ' + next + ' of 4';
+    var _sess = 4;
+    try { var _sv = localStorage.getItem('p9_pomo_sessions'); if (_sv) _sess = parseInt(JSON.parse(_sv)) || 4; } catch(_) {}
+    var next = (count % _sess) + 1;
+    el.innerText = 'Session ' + next + ' of ' + _sess;
 }
 
 function populateFocusTasks() {
@@ -2392,7 +2400,9 @@ var weekStartDate = new Date();
 (function() {
     var d = new Date();
     var day = d.getDay();
-    var diff = d.getDate() - day + (day === 0 ? -6 : 1);
+    var wkStart = 'mon';
+    try { var _v = localStorage.getItem('p9_week_start'); if (_v) wkStart = JSON.parse(_v); } catch(_) {}
+    var diff = (wkStart === 'sun') ? d.getDate() - day : d.getDate() - day + (day === 0 ? -6 : 1);
     weekStartDate = new Date(d.setDate(diff));
 })();
 
@@ -2410,7 +2420,9 @@ function calGoToday() {
     var now = new Date();
     curM = now.getMonth(); curY = now.getFullYear();
     var day = now.getDay();
-    var diff = now.getDate() - day + (day === 0 ? -6 : 1);
+    var wkStart = 'mon';
+    try { var _v = localStorage.getItem('p9_week_start'); if (_v) wkStart = JSON.parse(_v); } catch(_) {}
+    var diff = (wkStart === 'sun') ? now.getDate() - day : now.getDate() - day + (day === 0 ? -6 : 1);
     weekStartDate = new Date(new Date().setDate(diff));
     renderCalendar();
 }
