@@ -1,4 +1,4 @@
-# 🎓 Student OS
+# 🎓 Student OS - Beta Version
 
 ![HTML5](https://img.shields.io/badge/html5-%23E34F26.svg?style=flat-square&logo=html5&logoColor=white)
 ![TailwindCSS](https://img.shields.io/badge/tailwindcss-%2338B2AC.svg?style=flat-square&logo=tailwind-css&logoColor=white)
@@ -41,7 +41,7 @@ Want to see more, help out, or understand how this project is run? Check out the
 * 🔒 **[Security Policy](docs/SECURITY.md):** How to report vulnerabilities safely.
 * 📝 **[Licence](./LICENSE):** Take a look at the open-source licence!
 * 📚 **[Citation](CITATION.cff):** Easily citate this repository.
-* 🛠 **[Beta Repository](https://github.com/LD-beepbeep/SCHOOL-BETA):** Check out the newest version of Student OS!
+* 🛠 **[Main Repository](https://github.com/LD-beepbeep/SCHOOL):** Check out the main version of Student OS!
 
 ---
 
@@ -66,7 +66,7 @@ This project is licenced under the **GNU Affero General Public License v3.0 (AGP
 If you use Student OS in your research, academic work, or project, please give credit by citing it:
 
 **APA:**
-> Dehairs, L. (2026). Student OS: A minimalist productivity dashboard! (Version 1.0.0) [Computer software]. https://github.com/LD-beepbeep/SCHOOL
+> Dehairs, L. (2026). Student OS: A minimalist productivity dashboard! (Version 1.0.0) [Computer software]. https://github.com/LD-beepbeep/SCHOOL-BETA
 
 **BibTeX:**
 ```bibtex
@@ -74,7 +74,7 @@ If you use Student OS in your research, academic work, or project, please give c
   author = {Dehairs, Lars},
   month = mar,
   title = {{Student OS: A minimalist productivity dashboard!}},
-  url = {[https://github.com/LD-beepbeep/SCHOOL](https://github.com/LD-beepbeep/SCHOOL)},
+  url = {[https://github.com/LD-beepbeep/SCHOOL-BETA](https://github.com/LD-beepbeep/SCHOOL-BETA)},
   version = {1.0.0},
   year = {2026}
 }
