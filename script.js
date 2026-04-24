@@ -1729,13 +1729,52 @@ function deckCard(d) {
         + '<button onclick="event.stopPropagation();p4OpenImport(' + d.id + ',\'' + d.name.replace(/'/g,"\\'") + '\')" style="margin-top:8px;width:100%;display:flex;align-items:center;justify-content:center;gap:5px;padding:5px 0;border-radius:8px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);color:var(--text-muted);font-size:.68rem;font-weight:700;cursor:pointer;" onmouseenter="this.style.background=\'rgba(255,255,255,.1)\';this.style.color=\'var(--text-main)\'" onmouseleave="this.style.background=\'rgba(255,255,255,.05)\';this.style.color=\'var(--text-muted)\'"><i class="fa-solid fa-file-import"></i> Import</button>'
         + '</div>';
 }
+function openNewDeckModal() {
+    document.getElementById('deck-modal-title').innerText = 'New Deck';
+    document.getElementById('deck-modal-btn').innerText = 'Create';
+    document.getElementById('deck-editing-id').value = '';
+    document.getElementById('deck-name').value = '';
+    document.getElementById('deck-group-row').classList.remove('hidden');
+    selectedDeckEmoji = '📖';
+    populateGroupSelectForDeck();
+    initDeckEmojiPicker();
+    openModal('modal-add-deck');
+}
+function startDeckEdit() {
+    var deck = decks.find(function(d) { return d.id === activeDeckId; });
+    if (!deck) return;
+    document.getElementById('deck-modal-title').innerText = 'Edit Deck';
+    document.getElementById('deck-modal-btn').innerText = 'Save';
+    document.getElementById('deck-editing-id').value = deck.id;
+    document.getElementById('deck-name').value = deck.name;
+    selectedDeckEmoji = deck.emoji || '📖';
+    document.getElementById('deck-group-row').classList.add('hidden');
+    initDeckEmojiPicker();
+    openModal('modal-add-deck');
+}
 function saveDeck() {
     var name = document.getElementById('deck-name').value.trim();
     if (!name) return;
-    var groupId = document.getElementById('deck-group-select').value;
-    decks.push({ id: Date.now(), name: name, groupId: groupId ? parseInt(groupId) : null, emoji: selectedDeckEmoji || '📖', cards: [] });
-    DB.set('os_decks', decks);
+    var editingId = document.getElementById('deck-editing-id').value;
+    if (editingId) {
+        var deck = decks.find(function(d) { return d.id === parseInt(editingId); });
+        if (deck) {
+            deck.name = name;
+            deck.emoji = selectedDeckEmoji || '📖';
+            DB.set('os_decks', decks);
+            document.getElementById('edit-deck-title').innerText = deck.name;
+            document.getElementById('add-card-deck-name').innerText = deck.name;
+        }
+    } else {
+        var groupId = document.getElementById('deck-group-select').value;
+        decks.push({ id: Date.now(), name: name, groupId: groupId ? parseInt(groupId) : null, emoji: selectedDeckEmoji || '📖', cards: [] });
+        DB.set('os_decks', decks);
+    }
     document.getElementById('deck-name').value = '';
+    document.getElementById('deck-editing-id').value = '';
+    document.getElementById('deck-modal-title').innerText = 'New Deck';
+    document.getElementById('deck-modal-btn').innerText = 'Create';
+    document.getElementById('deck-group-row').classList.remove('hidden');
     selectedDeckEmoji = '📖';
     closeModals(); renderDecks();
 }
