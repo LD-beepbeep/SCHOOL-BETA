@@ -780,7 +780,7 @@
                 <h1 class="text-3xl font-light" data-i18n="study_decks">Study Decks</h1>
                 <div class="flex gap-2">
                     <button onclick="openModal('modal-add-group')" class="px-4 py-2 bg-[var(--glass-panel)] rounded-full text-sm hover:bg-[var(--glass-hover)] transition flex items-center gap-2 border border-[var(--glass-border)]"><i class="ph-bold ph-folder-plus"></i> New Group</button>
-                    <button onclick="openModal('modal-add-deck')" class="px-5 py-2 bg-[var(--accent)] text-white rounded-full text-sm font-medium hover:opacity-90 transition shadow-lg flex items-center gap-2"><i class="ph-bold ph-plus"></i> <span data-i18n="new_deck">New Deck</span></button>
+                    <button onclick="openNewDeckModal()" class="px-5 py-2 bg-[var(--accent)] text-white rounded-full text-sm font-medium hover:opacity-90 transition shadow-lg flex items-center gap-2"><i class="ph-bold ph-plus"></i> <span data-i18n="new_deck">New Deck</span></button>
                 </div>
             </div>
             <div class="overflow-y-auto flex-1" id="decks-container"></div>
@@ -790,9 +790,12 @@
             <div class="flex justify-between items-center mb-5">
                 <div class="flex items-center gap-4">
                     <button onclick="showDeckList()" class="w-10 h-10 rounded-full bg-[var(--glass-panel)] flex items-center justify-center hover:bg-[var(--glass-hover)] transition"><i class="ph-bold ph-arrow-left"></i></button>
-                    <div>
-                        <h1 class="text-2xl font-medium" id="edit-deck-title">Deck</h1>
-                        <p class="text-xs text-[var(--text-muted)]" id="edit-deck-stats">0 cards</p>
+                    <div class="flex items-center gap-2">
+                        <div>
+                            <h1 class="text-2xl font-medium" id="edit-deck-title">Deck</h1>
+                            <p class="text-xs text-[var(--text-muted)]" id="edit-deck-stats">0 cards</p>
+                        </div>
+                        <button onclick="startDeckEdit()" title="Edit deck name &amp; emoji" class="w-8 h-8 rounded-full bg-[var(--glass-panel)] flex items-center justify-center hover:bg-[var(--glass-hover)] transition text-[var(--text-muted)] hover:text-[var(--text-main)]"><i class="ph ph-pencil-simple"></i></button>
                     </div>
                 </div>
                 <div class="flex gap-2">
@@ -1488,18 +1491,19 @@
 
     <!-- Add Deck modal (with emoji picker) -->
     <div id="modal-add-deck" class="hidden modal-panel min-card p-8 w-[420px] bg-[var(--bg-color)] border border-[var(--glass-border)] max-h-[90vh] overflow-y-auto">
-        <h3 class="text-lg font-light mb-4">New Deck</h3>
+        <h3 class="text-lg font-light mb-4" id="deck-modal-title">New Deck</h3>
+        <input type="hidden" id="deck-editing-id" value="">
         <input type="text" id="deck-name" placeholder="Deck Name" class="bare-input w-full mb-4" onkeypress="if(event.key==='Enter')saveDeck()">
         <div class="mb-4">
             <label class="text-xs text-[var(--text-muted)] uppercase tracking-widest font-bold block mb-2">Deck Icon</label>
             <div id="deck-emoji-grid" class="grid gap-1 mb-1" style="grid-template-columns:repeat(10,1fr);"></div>
             <input type="text" id="deck-emoji-custom" placeholder="Or type any emoji/symbol..." class="bare-input w-full text-sm mt-2" oninput="setDeckEmoji(this.value)">
         </div>
-        <div class="mb-6">
+        <div class="mb-6" id="deck-group-row">
             <label class="text-xs text-[var(--text-muted)] uppercase tracking-widest font-bold block mb-2">Group (optional)</label>
             <select id="deck-group-select" class="bare-input w-full text-sm bg-transparent cursor-pointer"><option value="">No group</option></select>
         </div>
-        <div class="flex justify-end gap-4"><button onclick="closeModals()" class="text-sm text-[var(--text-muted)] hover:text-[var(--text-main)]">Cancel</button><button onclick="saveDeck()" class="text-sm font-medium bg-[var(--accent)] text-white px-4 py-2 rounded">Create</button></div>
+        <div class="flex justify-end gap-4"><button onclick="closeModals()" class="text-sm text-[var(--text-muted)] hover:text-[var(--text-main)]">Cancel</button><button onclick="saveDeck()" id="deck-modal-btn" class="text-sm font-medium bg-[var(--accent)] text-white px-4 py-2 rounded">Create</button></div>
     </div>
 
     <!-- Add Group modal (flashcard groups) -->
