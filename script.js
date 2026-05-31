@@ -60,6 +60,14 @@ var DB = (function() {
 
 window.DB = DB;
 
+var _safeRandState = (Date.now() ^ 0x9e3779b9) >>> 0;
+function safeRandom() {
+    _safeRandState ^= (_safeRandState << 13);
+    _safeRandState ^= (_safeRandState >>> 17);
+    _safeRandState ^= (_safeRandState << 5);
+    return (_safeRandState >>> 0) / 4294967296;
+}
+
 // ===== AUTH FUNCTIONS =====
 
 async function signInWithGoogle() {
@@ -1891,10 +1899,10 @@ function startStudy(mode) {
     if (mode === 'starred') cards = cards.filter(function(c) { return c.starred; });
     if (cards.length === 0) { showAlert('None Found', 'No cards match this filter.'); return; }
     if (mode === 'shuffle') {
-        cards.sort(function() { return Math.random() - .5; });
+        cards.sort(function() { return safeRandom() - .5; });
         studyMode = 'all';
     } else if (mode !== 'write' && mode !== 'reverse') {
-        cards.sort(function() { return Math.random() - .5; });
+        cards.sort(function() { return safeRandom() - .5; });
     }
     if (mode === 'match') { startMatchGame(); return; }
     studyQueue = cards;
@@ -2063,11 +2071,11 @@ function spawnConfetti() {
         (function() {
             var el = document.createElement('div');
             el.className = 'confetti-piece';
-            el.style.left = Math.random() * 100 + 'vw';
-            el.style.background = colors[Math.floor(Math.random() * colors.length)];
-            el.style.animationDuration = (1 + Math.random()) + 's';
-            el.style.animationDelay = (Math.random() * 0.5) + 's';
-            el.style.transform = 'rotate(' + Math.random() * 360 + 'deg)';
+            el.style.left = safeRandom() * 100 + 'vw';
+            el.style.background = colors[Math.floor(safeRandom() * colors.length)];
+            el.style.animationDuration = (1 + safeRandom()) + 's';
+            el.style.animationDelay = (safeRandom() * 0.5) + 's';
+            el.style.transform = 'rotate(' + safeRandom() * 360 + 'deg)';
             document.body.appendChild(el);
             setTimeout(function() { el.remove(); }, 2500);
         })();
@@ -2089,7 +2097,7 @@ function handleImportDeck(inp) {
             var data = JSON.parse(e.target.result);
             if (data.name && Array.isArray(data.cards)) {
                 data.id = Date.now();
-                data.cards.forEach(function(c) { c.id = Date.now() + Math.random(); });
+                data.cards.forEach(function(c, idx) { c.id = Date.now() + idx + 1; });
                 decks.push(data); DB.set('os_decks', decks); renderDecks();
                 showAlert('Imported!', 'Deck "' + data.name + '" added.');
             }
@@ -2108,13 +2116,13 @@ function startMatchGame() {
     document.getElementById('cards-match-view').classList.remove('hidden');
     var deck = decks.find(function(d) { return d.id === activeDeckId; });
     if (!deck || !deck.cards) return;
-    var sample = deck.cards.slice().sort(function() { return Math.random() - .5; }).slice(0, 6);
+    var sample = deck.cards.slice().sort(function() { return safeRandom() - .5; }).slice(0, 6);
     matchPairs = sample; matchSelected = null; matchMatched = 0;
     document.getElementById('match-progress').innerText = '0/' + sample.length + ' matched';
     var qs = document.getElementById('match-questions');
     var as = document.getElementById('match-answers');
     qs.innerHTML = ''; as.innerHTML = '';
-    var shuffledAnswers = sample.slice().sort(function() { return Math.random() - .5; });
+    var shuffledAnswers = sample.slice().sort(function() { return safeRandom() - .5; });
     sample.forEach(function(c) {
         var qel = document.createElement('div');
         qel.className = 'match-card'; qel.innerText = c.q; qel.dataset.id = c.id; qel.dataset.type = 'q';
@@ -2180,9 +2188,9 @@ function generateWordSearch(cards) {
     wsWords.forEach(function(word) {
         var placed = false;
         for (var attempt = 0; attempt < 300 && !placed; attempt++) {
-            var dir = wsDirs[Math.floor(Math.random() * wsDirs.length)];
-            var startR = Math.floor(Math.random() * wsSize);
-            var startC = Math.floor(Math.random() * wsSize);
+            var dir = wsDirs[Math.floor(safeRandom() * wsDirs.length)];
+            var startR = Math.floor(safeRandom() * wsSize);
+            var startC = Math.floor(safeRandom() * wsSize);
             if (canPlaceWS(word, startR, startC, dir)) {
                 placeWS(word, startR, startC, dir);
                 wsPlacements.push({ word: word, r: startR, c: startC, dr: dir[0], dc: dir[1] });
@@ -2193,7 +2201,7 @@ function generateWordSearch(cards) {
     var alpha = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
     for (var r = 0; r < wsSize; r++) {
         for (var c = 0; c < wsSize; c++) {
-            if (!wsGrid[r][c]) wsGrid[r][c] = alpha[Math.floor(Math.random() * alpha.length)];
+            if (!wsGrid[r][c]) wsGrid[r][c] = alpha[Math.floor(safeRandom() * alpha.length)];
         }
     }
     renderWordSearch();
@@ -4872,7 +4880,10 @@ window.sosToast = sosToast;
         var editor = document.getElementById('note-editor');
         if (!editor) return;
         editor.focus();
-        var cbId = 'cb-' + Date.now() + '-' + Math.floor(Math.random()*9999);
+        var randSuffix = (window.crypto && window.crypto.getRandomValues)
+            ? window.crypto.getRandomValues(new Uint32Array(1))[0].toString(16)
+            : String(Date.now());
+        var cbId = 'cb-' + Date.now() + '-' + randSuffix;
         var html = '<div class="note-cb-row" data-cb-id="' + cbId + '" data-checked="false" contenteditable="false">'
             + '<input type="checkbox" onchange="sosToggleCb(this,\'' + cbId + '\')">'
             + '<span class="cb-text" contenteditable="true">Task item</span>'
