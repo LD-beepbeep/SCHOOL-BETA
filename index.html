@@ -552,7 +552,7 @@
                 <div id="notes-sidebar" class="space-y-1 overflow-y-auto flex-1"></div>
             </div>
             <!-- RIGHT PANEL: editor -->
-            <div class="min-card p-0 flex flex-col overflow-hidden">
+            <div class="min-card p-0 flex flex-col overflow-visible">
                 <!-- ===== COMPACT NOTES TOOLBAR ===== -->
                 <div class="note-toolbar-compact" id="note-toolbar">
                     <!-- Title -->
@@ -2069,7 +2069,12 @@
     var _prevOpen = window.openModal;
     window.openModal = function(id) {
         if (_prevOpen) _prevOpen.apply(this, arguments);
-        if (id === 'modal-settings') setTimeout(_syncWbSettings, 50);
+        if (id === 'modal-settings') {
+            setTimeout(_syncWbSettings, 50);
+            setTimeout(function() {
+                if (typeof window.syncGroqNotesUI === 'function') window.syncGroqNotesUI();
+            }, 80);
+        }
     };
 
     /* Also sync on DOMContentLoaded in case settings is shown on load */
