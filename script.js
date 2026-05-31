@@ -3154,12 +3154,18 @@ function syncGroqNotesUI() {
     var dot = document.getElementById('groq-enabled-dot');
     if (toggle) toggle.style.background = enabled ? 'var(--accent)' : '';
     if (dot) dot.style.transform = enabled ? 'translateX(24px)' : '';
+    var p10Toggle = document.getElementById('p10-groq-enabled-toggle');
+    if (p10Toggle) p10Toggle.classList.toggle('on', enabled);
 
     var keyInput = document.getElementById('groq-api-key');
     if (keyInput) keyInput.value = groqNotesConfig.apiKey || '';
+    var p10KeyInput = document.getElementById('p10-groq-api-key');
+    if (p10KeyInput) p10KeyInput.value = groqNotesConfig.apiKey || '';
 
     var settingModel = document.getElementById('groq-default-model');
     if (settingModel) settingModel.value = groqNotesConfig.defaultModel || 'llama-3.1-8b-instant';
+    var p10SettingModel = document.getElementById('p10-groq-default-model');
+    if (p10SettingModel) p10SettingModel.value = groqNotesConfig.defaultModel || 'llama-3.1-8b-instant';
     var chatModel = document.getElementById('note-groq-model-select');
     if (chatModel) chatModel.value = groqNotesConfig.defaultModel || 'llama-3.1-8b-instant';
 
