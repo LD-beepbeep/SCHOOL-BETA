@@ -737,6 +737,28 @@ function _p10settingsHTML(){
                 </div>
             </div>
             <div class="p10-section">
+                <div class="p10-section-title">Notes AI (Optional)</div>
+                <div class="p10-row">
+                    <div><div class="p10-row-lbl">Enable Groq Notes Chat</div><div class="p10-row-sub">Shows the chat icon in Notes</div></div>
+                    <div id="p10-groq-enabled-toggle" class="p10-toggle" onclick="if(typeof toggleGroqNotesEnabled==='function')toggleGroqNotesEnabled()"></div>
+                </div>
+                <div class="p10-row">
+                    <div><div class="p10-row-lbl">Groq API Key</div></div>
+                    <input type="password" id="p10-groq-api-key" class="p10-input" placeholder="gsk_..."
+                           oninput="if(typeof setGroqNotesApiKey==='function')setGroqNotesApiKey(this.value)">
+                </div>
+                <div class="p10-row">
+                    <div><div class="p10-row-lbl">Default Chat Model</div></div>
+                    <select class="p10-select" id="p10-groq-default-model"
+                            onchange="if(typeof setGroqDefaultModel==='function')setGroqDefaultModel(this.value)">
+                        <option value="llama-3.1-8b-instant">llama-3.1-8b-instant</option>
+                        <option value="llama-3.3-70b-versatile">llama-3.3-70b-versatile</option>
+                        <option value="mixtral-8x7b-32768">mixtral-8x7b-32768</option>
+                        <option value="gemma2-9b-it">gemma2-9b-it</option>
+                    </select>
+                </div>
+            </div>
+            <div class="p10-section">
                 <div class="p10-section-title">Danger Zone</div>
                 <div class="p10-row">
                     <div><div class="p10-row-lbl" style="color:#f87171;">Reset All Data</div><div class="p10-row-sub">Permanently delete all your data</div></div>
