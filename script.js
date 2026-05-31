@@ -433,6 +433,11 @@ function initApp() {
     wbBoards            = DB.get('os_wb_boards',     []);
     wbActiveBoardId     = DB.get('os_wb_active',     null);
     cardStats           = DB.get('os_card_stats',    {});
+    groqNotesConfig     = DB.get('os_notes_groq_cfg', {
+        enabled: false,
+        apiKey: '',
+        defaultModel: 'llama-3.1-8b-instant'
+    });
 
     // Apply accent / font / clock / bg that were previously self-invoking
     var accent = DB.get('os_accent', '#3b82f6');
