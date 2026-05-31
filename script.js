@@ -2675,6 +2675,7 @@ var groqNotesConfig = DB.get('os_notes_groq_cfg', {
 var noteGroqMessages = [];
 var noteGroqBusy = false;
 var noteSketchColor = '#1a1a1a';
+var noteSketchTool = 'pen';
 var noteSketchDrawing = false;
 var noteSketchCtx = null;
 var noteSketchInitDone = false;
@@ -2684,6 +2685,43 @@ var noteOverlayDrawing = false;
 var noteOverlayEnabled = false;
 var noteOverlayData = '';
 var noteOverlayInitDone = false;
+
+function getNoteSketchSize() {
+    var overlaySize = document.getElementById('note-overlay-size');
+    if (overlaySize) return parseInt(overlaySize.value, 10) || 3;
+    var modalSize = document.getElementById('note-sketch-size');
+    return modalSize ? parseInt(modalSize.value, 10) || 3 : 3;
+}
+
+function applyNoteSketchTool(ctxObj) {
+    if (!ctxObj) return;
+    var size = getNoteSketchSize();
+    ctxObj.lineCap = 'round';
+    ctxObj.lineJoin = 'round';
+    ctxObj.globalCompositeOperation = 'source-over';
+    ctxObj.globalAlpha = 1;
+    ctxObj.strokeStyle = noteSketchColor;
+    ctxObj.lineWidth = size;
+    if (noteSketchTool === 'marker') {
+        ctxObj.globalAlpha = 0.35;
+        ctxObj.lineWidth = size * 2.5;
+    } else if (noteSketchTool === 'eraser') {
+        ctxObj.globalCompositeOperation = 'destination-out';
+        ctxObj.globalAlpha = 1;
+        ctxObj.lineWidth = size * 3;
+    }
+}
+
+function syncNoteSketchToolUI() {
+    ['pen', 'marker', 'eraser'].forEach(function(tool) {
+        var btn = document.getElementById('note-sketch-tool-' + tool);
+        if (btn) btn.classList.toggle('active-font', tool === noteSketchTool);
+    });
+    var icon = document.querySelector('#note-sketch-btn i');
+    if (icon) {
+        icon.className = 'text-xs ' + (noteSketchTool === 'eraser' ? 'fa-solid fa-eraser' : noteSketchTool === 'marker' ? 'fa-solid fa-highlighter' : 'fa-solid fa-pencil');
+    }
+}
 
 function renderNotes() {
     var c = document.getElementById('notes-sidebar');
@@ -2778,11 +2816,7 @@ function initNoteOverlayCanvas() {
 
     noteOverlayCanvas = canvas;
     noteOverlayCtx = canvas.getContext('2d');
-    noteOverlayCtx.lineCap = 'round';
-    noteOverlayCtx.lineJoin = 'round';
-    noteOverlayCtx.strokeStyle = noteSketchColor;
-    var size = document.getElementById('note-sketch-size');
-    noteOverlayCtx.lineWidth = size ? parseInt(size.value, 10) || 3 : 3;
+    applyNoteSketchTool(noteOverlayCtx);
 
     if (noteOverlayInitDone) return;
     noteOverlayInitDone = true;
@@ -2799,6 +2833,7 @@ function initNoteOverlayCanvas() {
         if (!noteOverlayEnabled) return;
         ev.preventDefault();
         noteOverlayDrawing = true;
+        applyNoteSketchTool(noteOverlayCtx);
         var p = point(ev);
         noteOverlayCtx.beginPath();
         noteOverlayCtx.moveTo(p.x, p.y);
@@ -2806,6 +2841,7 @@ function initNoteOverlayCanvas() {
     function move(ev) {
         if (!noteOverlayEnabled || !noteOverlayDrawing) return;
         ev.preventDefault();
+        applyNoteSketchTool(noteOverlayCtx);
         var p = point(ev);
         noteOverlayCtx.lineTo(p.x, p.y);
         noteOverlayCtx.stroke();
@@ -2814,6 +2850,8 @@ function initNoteOverlayCanvas() {
         if (!noteOverlayDrawing) return;
         noteOverlayDrawing = false;
         noteOverlayCtx.beginPath();
+        noteOverlayCtx.globalCompositeOperation = 'source-over';
+        noteOverlayCtx.globalAlpha = 1;
         noteOverlayData = noteOverlayCanvas.toDataURL('image/png');
         saveNote();
     }
@@ -3276,9 +3314,7 @@ function initNoteSketchCanvas() {
         noteSketchCtx.fillStyle = '#ffffff';
         noteSketchCtx.fillRect(0, 0, canvas.width, canvas.height);
     }
-    noteSketchCtx.strokeStyle = noteSketchColor;
-    var size = document.getElementById('note-sketch-size');
-    noteSketchCtx.lineWidth = size ? parseInt(size.value, 10) || 3 : 3;
+    applyNoteSketchTool(noteSketchCtx);
 
     if (noteSketchInitDone) return;
     noteSketchInitDone = true;
@@ -3286,6 +3322,7 @@ function initNoteSketchCanvas() {
     function start(ev) {
         ev.preventDefault();
         noteSketchDrawing = true;
+        applyNoteSketchTool(noteSketchCtx);
         var p = noteSketchPoint(ev);
         noteSketchCtx.beginPath();
         noteSketchCtx.moveTo(p.x, p.y);
@@ -3293,6 +3330,7 @@ function initNoteSketchCanvas() {
     function move(ev) {
         if (!noteSketchDrawing) return;
         ev.preventDefault();
+        applyNoteSketchTool(noteSketchCtx);
         var p = noteSketchPoint(ev);
         noteSketchCtx.lineTo(p.x, p.y);
         noteSketchCtx.stroke();
@@ -3300,6 +3338,8 @@ function initNoteSketchCanvas() {
     function end() {
         noteSketchDrawing = false;
         noteSketchCtx.beginPath();
+        noteSketchCtx.globalCompositeOperation = 'source-over';
+        noteSketchCtx.globalAlpha = 1;
     }
 
     canvas.addEventListener('mousedown', start);
@@ -3309,13 +3349,14 @@ function initNoteSketchCanvas() {
     canvas.addEventListener('touchstart', start, { passive: false });
     canvas.addEventListener('touchmove', move, { passive: false });
     canvas.addEventListener('touchend', end);
-    var slider = document.getElementById('note-sketch-size');
-    if (slider) {
+    ['note-sketch-size', 'note-overlay-size'].forEach(function(id) {
+        var slider = document.getElementById(id);
+        if (!slider) return;
         slider.addEventListener('input', function() {
-            if (noteSketchCtx) noteSketchCtx.lineWidth = parseInt(this.value, 10) || 3;
-            if (noteOverlayCtx) noteOverlayCtx.lineWidth = parseInt(this.value, 10) || 3;
+            applyNoteSketchTool(noteSketchCtx);
+            applyNoteSketchTool(noteOverlayCtx);
         });
-    }
+    });
 }
 
 function openNoteSketch() {
@@ -3330,8 +3371,17 @@ function openNoteSketch() {
 
 function setNoteSketchColor(color) {
     noteSketchColor = color || '#1a1a1a';
-    if (noteSketchCtx) noteSketchCtx.strokeStyle = noteSketchColor;
-    if (noteOverlayCtx) noteOverlayCtx.strokeStyle = noteSketchColor;
+    var picker = document.getElementById('note-sketch-color-picker');
+    if (picker && picker.value !== noteSketchColor) picker.value = noteSketchColor;
+    applyNoteSketchTool(noteSketchCtx);
+    applyNoteSketchTool(noteOverlayCtx);
+}
+
+function setNoteSketchTool(tool) {
+    noteSketchTool = (tool === 'marker' || tool === 'eraser') ? tool : 'pen';
+    syncNoteSketchToolUI();
+    applyNoteSketchTool(noteSketchCtx);
+    applyNoteSketchTool(noteOverlayCtx);
 }
 
 function clearNoteSketch() {
@@ -3361,6 +3411,7 @@ function insertNoteSketchIntoNote() {
 
 renderNotes();
 if (notes[0]) loadNote(notes[0].id);
+syncNoteSketchToolUI();
 syncGroqNotesUI();
 
 // ===== WHITEBOARD =====
@@ -4611,6 +4662,7 @@ window.toggleStickerPanel       = toggleStickerPanel;
 window.insertSticker            = insertSticker;
 window.openNoteSketch           = openNoteSketch;
 window.setNoteSketchColor       = setNoteSketchColor;
+window.setNoteSketchTool        = setNoteSketchTool;
 window.clearNoteSketch          = clearNoteSketch;
 window.insertNoteSketchIntoNote = insertNoteSketchIntoNote;
 window.toggleGroqNotesEnabled   = toggleGroqNotesEnabled;

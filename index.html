@@ -670,7 +670,26 @@
                     <div class="ml-auto flex gap-1 items-center flex-shrink-0">
                         <div class="text-xs text-[var(--text-muted)] font-mono hidden sm:block" id="note-stats">0 words</div>
                         <div class="flex gap-1" id="note-tag-row"></div>
-                        <button onclick="openNoteSketch()" id="note-sketch-btn" class="nt-btn" title="Draw handwriting note"><i class="fa-solid fa-pencil text-xs"></i></button>
+                        <div class="tbar-group">
+                            <div class="flex items-center gap-1">
+                                <button onclick="openNoteSketch()" id="note-sketch-btn" class="nt-btn" title="Toggle handwriting mode"><i class="fa-solid fa-pencil text-xs"></i></button>
+                                <button class="nt-btn" onclick="toggleToolbarDropdown('tbar-handwriting-menu')" title="Handwriting tools"><i class="fa-solid fa-caret-down text-[10px]"></i></button>
+                            </div>
+                            <div class="tbar-dropdown-menu" id="tbar-handwriting-menu" style="min-width:220px">
+                                <span class="tbar-dm-label">Handwriting Tool</span>
+                                <div class="tbar-dm-row">
+                                    <button id="note-sketch-tool-pen" class="tbar-dm-btn" onclick="setNoteSketchTool('pen')"><i class="fa-solid fa-pencil"></i> Pencil</button>
+                                    <button id="note-sketch-tool-marker" class="tbar-dm-btn" onclick="setNoteSketchTool('marker')"><i class="fa-solid fa-highlighter"></i> Marker</button>
+                                    <button id="note-sketch-tool-eraser" class="tbar-dm-btn" onclick="setNoteSketchTool('eraser')"><i class="fa-solid fa-eraser"></i> Gum</button>
+                                </div>
+                                <div class="tbar-dm-divider"></div>
+                                <span class="tbar-dm-label">Tool Colour</span>
+                                <div class="tbar-dm-row">
+                                    <input type="color" id="note-sketch-color-picker" value="#1a1a1a" onchange="setNoteSketchColor(this.value)" title="Pick handwriting colour" style="width:30px;height:30px;border-radius:8px;background:transparent;border:1px solid var(--glass-border);cursor:pointer;padding:0;">
+                                    <input type="range" id="note-overlay-size" min="1" max="24" value="3" class="w-24 accent-[var(--accent)]" title="Stroke size">
+                                </div>
+                            </div>
+                        </div>
                         <button onclick="toggleNoteGroqChat()" id="note-groq-chat-btn" class="nt-btn hidden" title="Ask your notes (Groq)"><i class="ph ph-chat-circle text-xs"></i></button>
                         <button onclick="toggleNotesSidebar()" id="notes-sidebar-toggle-btn" class="nt-btn" title="Toggle Sidebar (Ctrl+\)"><i class="ph ph-sidebar text-xs"></i></button>
                         <button onclick="deleteCurrentNote()" class="nt-btn hover:text-red-400" title="Delete note"><i class="fa-solid fa-trash text-xs"></i></button>
