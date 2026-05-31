@@ -2678,6 +2678,12 @@ var noteSketchColor = '#1a1a1a';
 var noteSketchDrawing = false;
 var noteSketchCtx = null;
 var noteSketchInitDone = false;
+var noteOverlayCanvas = null;
+var noteOverlayCtx = null;
+var noteOverlayDrawing = false;
+var noteOverlayEnabled = false;
+var noteOverlayData = '';
+var noteOverlayInitDone = false;
 
 function renderNotes() {
     var c = document.getElementById('notes-sidebar');
@@ -2746,6 +2752,103 @@ function noteItem(n) {
     return div;
 }
 
+function initNoteOverlayCanvas() {
+    var wrap = document.getElementById('note-editor-wrap');
+    var canvas = document.getElementById('note-overlay-canvas');
+    if (!wrap || !canvas) return;
+
+    var w = Math.floor(wrap.clientWidth);
+    var h = Math.floor(wrap.clientHeight);
+    if (w < 2 || h < 2) return;
+    if (canvas.width !== w || canvas.height !== h) {
+        var old = document.createElement('canvas');
+        old.width = canvas.width;
+        old.height = canvas.height;
+        if (old.width && old.height) {
+            var oldCtx = old.getContext('2d');
+            oldCtx.drawImage(canvas, 0, 0);
+        }
+        canvas.width = w;
+        canvas.height = h;
+        if (old.width && old.height) {
+            var resizedCtx = canvas.getContext('2d');
+            resizedCtx.drawImage(old, 0, 0, old.width, old.height, 0, 0, canvas.width, canvas.height);
+        }
+    }
+
+    noteOverlayCanvas = canvas;
+    noteOverlayCtx = canvas.getContext('2d');
+    noteOverlayCtx.lineCap = 'round';
+    noteOverlayCtx.lineJoin = 'round';
+    noteOverlayCtx.strokeStyle = noteSketchColor;
+    var size = document.getElementById('note-sketch-size');
+    noteOverlayCtx.lineWidth = size ? parseInt(size.value, 10) || 3 : 3;
+
+    if (noteOverlayInitDone) return;
+    noteOverlayInitDone = true;
+
+    function point(ev) {
+        var rect = canvas.getBoundingClientRect();
+        var src = ev.touches && ev.touches[0] ? ev.touches[0] : ev;
+        return {
+            x: src.clientX - rect.left,
+            y: src.clientY - rect.top
+        };
+    }
+    function start(ev) {
+        if (!noteOverlayEnabled) return;
+        ev.preventDefault();
+        noteOverlayDrawing = true;
+        var p = point(ev);
+        noteOverlayCtx.beginPath();
+        noteOverlayCtx.moveTo(p.x, p.y);
+    }
+    function move(ev) {
+        if (!noteOverlayEnabled || !noteOverlayDrawing) return;
+        ev.preventDefault();
+        var p = point(ev);
+        noteOverlayCtx.lineTo(p.x, p.y);
+        noteOverlayCtx.stroke();
+    }
+    function end() {
+        if (!noteOverlayDrawing) return;
+        noteOverlayDrawing = false;
+        noteOverlayCtx.beginPath();
+        noteOverlayData = noteOverlayCanvas.toDataURL('image/png');
+        saveNote();
+    }
+
+    canvas.addEventListener('mousedown', start);
+    canvas.addEventListener('mousemove', move);
+    canvas.addEventListener('mouseup', end);
+    canvas.addEventListener('mouseleave', end);
+    canvas.addEventListener('touchstart', start, { passive: false });
+    canvas.addEventListener('touchmove', move, { passive: false });
+    canvas.addEventListener('touchend', end);
+    window.addEventListener('resize', initNoteOverlayCanvas);
+}
+
+function loadNoteOverlay(dataUrl, attempt) {
+    noteOverlayData = dataUrl || '';
+    initNoteOverlayCanvas();
+    attempt = attempt || 0;
+    if (!noteOverlayCtx || !noteOverlayCanvas) {
+        if (attempt < 3) {
+            setTimeout(function() { loadNoteOverlay(noteOverlayData, attempt + 1); }, 80);
+        }
+        return;
+    }
+    noteOverlayCtx.clearRect(0, 0, noteOverlayCanvas.width, noteOverlayCanvas.height);
+    if (!noteOverlayData) return;
+    var img = new Image();
+    img.onload = function() {
+        if (!noteOverlayCtx || !noteOverlayCanvas) return;
+        noteOverlayCtx.clearRect(0, 0, noteOverlayCanvas.width, noteOverlayCanvas.height);
+        noteOverlayCtx.drawImage(img, 0, 0, noteOverlayCanvas.width, noteOverlayCanvas.height);
+    };
+    img.src = noteOverlayData;
+}
+
 function loadNote(id) {
     activeNote = id;
     var n = notes.find(function(x) { return x.id === id; });
@@ -2757,6 +2860,7 @@ function loadNote(id) {
     } else {
         setNoteFont('Inter, sans-serif', 'font-sans', true);
     }
+    loadNoteOverlay(n.handwritingLayer || '');
     renderNotes(); updateNoteCount();
 }
 function saveNote() {
@@ -2766,6 +2870,7 @@ function saveNote() {
     n.body = document.getElementById('note-editor').innerHTML;
     n.font = document.getElementById('note-editor').style.fontFamily;
     n.fontClass = noteFontActive;
+    n.handwritingLayer = noteOverlayData || '';
     DB.set('os_notes', notes); renderNotes(); updateNoteCount();
 }
 function createNewNote() {
@@ -3208,21 +3313,33 @@ function initNoteSketchCanvas() {
     if (slider) {
         slider.addEventListener('input', function() {
             if (noteSketchCtx) noteSketchCtx.lineWidth = parseInt(this.value, 10) || 3;
+            if (noteOverlayCtx) noteOverlayCtx.lineWidth = parseInt(this.value, 10) || 3;
         });
     }
 }
 
 function openNoteSketch() {
-    openModal('modal-note-sketch');
-    initNoteSketchCanvas();
+    initNoteOverlayCanvas();
+    noteOverlayEnabled = !noteOverlayEnabled;
+    var canvas = document.getElementById('note-overlay-canvas');
+    if (canvas) canvas.classList.toggle('drawing-enabled', noteOverlayEnabled);
+    var btn = document.getElementById('note-sketch-btn');
+    if (btn) btn.classList.toggle('active', noteOverlayEnabled);
+    showToast(noteOverlayEnabled ? 'Handwriting mode on' : 'Handwriting mode off');
 }
 
 function setNoteSketchColor(color) {
     noteSketchColor = color || '#1a1a1a';
     if (noteSketchCtx) noteSketchCtx.strokeStyle = noteSketchColor;
+    if (noteOverlayCtx) noteOverlayCtx.strokeStyle = noteSketchColor;
 }
 
 function clearNoteSketch() {
+    if (noteOverlayCanvas && noteOverlayCtx) {
+        noteOverlayCtx.clearRect(0, 0, noteOverlayCanvas.width, noteOverlayCanvas.height);
+        noteOverlayData = '';
+        saveNote();
+    }
     var canvas = document.getElementById('note-sketch-canvas');
     if (!canvas || !noteSketchCtx) return;
     noteSketchCtx.clearRect(0, 0, canvas.width, canvas.height);

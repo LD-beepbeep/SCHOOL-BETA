@@ -670,13 +670,16 @@
                     <div class="ml-auto flex gap-1 items-center flex-shrink-0">
                         <div class="text-xs text-[var(--text-muted)] font-mono hidden sm:block" id="note-stats">0 words</div>
                         <div class="flex gap-1" id="note-tag-row"></div>
-                        <button onclick="openNoteSketch()" class="nt-btn" title="Draw handwriting note"><i class="fa-solid fa-pencil text-xs"></i></button>
+                        <button onclick="openNoteSketch()" id="note-sketch-btn" class="nt-btn" title="Draw handwriting note"><i class="fa-solid fa-pencil text-xs"></i></button>
                         <button onclick="toggleNoteGroqChat()" id="note-groq-chat-btn" class="nt-btn hidden" title="Ask your notes (Groq)"><i class="ph ph-chat-circle text-xs"></i></button>
                         <button onclick="toggleNotesSidebar()" id="notes-sidebar-toggle-btn" class="nt-btn" title="Toggle Sidebar (Ctrl+\)"><i class="ph ph-sidebar text-xs"></i></button>
                         <button onclick="deleteCurrentNote()" class="nt-btn hover:text-red-400" title="Delete note"><i class="fa-solid fa-trash text-xs"></i></button>
                     </div>
                 </div>
-                <div id="note-editor" contenteditable="true" class="flex-1 p-8 outline-none text-[var(--text-main)] leading-relaxed overflow-y-auto" placeholder="Start writing…" style="font-family:'Inter',sans-serif;font-size:1rem;line-height:1.8;"></div>
+                <div id="note-editor-wrap" class="note-editor-wrap flex-1">
+                    <div id="note-editor" contenteditable="true" class="h-full p-8 outline-none text-[var(--text-main)] leading-relaxed overflow-y-auto relative z-[1]" placeholder="Start writing…" style="font-family:'Inter',sans-serif;font-size:1rem;line-height:1.8;"></div>
+                    <canvas id="note-overlay-canvas" class="note-overlay-canvas"></canvas>
+                </div>
                 <div id="note-groq-chat-panel" class="hidden note-chat-panel border-t border-[var(--glass-border)]">
                     <div class="note-chat-top">
                         <div class="text-xs font-semibold">Notes AI (Groq)</div>
