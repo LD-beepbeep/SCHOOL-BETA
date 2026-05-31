@@ -670,11 +670,37 @@
                     <div class="ml-auto flex gap-1 items-center flex-shrink-0">
                         <div class="text-xs text-[var(--text-muted)] font-mono hidden sm:block" id="note-stats">0 words</div>
                         <div class="flex gap-1" id="note-tag-row"></div>
+                        <button onclick="openNoteSketch()" id="note-sketch-btn" class="nt-btn" title="Draw handwriting note"><i class="fa-solid fa-pencil text-xs"></i></button>
+                        <button onclick="toggleNoteGroqChat()" id="note-groq-chat-btn" class="nt-btn hidden" title="Ask your notes (Groq)"><i class="ph ph-chat-circle text-xs"></i></button>
                         <button onclick="toggleNotesSidebar()" id="notes-sidebar-toggle-btn" class="nt-btn" title="Toggle Sidebar (Ctrl+\)"><i class="ph ph-sidebar text-xs"></i></button>
                         <button onclick="deleteCurrentNote()" class="nt-btn hover:text-red-400" title="Delete note"><i class="fa-solid fa-trash text-xs"></i></button>
                     </div>
                 </div>
-                <div id="note-editor" contenteditable="true" class="flex-1 p-8 outline-none text-[var(--text-main)] leading-relaxed overflow-y-auto" placeholder="Start writing…" style="font-family:'Inter',sans-serif;font-size:1rem;line-height:1.8;"></div>
+                <div id="note-editor-wrap" class="note-editor-wrap flex-1">
+                    <div id="note-editor" contenteditable="true" class="h-full p-8 outline-none text-[var(--text-main)] leading-relaxed overflow-y-auto relative z-[1]" placeholder="Start writing…" style="font-family:'Inter',sans-serif;font-size:1rem;line-height:1.8;"></div>
+                    <canvas id="note-overlay-canvas" class="note-overlay-canvas"></canvas>
+                </div>
+                <div id="note-groq-chat-panel" class="hidden note-chat-panel border-t border-[var(--glass-border)]">
+                    <div class="note-chat-top">
+                        <div class="text-xs font-semibold">Notes AI (Groq)</div>
+                        <div class="flex items-center gap-2">
+                            <label for="note-groq-model-select" class="text-[10px] text-[var(--text-muted)]">Model</label>
+                            <select id="note-groq-model-select" class="bare-input text-xs py-1 px-2" onchange="setGroqDefaultModel(this.value)">
+                                <option value="llama-3.1-8b-instant">llama-3.1-8b-instant</option>
+                                <option value="llama-3.3-70b-versatile">llama-3.3-70b-versatile</option>
+                                <option value="mixtral-8x7b-32768">mixtral-8x7b-32768</option>
+                                <option value="gemma2-9b-it">gemma2-9b-it</option>
+                            </select>
+                            <button onclick="toggleNoteGroqChat()" class="nt-btn" title="Hide chat"><i class="ph ph-x text-xs"></i></button>
+                        </div>
+                    </div>
+                    <div id="note-groq-chat-messages" class="note-chat-messages"></div>
+                    <div class="note-chat-input-row">
+                        <input type="text" id="note-groq-chat-input" class="bare-input text-sm flex-1" placeholder="Ask something about this note…" onkeypress="if(event.key==='Enter')sendNoteGroqMessage()">
+                        <button onclick="clearNoteGroqChat()" class="text-xs px-2 py-1 rounded-lg bg-[var(--glass-hover)] hover:bg-[var(--glass-panel)] transition">Clear</button>
+                        <button onclick="sendNoteGroqMessage()" id="note-groq-send-btn" class="text-xs px-3 py-1 rounded-lg bg-[var(--accent)] text-white hover:opacity-90 transition">Send</button>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -1255,6 +1281,9 @@
         'openPdfAnnotator','closePdfAnnotator','savePdfAnnotations',
         'setPdfTool','setPdfColor','pdfUndo','loadPdfForAnnotation',
         'confirmDeleteNote','quickNoteToNotes','saveQuickNote',
+        'openNoteSketch','clearNoteSketch','setNoteSketchColor',
+        'insertNoteSketchIntoNote','toggleNoteGroqChat','sendNoteGroqMessage',
+        'clearNoteGroqChat','toggleGroqNotesEnabled','setGroqNotesApiKey','setGroqDefaultModel',
         // Whiteboard
         'wbSetTool','setPenColor','setWbBg','clearCanvas','wbUndo','wbRedo',
         'wbNewBoard','wbDeleteBoard','wbToggleGrid','wbToggleFullscreen',
@@ -1346,6 +1375,29 @@
         <button onclick="closeModals();autoStartBreak()" class="w-full py-2 bg-[var(--text-main)] text-[var(--bg-color)] rounded-lg text-sm font-bold" id="timer-done-action">Done</button>
     </div>
     <div id="modal-wb-text" class="hidden modal-panel min-card p-6 w-80 bg-[var(--bg-color)] border border-[var(--glass-border)]"><h3 class="text-sm font-bold mb-3">Add Text</h3><input type="text" id="wb-text-input" class="bare-input w-full mb-2" placeholder="Type here…"><div class="flex items-center gap-2 mb-4"><label class="text-xs text-[var(--text-muted)]">Size:</label><input type="range" id="wb-text-size" min="10" max="72" value="18" class="w-24 accent-[var(--accent)]"><span id="wb-text-size-disp" class="text-xs text-[var(--text-muted)]">18px</span></div><div class="flex justify-end gap-2"><button onclick="closeModals()" class="text-xs text-[var(--text-muted)]">Cancel</button><button onclick="confirmWbText()" class="text-xs bg-[var(--accent)] text-white px-3 py-1 rounded">Add</button></div></div>
+    <div id="modal-note-sketch" class="hidden modal-panel min-card p-6 w-[min(92vw,820px)] bg-[var(--bg-color)] border border-[var(--glass-border)]">
+        <div class="flex items-center justify-between mb-3">
+            <h3 class="text-sm font-bold">Draw handwriting note</h3>
+            <button onclick="closeModals()" class="text-[var(--text-muted)] hover:text-[var(--text-main)]"><i class="ph ph-x"></i></button>
+        </div>
+        <div class="flex flex-wrap gap-2 items-center mb-3">
+            <span class="text-xs text-[var(--text-muted)]">Pen:</span>
+            <button onclick="setNoteSketchColor('#ffffff')" class="w-5 h-5 rounded-full bg-white border border-[var(--glass-border)]"></button>
+            <button onclick="setNoteSketchColor('#1a1a1a')" class="w-5 h-5 rounded-full bg-[#1a1a1a] border border-[var(--glass-border)]"></button>
+            <button onclick="setNoteSketchColor('#ef4444')" class="w-5 h-5 rounded-full bg-red-500"></button>
+            <button onclick="setNoteSketchColor('#3b82f6')" class="w-5 h-5 rounded-full bg-blue-500"></button>
+            <button onclick="setNoteSketchColor('#22c55e')" class="w-5 h-5 rounded-full bg-green-500"></button>
+            <input type="range" id="note-sketch-size" min="1" max="24" value="3" class="w-24 accent-[var(--accent)]">
+            <button onclick="clearNoteSketch()" class="text-xs px-2 py-1 rounded-lg bg-[var(--glass-hover)] hover:bg-[var(--glass-panel)] transition">Clear</button>
+        </div>
+        <div class="note-sketch-wrap">
+            <canvas id="note-sketch-canvas" width="760" height="320"></canvas>
+        </div>
+        <div class="flex justify-end gap-2 mt-4">
+            <button onclick="closeModals()" class="text-xs text-[var(--text-muted)]">Cancel</button>
+            <button onclick="insertNoteSketchIntoNote()" class="text-xs bg-[var(--accent)] text-white px-3 py-1 rounded">Insert into note</button>
+        </div>
+    </div>
 
     <!-- Mind Map node text input -->
     <div id="modal-mm-node" class="hidden modal-panel min-card p-6 w-72 bg-[var(--bg-color)] border border-[var(--glass-border)]">
@@ -1408,6 +1460,24 @@
                 <div class="text-xs text-[var(--text-muted)] uppercase tracking-widest font-bold mb-3">Notifications</div>
                 <div class="settings-row"><span class="text-sm">Calendar Events</span><button onclick="requestCalNotifications()" class="text-xs px-3 py-1.5 bg-[var(--glass-hover)] rounded-lg hover:bg-[var(--accent)] hover:text-white transition">Enable</button></div>
                 <div class="settings-row"><span class="text-sm">Task Reminders</span><button onclick="requestTaskNotifications()" class="text-xs px-3 py-1.5 bg-[var(--glass-hover)] rounded-lg hover:bg-[var(--accent)] hover:text-white transition">Enable</button></div>
+            </div>
+            <div class="settings-section">
+                <div class="text-xs text-[var(--text-muted)] uppercase tracking-widest font-bold mb-3">Notes AI (Optional)</div>
+                <div class="settings-row"><div><span class="text-sm block">Enable Groq Notes Chat</span><span class="text-xs text-[var(--text-muted)]">When off, the notes chat icon is fully hidden</span></div><button id="groq-enabled-toggle" onclick="toggleGroqNotesEnabled()" class="w-12 h-6 rounded-full bg-[var(--glass-hover)] relative transition border border-[var(--glass-border)]"><div id="groq-enabled-dot" class="w-4 h-4 bg-[var(--text-main)] rounded-full absolute top-1 left-1 transition-transform"></div></button></div>
+                <div class="settings-row items-start flex-col gap-2">
+                    <span class="text-sm">Groq API Key</span>
+                    <input type="password" id="groq-api-key" placeholder="gsk_..." class="bare-input text-sm w-full" oninput="setGroqNotesApiKey(this.value)">
+                </div>
+                <div class="settings-row">
+                    <span class="text-sm">Default Chat Model</span>
+                    <select id="groq-default-model" onchange="setGroqDefaultModel(this.value)" class="bare-input text-sm bg-transparent w-56 text-right cursor-pointer">
+                        <option value="llama-3.1-8b-instant">llama-3.1-8b-instant</option>
+                        <option value="llama-3.3-70b-versatile">llama-3.3-70b-versatile</option>
+                        <option value="mixtral-8x7b-32768">mixtral-8x7b-32768</option>
+                        <option value="gemma2-9b-it">gemma2-9b-it</option>
+                    </select>
+                </div>
+                <p class="text-xs text-[var(--text-muted)] leading-relaxed">Setup: add your own Groq API key, switch this on, then use the notes chat icon. See the full guide in <code>docs/GROQ_NOTES_CHAT.md</code>.</p>
             </div>
             <div class="settings-section">
                 <div class="text-xs text-[var(--text-muted)] uppercase tracking-widest font-bold mb-3">Data</div>
