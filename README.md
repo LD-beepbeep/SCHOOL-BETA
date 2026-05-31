@@ -36,6 +36,7 @@ A minimalist, glassmorphism-inspired productivity dashboard built specifically f
 Want to see more, help out, or understand how this project is run? Check out the links below:
 
 * 📸 **[Screenshots Gallery](docs/SCREENSHOTS.md):** See more angles and features of the UI!
+* 🤖 **[Groq Notes Chat Setup](docs/GROQ_NOTES_CHAT.md):** Optional Notes AI setup with your own API key.
 * 🤝 **[Contributing Guidelines](docs/CONTRIBUTING.md):** Want to add a feature? Read this first!
 * 📜 **[Code of Conduct](docs/CODE_OF_CONDUCT.md):** Our standards for a welcoming community :)
 * 🔒 **[Security Policy](docs/SECURITY.md):** How to report vulnerabilities safely.

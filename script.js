@@ -457,6 +457,7 @@ function initApp() {
     renderDecks();
     populateGroupSelect();
     renderNotes();
+    syncGroqNotesUI();
     renderCalendar();
     renderGrades();
     initPomoTimer();
@@ -2661,6 +2662,17 @@ var noteFontActive = 'font-sans';
 var noteGroups = DB.get('os_note_groups', []);
 var selectedNoteGroupColor = '#3b82f6';
 var notesSidebarHidden = false;
+var groqNotesConfig = DB.get('os_notes_groq_cfg', {
+    enabled: false,
+    apiKey: '',
+    defaultModel: 'llama-3.1-8b-instant'
+});
+var noteGroqMessages = [];
+var noteGroqBusy = false;
+var noteSketchColor = '#1a1a1a';
+var noteSketchDrawing = false;
+var noteSketchCtx = null;
+var noteSketchInitDone = false;
 
 function renderNotes() {
     var c = document.getElementById('notes-sidebar');
@@ -2988,8 +3000,246 @@ function insertSticker(s) {
     document.getElementById('sticker-panel').classList.remove('open');
 }
 
+function syncGroqNotesUI() {
+    var enabled = !!groqNotesConfig.enabled;
+    var toggle = document.getElementById('groq-enabled-toggle');
+    var dot = document.getElementById('groq-enabled-dot');
+    if (toggle) toggle.style.background = enabled ? 'var(--accent)' : '';
+    if (dot) dot.style.transform = enabled ? 'translateX(24px)' : '';
+
+    var keyInput = document.getElementById('groq-api-key');
+    if (keyInput) keyInput.value = groqNotesConfig.apiKey || '';
+
+    var settingModel = document.getElementById('groq-default-model');
+    if (settingModel) settingModel.value = groqNotesConfig.defaultModel || 'llama-3.1-8b-instant';
+    var chatModel = document.getElementById('note-groq-model-select');
+    if (chatModel) chatModel.value = groqNotesConfig.defaultModel || 'llama-3.1-8b-instant';
+
+    var chatBtn = document.getElementById('note-groq-chat-btn');
+    if (chatBtn) chatBtn.classList.toggle('hidden', !enabled);
+    var panel = document.getElementById('note-groq-chat-panel');
+    if (!enabled && panel) panel.classList.add('hidden');
+}
+
+function toggleGroqNotesEnabled() {
+    groqNotesConfig.enabled = !groqNotesConfig.enabled;
+    DB.set('os_notes_groq_cfg', groqNotesConfig);
+    syncGroqNotesUI();
+}
+
+function setGroqNotesApiKey(v) {
+    groqNotesConfig.apiKey = (v || '').trim();
+    DB.set('os_notes_groq_cfg', groqNotesConfig);
+}
+
+function setGroqDefaultModel(model) {
+    groqNotesConfig.defaultModel = model || 'llama-3.1-8b-instant';
+    DB.set('os_notes_groq_cfg', groqNotesConfig);
+    var settingModel = document.getElementById('groq-default-model');
+    if (settingModel && settingModel.value !== groqNotesConfig.defaultModel) settingModel.value = groqNotesConfig.defaultModel;
+    var chatModel = document.getElementById('note-groq-model-select');
+    if (chatModel && chatModel.value !== groqNotesConfig.defaultModel) chatModel.value = groqNotesConfig.defaultModel;
+}
+
+function toggleNoteGroqChat() {
+    if (!groqNotesConfig.enabled) {
+        showAlert('Groq chat is disabled', 'Enable Groq Notes Chat in Settings first.');
+        return;
+    }
+    var panel = document.getElementById('note-groq-chat-panel');
+    if (!panel) return;
+    panel.classList.toggle('hidden');
+    if (!panel.classList.contains('hidden')) {
+        renderNoteGroqMessages();
+        var input = document.getElementById('note-groq-chat-input');
+        if (input) input.focus();
+    }
+}
+
+function clearNoteGroqChat() {
+    noteGroqMessages = [];
+    renderNoteGroqMessages();
+}
+
+function renderNoteGroqMessages() {
+    var box = document.getElementById('note-groq-chat-messages');
+    if (!box) return;
+    box.innerHTML = '';
+    if (!noteGroqMessages.length) {
+        var hint = document.createElement('div');
+        hint.className = 'text-xs text-[var(--text-muted)]';
+        hint.textContent = 'Ask about your current note. Answers are based on the note text.';
+        box.appendChild(hint);
+        return;
+    }
+    noteGroqMessages.forEach(function(m) {
+        var bubble = document.createElement('div');
+        bubble.className = 'note-chat-msg ' + (m.role === 'user' ? 'user' : 'assistant');
+        bubble.textContent = m.content || '';
+        box.appendChild(bubble);
+    });
+    box.scrollTop = box.scrollHeight;
+}
+
+async function sendNoteGroqMessage() {
+    if (noteGroqBusy) return;
+    if (!groqNotesConfig.enabled) return showAlert('Groq chat is disabled', 'Enable Groq Notes Chat in Settings first.');
+    if (!groqNotesConfig.apiKey) return showAlert('Missing API key', 'Add your Groq API key in Settings.');
+
+    var input = document.getElementById('note-groq-chat-input');
+    var text = input ? input.value.trim() : '';
+    if (!text) return;
+
+    var modelEl = document.getElementById('note-groq-model-select');
+    var model = (modelEl && modelEl.value) || groqNotesConfig.defaultModel || 'llama-3.1-8b-instant';
+    setGroqDefaultModel(model);
+
+    noteGroqMessages.push({ role: 'user', content: text });
+    if (input) input.value = '';
+    renderNoteGroqMessages();
+
+    noteGroqBusy = true;
+    var sendBtn = document.getElementById('note-groq-send-btn');
+    if (sendBtn) sendBtn.disabled = true;
+
+    try {
+        var noteContext = (document.getElementById('note-editor') && document.getElementById('note-editor').innerText) || '';
+        var reqMessages = [
+            {
+                role: 'system',
+                content: 'You are a helpful study assistant. Use the provided note content as primary context and clearly say when the note does not contain enough information.'
+            },
+            {
+                role: 'system',
+                content: 'Current note content:\n' + noteContext.slice(0, 12000)
+            }
+        ].concat(noteGroqMessages.slice(-10).map(function(m) {
+            return { role: m.role, content: m.content };
+        }));
+
+        var res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': 'Bearer ' + groqNotesConfig.apiKey
+            },
+            body: JSON.stringify({
+                model: model,
+                messages: reqMessages,
+                temperature: 0.2
+            })
+        });
+        var data = await res.json();
+        if (!res.ok) {
+            var msg = (data && data.error && data.error.message) || 'Groq request failed.';
+            throw new Error(msg);
+        }
+        var answer = (((data || {}).choices || [])[0] || {}).message;
+        var reply = (answer && answer.content) ? answer.content.trim() : 'No response from model.';
+        noteGroqMessages.push({ role: 'assistant', content: reply });
+    } catch (e) {
+        noteGroqMessages.push({ role: 'assistant', content: 'Error: ' + (e && e.message ? e.message : 'Request failed') });
+    } finally {
+        noteGroqBusy = false;
+        if (sendBtn) sendBtn.disabled = false;
+        renderNoteGroqMessages();
+    }
+}
+
+function noteSketchPoint(ev) {
+    var canvas = document.getElementById('note-sketch-canvas');
+    if (!canvas) return { x: 0, y: 0 };
+    var rect = canvas.getBoundingClientRect();
+    var src = ev.touches && ev.touches[0] ? ev.touches[0] : ev;
+    var x = ((src.clientX - rect.left) / rect.width) * canvas.width;
+    var y = ((src.clientY - rect.top) / rect.height) * canvas.height;
+    return { x: x, y: y };
+}
+
+function initNoteSketchCanvas() {
+    var canvas = document.getElementById('note-sketch-canvas');
+    if (!canvas) return;
+    if (!noteSketchCtx) {
+        noteSketchCtx = canvas.getContext('2d');
+        noteSketchCtx.lineCap = 'round';
+        noteSketchCtx.lineJoin = 'round';
+        noteSketchCtx.fillStyle = '#ffffff';
+        noteSketchCtx.fillRect(0, 0, canvas.width, canvas.height);
+    }
+    noteSketchCtx.strokeStyle = noteSketchColor;
+    var size = document.getElementById('note-sketch-size');
+    noteSketchCtx.lineWidth = size ? parseInt(size.value, 10) || 3 : 3;
+
+    if (noteSketchInitDone) return;
+    noteSketchInitDone = true;
+
+    function start(ev) {
+        ev.preventDefault();
+        noteSketchDrawing = true;
+        var p = noteSketchPoint(ev);
+        noteSketchCtx.beginPath();
+        noteSketchCtx.moveTo(p.x, p.y);
+    }
+    function move(ev) {
+        if (!noteSketchDrawing) return;
+        ev.preventDefault();
+        var p = noteSketchPoint(ev);
+        noteSketchCtx.lineTo(p.x, p.y);
+        noteSketchCtx.stroke();
+    }
+    function end() {
+        noteSketchDrawing = false;
+        noteSketchCtx.beginPath();
+    }
+
+    canvas.addEventListener('mousedown', start);
+    canvas.addEventListener('mousemove', move);
+    canvas.addEventListener('mouseup', end);
+    canvas.addEventListener('mouseleave', end);
+    canvas.addEventListener('touchstart', start, { passive: false });
+    canvas.addEventListener('touchmove', move, { passive: false });
+    canvas.addEventListener('touchend', end);
+    var slider = document.getElementById('note-sketch-size');
+    if (slider) {
+        slider.addEventListener('input', function() {
+            if (noteSketchCtx) noteSketchCtx.lineWidth = parseInt(this.value, 10) || 3;
+        });
+    }
+}
+
+function openNoteSketch() {
+    openModal('modal-note-sketch');
+    initNoteSketchCanvas();
+}
+
+function setNoteSketchColor(color) {
+    noteSketchColor = color || '#1a1a1a';
+    if (noteSketchCtx) noteSketchCtx.strokeStyle = noteSketchColor;
+}
+
+function clearNoteSketch() {
+    var canvas = document.getElementById('note-sketch-canvas');
+    if (!canvas || !noteSketchCtx) return;
+    noteSketchCtx.clearRect(0, 0, canvas.width, canvas.height);
+    noteSketchCtx.fillStyle = '#ffffff';
+    noteSketchCtx.fillRect(0, 0, canvas.width, canvas.height);
+}
+
+function insertNoteSketchIntoNote() {
+    var canvas = document.getElementById('note-sketch-canvas');
+    if (!canvas) return;
+    var data = canvas.toDataURL('image/png');
+    var editor = document.getElementById('note-editor');
+    if (!editor) return;
+    editor.focus();
+    document.execCommand('insertHTML', false, '<img src="' + data + '" style="max-width:100%;border-radius:8px;margin:4px 0;" alt="Handwriting sketch">');
+    saveNote();
+    closeModals();
+}
+
 renderNotes();
 if (notes[0]) loadNote(notes[0].id);
+syncGroqNotesUI();
 
 // ===== WHITEBOARD =====
 var canvas = document.getElementById('wb-canvas');
@@ -4237,6 +4487,16 @@ window.toggleNotesSidebar       = toggleNotesSidebar;
 window.toggleTablePicker        = toggleTablePicker;
 window.toggleStickerPanel       = toggleStickerPanel;
 window.insertSticker            = insertSticker;
+window.openNoteSketch           = openNoteSketch;
+window.setNoteSketchColor       = setNoteSketchColor;
+window.clearNoteSketch          = clearNoteSketch;
+window.insertNoteSketchIntoNote = insertNoteSketchIntoNote;
+window.toggleGroqNotesEnabled   = toggleGroqNotesEnabled;
+window.setGroqNotesApiKey       = setGroqNotesApiKey;
+window.setGroqDefaultModel      = setGroqDefaultModel;
+window.toggleNoteGroqChat       = toggleNoteGroqChat;
+window.sendNoteGroqMessage      = sendNoteGroqMessage;
+window.clearNoteGroqChat        = clearNoteGroqChat;
 window.saveNoteGroup            = saveNoteGroup;
 window.setNoteGroupColor        = setNoteGroupColor;
 window.deleteNoteGroup          = deleteNoteGroup;
