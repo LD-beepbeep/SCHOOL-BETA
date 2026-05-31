@@ -158,7 +158,7 @@ input[type=color]::-webkit-color-swatch { border:none; border-radius:50%; }
 .font-opt { padding:4px 10px; border-radius:8px; font-size:.78rem; cursor:pointer; transition:all .15s; color:var(--text-muted); white-space:nowrap; }
 .font-opt.active-font { background:var(--accent); color:#fff; }
 .font-opt:not(.active-font):hover { background:var(--glass-hover); color:var(--text-main); }
-.note-editor-wrap { position:relative; min-height:0; }
+.note-editor-wrap { position:relative; min-height:0; overflow:hidden; }
 #note-editor { position:relative; z-index:1; font-size:1rem; line-height:1.8; }
 .note-overlay-canvas { position:absolute; inset:0; z-index:5; pointer-events:none; touch-action:none; }
 .note-overlay-canvas.drawing-enabled { pointer-events:auto; cursor:crosshair; }

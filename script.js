@@ -738,6 +738,11 @@ function switchTab(name) {
     if (name === 'dashboard') { updateDashWidgets(); }
     if (name === 'calendar') { renderCalendar(); }
     if (name === 'focus') { populateFocusTasks(); }
+    if (name === 'notes') {
+        syncGroqNotesUI();
+        syncNoteSketchToolUI();
+        initNoteOverlayCanvas();
+    }
 }
 document.addEventListener('keydown', function(e) {
     if (e.altKey) {
@@ -2686,6 +2691,15 @@ var noteOverlayEnabled = false;
 var noteOverlayData = '';
 var noteOverlayInitDone = false;
 
+function normalizeGroqNotesConfig() {
+    if (!groqNotesConfig || typeof groqNotesConfig !== 'object') {
+        groqNotesConfig = {};
+    }
+    groqNotesConfig.enabled = !!groqNotesConfig.enabled;
+    groqNotesConfig.apiKey = typeof groqNotesConfig.apiKey === 'string' ? groqNotesConfig.apiKey.trim() : '';
+    groqNotesConfig.defaultModel = groqNotesConfig.defaultModel || 'llama-3.1-8b-instant';
+}
+
 function getNoteSketchSize() {
     var overlaySize = document.getElementById('note-overlay-size');
     if (overlaySize) return parseInt(overlaySize.value, 10) || 3;
@@ -3149,6 +3163,7 @@ function insertSticker(s) {
 }
 
 function syncGroqNotesUI() {
+    normalizeGroqNotesConfig();
     var enabled = !!groqNotesConfig.enabled;
     var toggle = document.getElementById('groq-enabled-toggle');
     var dot = document.getElementById('groq-enabled-dot');
@@ -3385,9 +3400,19 @@ function setNoteSketchColor(color) {
 
 function setNoteSketchTool(tool) {
     noteSketchTool = (tool === 'marker' || tool === 'eraser') ? tool : 'pen';
+    initNoteOverlayCanvas();
+    if (!noteOverlayEnabled) {
+        noteOverlayEnabled = true;
+        var canvas = document.getElementById('note-overlay-canvas');
+        if (canvas) canvas.classList.add('drawing-enabled');
+        var btn = document.getElementById('note-sketch-btn');
+        if (btn) btn.classList.add('active');
+    }
     syncNoteSketchToolUI();
     applyNoteSketchTool(noteSketchCtx);
     applyNoteSketchTool(noteOverlayCtx);
+    var menu = document.getElementById('tbar-handwriting-menu');
+    if (menu) menu.classList.remove('open');
 }
 
 function clearNoteSketch() {
@@ -4674,6 +4699,7 @@ window.insertNoteSketchIntoNote = insertNoteSketchIntoNote;
 window.toggleGroqNotesEnabled   = toggleGroqNotesEnabled;
 window.setGroqNotesApiKey       = setGroqNotesApiKey;
 window.setGroqDefaultModel      = setGroqDefaultModel;
+window.syncGroqNotesUI          = syncGroqNotesUI;
 window.toggleNoteGroqChat       = toggleNoteGroqChat;
 window.sendNoteGroqMessage      = sendNoteGroqMessage;
 window.clearNoteGroqChat        = clearNoteGroqChat;
@@ -4788,12 +4814,38 @@ function toggleToolbarDropdown(id) {
         m.classList.remove('open');
     });
     if (!isOpen) {
+        menu.style.left = '';
+        menu.style.right = '';
+        menu.style.top = '';
+        menu.style.bottom = '';
+        menu.style.transform = '';
         menu.classList.add('open');
+        var rect = menu.getBoundingClientRect();
+        var edge = 8;
+        if (rect.right > window.innerWidth - edge) {
+            menu.style.left = 'auto';
+            menu.style.right = '0';
+            rect = menu.getBoundingClientRect();
+        }
+        if (rect.left < edge) {
+            var shift = edge - rect.left;
+            menu.style.transform = 'translateX(' + shift + 'px)';
+            rect = menu.getBoundingClientRect();
+        }
+        if (rect.bottom > window.innerHeight - edge) {
+            menu.style.top = 'auto';
+            menu.style.bottom = 'calc(100% + 4px)';
+        }
         // Close on outside click
         setTimeout(function() {
             document.addEventListener('click', function _close(e) {
                 if (!menu.contains(e.target) && !e.target.closest('.tbar-group')) {
                     menu.classList.remove('open');
+                    menu.style.left = '';
+                    menu.style.right = '';
+                    menu.style.top = '';
+                    menu.style.bottom = '';
+                    menu.style.transform = '';
                     document.removeEventListener('click', _close);
                 }
             });
