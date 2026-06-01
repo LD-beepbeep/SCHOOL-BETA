@@ -683,6 +683,15 @@
                                     <button id="note-sketch-tool-eraser" class="tbar-dm-btn" onclick="setNoteSketchTool('eraser')"><i class="fa-solid fa-eraser"></i> Gum</button>
                                 </div>
                                 <div class="tbar-dm-divider"></div>
+                                <span class="tbar-dm-label">Layer</span>
+                                <div class="tbar-dm-row">
+                                    <select id="note-sketch-layer-select" class="bare-input text-xs py-1 px-2 w-full" onchange="setNoteSketchLayer(this.value)">
+                                        <option value="auto">Auto (Pen top, Marker under)</option>
+                                        <option value="above">Above text</option>
+                                        <option value="behind">Behind text</option>
+                                    </select>
+                                </div>
+                                <div class="tbar-dm-divider"></div>
                                 <span class="tbar-dm-label">Tool Colour</span>
                                 <div class="tbar-dm-row">
                                     <input type="color" id="note-sketch-color-picker" value="#1a1a1a" onchange="setNoteSketchColor(this.value)" title="Pick handwriting colour" style="width:30px;height:30px;border-radius:8px;background:transparent;border:1px solid var(--glass-border);cursor:pointer;padding:0;">
@@ -696,8 +705,9 @@
                     </div>
                 </div>
                 <div id="note-editor-wrap" class="note-editor-wrap flex-1">
+                    <canvas id="note-overlay-canvas" class="note-overlay-canvas behind"></canvas>
                     <div id="note-editor" contenteditable="true" class="h-full p-8 outline-none text-[var(--text-main)] leading-relaxed overflow-y-auto relative z-[1]" placeholder="Start writing…" style="font-family:'Inter',sans-serif;font-size:1rem;line-height:1.8;"></div>
-                    <canvas id="note-overlay-canvas" class="note-overlay-canvas"></canvas>
+                    <canvas id="note-overlay-canvas-front" class="note-overlay-canvas front"></canvas>
                 </div>
             </div>
             <aside id="note-groq-chat-panel" class="hidden note-chat-panel min-card">
@@ -713,6 +723,7 @@
                         <button onclick="toggleNoteGroqChat()" class="nt-btn" title="Hide AI sidebar"><i class="ph ph-x text-xs"></i></button>
                     </div>
                 </div>
+                <div id="note-groq-chat-context" class="note-chat-context text-xs">Connected to current note</div>
                 <div class="note-chat-quick">
                     <button class="note-chat-chip" onclick="askPresetNoteQuestion('Summarize this note in 5 bullets.')">Summarize</button>
                     <button class="note-chat-chip" onclick="askPresetNoteQuestion('What are the key terms and definitions in this note?')">Key terms</button>

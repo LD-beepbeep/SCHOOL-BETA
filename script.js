@@ -2697,10 +2697,15 @@ var noteSketchCtx = null;
 var noteSketchInitDone = false;
 var noteOverlayCanvas = null;
 var noteOverlayCtx = null;
+var noteOverlayCanvasFront = null;
+var noteOverlayCtxFront = null;
 var noteOverlayDrawing = false;
+var noteOverlayActiveContexts = [];
 var noteOverlayEnabled = false;
 var noteOverlayData = '';
+var noteOverlayDataFront = '';
 var noteOverlayInitDone = false;
+var noteSketchLayerMode = 'auto';
 
 function normalizeGroqNotesConfig() {
     if (!groqNotesConfig || typeof groqNotesConfig !== 'object') {
@@ -2732,6 +2737,35 @@ function getNoteSketchSize() {
     return modalSize ? parseInt(modalSize.value, 10) || 3 : 3;
 }
 
+function getNoteSketchLayerMode() {
+    return noteSketchLayerMode === 'above' || noteSketchLayerMode === 'behind' ? noteSketchLayerMode : 'auto';
+}
+
+function getNoteSketchTargetLayer() {
+    if (noteSketchTool === 'eraser') return 'both';
+    var mode = getNoteSketchLayerMode();
+    if (mode === 'above' || mode === 'behind') return mode;
+    return noteSketchTool === 'marker' ? 'behind' : 'above';
+}
+
+function getNoteOverlayTargetContexts() {
+    var target = getNoteSketchTargetLayer();
+    if (target === 'both') return [noteOverlayCtx, noteOverlayCtxFront].filter(Boolean);
+    return [target === 'behind' ? noteOverlayCtx : noteOverlayCtxFront].filter(Boolean);
+}
+
+function syncNoteOverlayLayerUI() {
+    var target = getNoteSketchTargetLayer();
+    var wrap = document.getElementById('note-editor-wrap');
+    if (wrap) wrap.classList.toggle('overlay-drawing', noteOverlayEnabled);
+    if (noteOverlayCanvas) {
+        noteOverlayCanvas.classList.toggle('drawing-enabled', noteOverlayEnabled && (target === 'behind' || target === 'both'));
+    }
+    if (noteOverlayCanvasFront) {
+        noteOverlayCanvasFront.classList.toggle('drawing-enabled', noteOverlayEnabled && (target === 'above' || target === 'both'));
+    }
+}
+
 function applyNoteSketchTool(ctxObj) {
     if (!ctxObj) return;
     var size = getNoteSketchSize();
@@ -2756,10 +2790,13 @@ function syncNoteSketchToolUI() {
         var btn = document.getElementById('note-sketch-tool-' + tool);
         if (btn) btn.classList.toggle('active-font', tool === noteSketchTool);
     });
+    var layerSelect = document.getElementById('note-sketch-layer-select');
+    if (layerSelect && layerSelect.value !== getNoteSketchLayerMode()) layerSelect.value = getNoteSketchLayerMode();
     var icon = document.querySelector('#note-sketch-btn i');
     if (icon) {
         icon.className = 'text-xs ' + (noteSketchTool === 'eraser' ? 'fa-solid fa-eraser' : noteSketchTool === 'marker' ? 'fa-solid fa-highlighter' : 'fa-solid fa-pencil');
     }
+    syncNoteOverlayLayerUI();
 }
 
 function renderNotes() {
@@ -2832,36 +2869,44 @@ function noteItem(n) {
 function initNoteOverlayCanvas() {
     var wrap = document.getElementById('note-editor-wrap');
     var canvas = document.getElementById('note-overlay-canvas');
-    if (!wrap || !canvas) return;
+    var frontCanvas = document.getElementById('note-overlay-canvas-front');
+    if (!wrap || !canvas || !frontCanvas) return;
 
     var w = Math.floor(wrap.clientWidth);
     var h = Math.floor(wrap.clientHeight);
     if (w < 2 || h < 2) return;
-    if (canvas.width !== w || canvas.height !== h) {
-        var old = document.createElement('canvas');
-        old.width = canvas.width;
-        old.height = canvas.height;
-        if (old.width && old.height) {
-            var oldCtx = old.getContext('2d');
-            oldCtx.drawImage(canvas, 0, 0);
+
+    [canvas, frontCanvas].forEach(function(layerCanvas) {
+        if (layerCanvas.width !== w || layerCanvas.height !== h) {
+            var old = document.createElement('canvas');
+            old.width = layerCanvas.width;
+            old.height = layerCanvas.height;
+            if (old.width && old.height) {
+                var oldCtx = old.getContext('2d');
+                oldCtx.drawImage(layerCanvas, 0, 0);
+            }
+            layerCanvas.width = w;
+            layerCanvas.height = h;
+            if (old.width && old.height) {
+                var resizedCtx = layerCanvas.getContext('2d');
+                resizedCtx.drawImage(old, 0, 0, old.width, old.height, 0, 0, layerCanvas.width, layerCanvas.height);
+            }
         }
-        canvas.width = w;
-        canvas.height = h;
-        if (old.width && old.height) {
-            var resizedCtx = canvas.getContext('2d');
-            resizedCtx.drawImage(old, 0, 0, old.width, old.height, 0, 0, canvas.width, canvas.height);
-        }
-    }
+    });
 
     noteOverlayCanvas = canvas;
+    noteOverlayCanvasFront = frontCanvas;
     noteOverlayCtx = canvas.getContext('2d');
+    noteOverlayCtxFront = frontCanvas.getContext('2d');
     applyNoteSketchTool(noteOverlayCtx);
+    applyNoteSketchTool(noteOverlayCtxFront);
+    syncNoteOverlayLayerUI();
 
     if (noteOverlayInitDone) return;
     noteOverlayInitDone = true;
 
     function point(ev) {
-        var rect = canvas.getBoundingClientRect();
+        var rect = wrap.getBoundingClientRect();
         var src = ev.touches && ev.touches[0] ? ev.touches[0] : ev;
         return {
             x: src.clientX - rect.left,
@@ -2872,58 +2917,75 @@ function initNoteOverlayCanvas() {
         if (!noteOverlayEnabled) return;
         ev.preventDefault();
         noteOverlayDrawing = true;
-        applyNoteSketchTool(noteOverlayCtx);
+        noteOverlayActiveContexts = getNoteOverlayTargetContexts();
+        noteOverlayActiveContexts.forEach(function(ctx) { applyNoteSketchTool(ctx); });
         var p = point(ev);
-        noteOverlayCtx.beginPath();
-        noteOverlayCtx.moveTo(p.x, p.y);
+        noteOverlayActiveContexts.forEach(function(ctx) {
+            ctx.beginPath();
+            ctx.moveTo(p.x, p.y);
+        });
     }
     function move(ev) {
         if (!noteOverlayEnabled || !noteOverlayDrawing) return;
         ev.preventDefault();
-        applyNoteSketchTool(noteOverlayCtx);
+        noteOverlayActiveContexts.forEach(function(ctx) { applyNoteSketchTool(ctx); });
         var p = point(ev);
-        noteOverlayCtx.lineTo(p.x, p.y);
-        noteOverlayCtx.stroke();
+        noteOverlayActiveContexts.forEach(function(ctx) {
+            ctx.lineTo(p.x, p.y);
+            ctx.stroke();
+        });
     }
     function end() {
         if (!noteOverlayDrawing) return;
         noteOverlayDrawing = false;
-        noteOverlayCtx.beginPath();
-        noteOverlayCtx.globalCompositeOperation = 'source-over';
-        noteOverlayCtx.globalAlpha = 1;
+        noteOverlayActiveContexts.forEach(function(ctx) {
+            ctx.beginPath();
+            ctx.globalCompositeOperation = 'source-over';
+            ctx.globalAlpha = 1;
+        });
+        noteOverlayActiveContexts = [];
         noteOverlayData = noteOverlayCanvas.toDataURL('image/png');
+        noteOverlayDataFront = noteOverlayCanvasFront.toDataURL('image/png');
         saveNote();
     }
 
-    canvas.addEventListener('mousedown', start);
-    canvas.addEventListener('mousemove', move);
-    canvas.addEventListener('mouseup', end);
-    canvas.addEventListener('mouseleave', end);
-    canvas.addEventListener('touchstart', start, { passive: false });
-    canvas.addEventListener('touchmove', move, { passive: false });
-    canvas.addEventListener('touchend', end);
+    [canvas, frontCanvas].forEach(function(layerCanvas) {
+        layerCanvas.addEventListener('mousedown', start);
+        layerCanvas.addEventListener('mousemove', move);
+        layerCanvas.addEventListener('mouseup', end);
+        layerCanvas.addEventListener('mouseleave', end);
+        layerCanvas.addEventListener('touchstart', start, { passive: false });
+        layerCanvas.addEventListener('touchmove', move, { passive: false });
+        layerCanvas.addEventListener('touchend', end);
+    });
     window.addEventListener('resize', initNoteOverlayCanvas);
 }
 
-function loadNoteOverlay(dataUrl, attempt) {
-    noteOverlayData = dataUrl || '';
+function loadNoteOverlay(backDataUrl, frontDataUrl, attempt) {
+    noteOverlayData = backDataUrl || '';
+    noteOverlayDataFront = frontDataUrl || '';
     initNoteOverlayCanvas();
     attempt = attempt || 0;
-    if (!noteOverlayCtx || !noteOverlayCanvas) {
+    if (!noteOverlayCtx || !noteOverlayCanvas || !noteOverlayCtxFront || !noteOverlayCanvasFront) {
         if (attempt < 3) {
-            setTimeout(function() { loadNoteOverlay(noteOverlayData, attempt + 1); }, 80);
+            setTimeout(function() { loadNoteOverlay(noteOverlayData, noteOverlayDataFront, attempt + 1); }, 80);
         }
         return;
     }
-    noteOverlayCtx.clearRect(0, 0, noteOverlayCanvas.width, noteOverlayCanvas.height);
-    if (!noteOverlayData) return;
-    var img = new Image();
-    img.onload = function() {
-        if (!noteOverlayCtx || !noteOverlayCanvas) return;
-        noteOverlayCtx.clearRect(0, 0, noteOverlayCanvas.width, noteOverlayCanvas.height);
-        noteOverlayCtx.drawImage(img, 0, 0, noteOverlayCanvas.width, noteOverlayCanvas.height);
-    };
-    img.src = noteOverlayData;
+    [
+        { ctx: noteOverlayCtx, canvas: noteOverlayCanvas, data: noteOverlayData },
+        { ctx: noteOverlayCtxFront, canvas: noteOverlayCanvasFront, data: noteOverlayDataFront }
+    ].forEach(function(layer) {
+        layer.ctx.clearRect(0, 0, layer.canvas.width, layer.canvas.height);
+        if (!layer.data) return;
+        var img = new Image();
+        img.onload = function() {
+            if (!layer.ctx || !layer.canvas) return;
+            layer.ctx.clearRect(0, 0, layer.canvas.width, layer.canvas.height);
+            layer.ctx.drawImage(img, 0, 0, layer.canvas.width, layer.canvas.height);
+        };
+        img.src = layer.data;
+    });
 }
 
 function loadNote(id) {
@@ -2937,7 +2999,8 @@ function loadNote(id) {
     } else {
         setNoteFont('Inter, sans-serif', 'font-sans', true);
     }
-    loadNoteOverlay(n.handwritingLayer || '');
+    loadNoteOverlay(n.handwritingLayerBehind || n.handwritingLayer || '', n.handwritingLayerAbove || '');
+    syncNoteGroqContext();
     renderNotes(); updateNoteCount();
 }
 function saveNote() {
@@ -2947,8 +3010,11 @@ function saveNote() {
     n.body = document.getElementById('note-editor').innerHTML;
     n.font = document.getElementById('note-editor').style.fontFamily;
     n.fontClass = noteFontActive;
+    n.handwritingLayerBehind = noteOverlayData || '';
+    n.handwritingLayerAbove = noteOverlayDataFront || '';
     n.handwritingLayer = noteOverlayData || '';
     DB.set('os_notes', notes); renderNotes(); updateNoteCount();
+    syncNoteGroqContext();
 }
 function createNewNote() {
     notes.unshift({ id: Date.now(), title: '', body: '' });
@@ -3249,6 +3315,14 @@ function setGroqDefaultModel(model) {
     if (chatModel && chatModel.value !== groqNotesConfig.defaultModel) chatModel.value = groqNotesConfig.defaultModel;
 }
 
+function syncNoteGroqContext() {
+    var label = document.getElementById('note-groq-chat-context');
+    if (!label) return;
+    var n = notes.find(function(x) { return x.id === activeNote; });
+    var title = n && n.title ? n.title.trim() : '';
+    label.textContent = title ? ('Connected to: ' + title) : 'Connected to current note';
+}
+
 function toggleNoteGroqChat() {
     if (!groqNotesConfig.enabled) {
         showAlert('Notes AI is disabled', 'Enable Groq Notes Chat in Settings first.');
@@ -3263,6 +3337,7 @@ function toggleNoteGroqChat() {
     if (layout) layout.classList.toggle('ai-sidebar-open', open);
     if (btn) btn.classList.toggle('active', open);
     if (open) {
+        syncNoteGroqContext();
         renderNoteGroqMessages();
         var input = document.getElementById('note-groq-chat-input');
         if (input) input.focus();
@@ -3466,6 +3541,7 @@ function initNoteSketchCanvas() {
         slider.addEventListener('input', function() {
             applyNoteSketchTool(noteSketchCtx);
             applyNoteSketchTool(noteOverlayCtx);
+            applyNoteSketchTool(noteOverlayCtxFront);
         });
     });
 }
@@ -3473,10 +3549,7 @@ function initNoteSketchCanvas() {
 function openNoteSketch() {
     initNoteOverlayCanvas();
     noteOverlayEnabled = !noteOverlayEnabled;
-    var canvas = document.getElementById('note-overlay-canvas');
-    var wrap = document.getElementById('note-editor-wrap');
-    if (canvas) canvas.classList.toggle('drawing-enabled', noteOverlayEnabled);
-    if (wrap) wrap.classList.toggle('overlay-drawing', noteOverlayEnabled);
+    syncNoteOverlayLayerUI();
     var btn = document.getElementById('note-sketch-btn');
     if (btn) btn.classList.toggle('active', noteOverlayEnabled);
     showToast(noteOverlayEnabled ? 'Handwriting mode on' : 'Handwriting mode off');
@@ -3488,6 +3561,12 @@ function setNoteSketchColor(color) {
     if (picker && picker.value !== noteSketchColor) picker.value = noteSketchColor;
     applyNoteSketchTool(noteSketchCtx);
     applyNoteSketchTool(noteOverlayCtx);
+    applyNoteSketchTool(noteOverlayCtxFront);
+}
+
+function setNoteSketchLayer(mode) {
+    noteSketchLayerMode = (mode === 'above' || mode === 'behind') ? mode : 'auto';
+    syncNoteSketchToolUI();
 }
 
 function setNoteSketchTool(tool) {
@@ -3495,16 +3574,14 @@ function setNoteSketchTool(tool) {
     initNoteOverlayCanvas();
     if (!noteOverlayEnabled) {
         noteOverlayEnabled = true;
-        var canvas = document.getElementById('note-overlay-canvas');
-        var wrap = document.getElementById('note-editor-wrap');
-        if (canvas) canvas.classList.add('drawing-enabled');
-        if (wrap) wrap.classList.add('overlay-drawing');
+        syncNoteOverlayLayerUI();
         var btn = document.getElementById('note-sketch-btn');
         if (btn) btn.classList.add('active');
     }
     syncNoteSketchToolUI();
     applyNoteSketchTool(noteSketchCtx);
     applyNoteSketchTool(noteOverlayCtx);
+    applyNoteSketchTool(noteOverlayCtxFront);
     var menu = document.getElementById('tbar-handwriting-menu');
     if (menu) menu.classList.remove('open');
 }
@@ -3513,6 +3590,12 @@ function clearNoteSketch() {
     if (noteOverlayCanvas && noteOverlayCtx) {
         noteOverlayCtx.clearRect(0, 0, noteOverlayCanvas.width, noteOverlayCanvas.height);
         noteOverlayData = '';
+    }
+    if (noteOverlayCanvasFront && noteOverlayCtxFront) {
+        noteOverlayCtxFront.clearRect(0, 0, noteOverlayCanvasFront.width, noteOverlayCanvasFront.height);
+        noteOverlayDataFront = '';
+    }
+    if (noteOverlayCanvas || noteOverlayCanvasFront) {
         saveNote();
     }
     var canvas = document.getElementById('note-sketch-canvas');
