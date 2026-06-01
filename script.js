@@ -2715,6 +2715,9 @@ function normalizeGroqNotesConfig() {
 function normalizeNotesAiModel(model) {
     var raw = (model || '').trim();
     if (!raw) return 'groq:llama-3.1-8b-instant';
+    if (raw === 'mixtral-8x7b-32768' || raw === 'gemma2-9b-it' || raw === 'groq:mixtral-8x7b-32768' || raw === 'groq:gemma2-9b-it') {
+        return 'groq:llama-3.3-70b-versatile';
+    }
     if (raw.indexOf(':') === -1) {
         if (raw.indexOf('gemini-') === 0) return 'gemini:' + raw;
         return 'groq:' + raw;
