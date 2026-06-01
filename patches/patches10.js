@@ -748,14 +748,22 @@ function _p10settingsHTML(){
                            oninput="if(typeof setGroqNotesApiKey==='function')setGroqNotesApiKey(this.value)">
                 </div>
                 <div class="p10-row">
+                    <div><div class="p10-row-lbl">Gemini API Key</div></div>
+                    <input type="password" id="p10-gemini-api-key" class="p10-input" placeholder="AIza..."
+                           oninput="if(typeof setGeminiNotesApiKey==='function')setGeminiNotesApiKey(this.value)">
+                </div>
+                <div class="p10-row">
                     <div><div class="p10-row-lbl">Default Chat Model</div></div>
                     <select class="p10-select" id="p10-groq-default-model"
                             onchange="if(typeof setGroqDefaultModel==='function')setGroqDefaultModel(this.value)">
-                        <option value="llama-3.1-8b-instant">llama-3.1-8b-instant</option>
-                        <option value="llama-3.3-70b-versatile">llama-3.3-70b-versatile</option>
-                        <option value="mixtral-8x7b-32768">mixtral-8x7b-32768</option>
-                        <option value="gemma2-9b-it">gemma2-9b-it</option>
+                        <option value="groq:llama-3.1-8b-instant">Groq · llama-3.1-8b-instant</option>
+                        <option value="groq:llama-3.3-70b-versatile">Groq · llama-3.3-70b-versatile</option>
+                        <option value="gemini:gemini-2.0-flash">Gemini · gemini-2.0-flash</option>
+                        <option value="gemini:gemini-1.5-flash">Gemini · gemini-1.5-flash</option>
                     </select>
+                </div>
+                <div class="p10-row">
+                    <div class="p10-row-sub">Setup: add one or both keys, enable Notes AI, then use the sparkle icon in Notes.</div>
                 </div>
             </div>
             <div class="p10-section">

@@ -270,6 +270,7 @@ function _defaultUserDoc() {
         os_card_stats:  {},
         os_streak:      { count: 0, lastDate: '' },
         os_quick_note:  '',
+        os_notes_groq_cfg: { enabled: false, apiKey: '', geminiApiKey: '', defaultModel: 'groq:llama-3.1-8b-instant' },
         os_theme:       'dark',
         os_lang:        'en',
         os_accent:      '#3b82f6',
@@ -286,7 +287,7 @@ function _collectLocalStorage() {
         'os_font_scale','os_clock_color','os_bg_color','os_name','os_profile',
         'os_widgets','os_wb_boards','os_wb_active','os_boards','os_cal_url',
         'os_pomo_times','os_pomo_autobreak','os_pomo_session','os_pomo_today',
-        'os_timer_sound','os_notif_cal','os_notif_tasks'
+        'os_timer_sound','os_notif_cal','os_notif_tasks','os_notes_groq_cfg'
     ];
     const data = {};
     let found = false;
@@ -317,7 +318,7 @@ function _clearLocalStorage() {
         'os_font_scale','os_clock_color','os_bg_color','os_name','os_profile',
         'os_widgets','os_wb_boards','os_wb_active','os_boards','os_cal_url',
         'os_pomo_times','os_pomo_autobreak','os_pomo_session','os_pomo_today',
-        'os_timer_sound','os_notif_cal','os_notif_tasks'
+        'os_timer_sound','os_notif_cal','os_notif_tasks','os_notes_groq_cfg'
     ];
     keys.forEach(k => localStorage.removeItem(k));
 }
@@ -444,7 +445,8 @@ function initApp() {
     groqNotesConfig     = DB.get('os_notes_groq_cfg', {
         enabled: false,
         apiKey: '',
-        defaultModel: 'llama-3.1-8b-instant'
+        geminiApiKey: '',
+        defaultModel: 'groq:llama-3.1-8b-instant'
     });
 
     // Apply accent / font / clock / bg that were previously self-invoking
@@ -2683,7 +2685,8 @@ var notesSidebarHidden = false;
 var groqNotesConfig = DB.get('os_notes_groq_cfg', {
     enabled: false,
     apiKey: '',
-    defaultModel: 'llama-3.1-8b-instant'
+    geminiApiKey: '',
+    defaultModel: 'groq:llama-3.1-8b-instant'
 });
 var noteGroqMessages = [];
 var noteGroqBusy = false;
@@ -2694,10 +2697,15 @@ var noteSketchCtx = null;
 var noteSketchInitDone = false;
 var noteOverlayCanvas = null;
 var noteOverlayCtx = null;
+var noteOverlayCanvasFront = null;
+var noteOverlayCtxFront = null;
 var noteOverlayDrawing = false;
+var noteOverlayActiveContexts = [];
 var noteOverlayEnabled = false;
 var noteOverlayData = '';
+var noteOverlayDataFront = '';
 var noteOverlayInitDone = false;
+var noteSketchLayerMode = 'auto';
 
 function normalizeGroqNotesConfig() {
     if (!groqNotesConfig || typeof groqNotesConfig !== 'object') {
@@ -2705,7 +2713,21 @@ function normalizeGroqNotesConfig() {
     }
     groqNotesConfig.enabled = !!groqNotesConfig.enabled;
     groqNotesConfig.apiKey = typeof groqNotesConfig.apiKey === 'string' ? groqNotesConfig.apiKey.trim() : '';
-    groqNotesConfig.defaultModel = groqNotesConfig.defaultModel || 'llama-3.1-8b-instant';
+    groqNotesConfig.geminiApiKey = typeof groqNotesConfig.geminiApiKey === 'string' ? groqNotesConfig.geminiApiKey.trim() : '';
+    groqNotesConfig.defaultModel = normalizeNotesAiModel(groqNotesConfig.defaultModel || 'groq:llama-3.1-8b-instant');
+}
+
+function normalizeNotesAiModel(model) {
+    var raw = (model || '').trim();
+    if (!raw) return 'groq:llama-3.1-8b-instant';
+    if (raw === 'mixtral-8x7b-32768' || raw === 'gemma2-9b-it' || raw === 'groq:mixtral-8x7b-32768' || raw === 'groq:gemma2-9b-it') {
+        return 'groq:llama-3.3-70b-versatile';
+    }
+    if (raw.indexOf(':') === -1) {
+        if (raw.indexOf('gemini-') === 0) return 'gemini:' + raw;
+        return 'groq:' + raw;
+    }
+    return raw;
 }
 
 function getNoteSketchSize() {
@@ -2713,6 +2735,35 @@ function getNoteSketchSize() {
     if (overlaySize) return parseInt(overlaySize.value, 10) || 3;
     var modalSize = document.getElementById('note-sketch-size');
     return modalSize ? parseInt(modalSize.value, 10) || 3 : 3;
+}
+
+function getNoteSketchLayerMode() {
+    return noteSketchLayerMode === 'above' || noteSketchLayerMode === 'behind' ? noteSketchLayerMode : 'auto';
+}
+
+function getNoteSketchTargetLayer() {
+    if (noteSketchTool === 'eraser') return 'both';
+    var mode = getNoteSketchLayerMode();
+    if (mode === 'above' || mode === 'behind') return mode;
+    return noteSketchTool === 'marker' ? 'behind' : 'above';
+}
+
+function getNoteOverlayTargetContexts() {
+    var target = getNoteSketchTargetLayer();
+    if (target === 'both') return [noteOverlayCtx, noteOverlayCtxFront].filter(Boolean);
+    return [target === 'behind' ? noteOverlayCtx : noteOverlayCtxFront].filter(Boolean);
+}
+
+function syncNoteOverlayLayerUI() {
+    var target = getNoteSketchTargetLayer();
+    var wrap = document.getElementById('note-editor-wrap');
+    if (wrap) wrap.classList.toggle('overlay-drawing', noteOverlayEnabled);
+    if (noteOverlayCanvas) {
+        noteOverlayCanvas.classList.toggle('drawing-enabled', noteOverlayEnabled && (target === 'behind' || target === 'both'));
+    }
+    if (noteOverlayCanvasFront) {
+        noteOverlayCanvasFront.classList.toggle('drawing-enabled', noteOverlayEnabled && (target === 'above' || target === 'both'));
+    }
 }
 
 function applyNoteSketchTool(ctxObj) {
@@ -2739,10 +2790,13 @@ function syncNoteSketchToolUI() {
         var btn = document.getElementById('note-sketch-tool-' + tool);
         if (btn) btn.classList.toggle('active-font', tool === noteSketchTool);
     });
+    var layerSelect = document.getElementById('note-sketch-layer-select');
+    if (layerSelect && layerSelect.value !== getNoteSketchLayerMode()) layerSelect.value = getNoteSketchLayerMode();
     var icon = document.querySelector('#note-sketch-btn i');
     if (icon) {
         icon.className = 'text-xs ' + (noteSketchTool === 'eraser' ? 'fa-solid fa-eraser' : noteSketchTool === 'marker' ? 'fa-solid fa-highlighter' : 'fa-solid fa-pencil');
     }
+    syncNoteOverlayLayerUI();
 }
 
 function renderNotes() {
@@ -2815,36 +2869,44 @@ function noteItem(n) {
 function initNoteOverlayCanvas() {
     var wrap = document.getElementById('note-editor-wrap');
     var canvas = document.getElementById('note-overlay-canvas');
-    if (!wrap || !canvas) return;
+    var frontCanvas = document.getElementById('note-overlay-canvas-front');
+    if (!wrap || !canvas || !frontCanvas) return;
 
     var w = Math.floor(wrap.clientWidth);
     var h = Math.floor(wrap.clientHeight);
     if (w < 2 || h < 2) return;
-    if (canvas.width !== w || canvas.height !== h) {
-        var old = document.createElement('canvas');
-        old.width = canvas.width;
-        old.height = canvas.height;
-        if (old.width && old.height) {
-            var oldCtx = old.getContext('2d');
-            oldCtx.drawImage(canvas, 0, 0);
+
+    [canvas, frontCanvas].forEach(function(layerCanvas) {
+        if (layerCanvas.width !== w || layerCanvas.height !== h) {
+            var old = document.createElement('canvas');
+            old.width = layerCanvas.width;
+            old.height = layerCanvas.height;
+            if (old.width && old.height) {
+                var oldCtx = old.getContext('2d');
+                oldCtx.drawImage(layerCanvas, 0, 0);
+            }
+            layerCanvas.width = w;
+            layerCanvas.height = h;
+            if (old.width && old.height) {
+                var resizedCtx = layerCanvas.getContext('2d');
+                resizedCtx.drawImage(old, 0, 0, old.width, old.height, 0, 0, layerCanvas.width, layerCanvas.height);
+            }
         }
-        canvas.width = w;
-        canvas.height = h;
-        if (old.width && old.height) {
-            var resizedCtx = canvas.getContext('2d');
-            resizedCtx.drawImage(old, 0, 0, old.width, old.height, 0, 0, canvas.width, canvas.height);
-        }
-    }
+    });
 
     noteOverlayCanvas = canvas;
+    noteOverlayCanvasFront = frontCanvas;
     noteOverlayCtx = canvas.getContext('2d');
+    noteOverlayCtxFront = frontCanvas.getContext('2d');
     applyNoteSketchTool(noteOverlayCtx);
+    applyNoteSketchTool(noteOverlayCtxFront);
+    syncNoteOverlayLayerUI();
 
     if (noteOverlayInitDone) return;
     noteOverlayInitDone = true;
 
     function point(ev) {
-        var rect = canvas.getBoundingClientRect();
+        var rect = wrap.getBoundingClientRect();
         var src = ev.touches && ev.touches[0] ? ev.touches[0] : ev;
         return {
             x: src.clientX - rect.left,
@@ -2855,58 +2917,75 @@ function initNoteOverlayCanvas() {
         if (!noteOverlayEnabled) return;
         ev.preventDefault();
         noteOverlayDrawing = true;
-        applyNoteSketchTool(noteOverlayCtx);
+        noteOverlayActiveContexts = getNoteOverlayTargetContexts();
+        noteOverlayActiveContexts.forEach(function(ctx) { applyNoteSketchTool(ctx); });
         var p = point(ev);
-        noteOverlayCtx.beginPath();
-        noteOverlayCtx.moveTo(p.x, p.y);
+        noteOverlayActiveContexts.forEach(function(ctx) {
+            ctx.beginPath();
+            ctx.moveTo(p.x, p.y);
+        });
     }
     function move(ev) {
         if (!noteOverlayEnabled || !noteOverlayDrawing) return;
         ev.preventDefault();
-        applyNoteSketchTool(noteOverlayCtx);
+        noteOverlayActiveContexts.forEach(function(ctx) { applyNoteSketchTool(ctx); });
         var p = point(ev);
-        noteOverlayCtx.lineTo(p.x, p.y);
-        noteOverlayCtx.stroke();
+        noteOverlayActiveContexts.forEach(function(ctx) {
+            ctx.lineTo(p.x, p.y);
+            ctx.stroke();
+        });
     }
     function end() {
         if (!noteOverlayDrawing) return;
         noteOverlayDrawing = false;
-        noteOverlayCtx.beginPath();
-        noteOverlayCtx.globalCompositeOperation = 'source-over';
-        noteOverlayCtx.globalAlpha = 1;
+        noteOverlayActiveContexts.forEach(function(ctx) {
+            ctx.beginPath();
+            ctx.globalCompositeOperation = 'source-over';
+            ctx.globalAlpha = 1;
+        });
+        noteOverlayActiveContexts = [];
         noteOverlayData = noteOverlayCanvas.toDataURL('image/png');
+        noteOverlayDataFront = noteOverlayCanvasFront.toDataURL('image/png');
         saveNote();
     }
 
-    canvas.addEventListener('mousedown', start);
-    canvas.addEventListener('mousemove', move);
-    canvas.addEventListener('mouseup', end);
-    canvas.addEventListener('mouseleave', end);
-    canvas.addEventListener('touchstart', start, { passive: false });
-    canvas.addEventListener('touchmove', move, { passive: false });
-    canvas.addEventListener('touchend', end);
+    [canvas, frontCanvas].forEach(function(layerCanvas) {
+        layerCanvas.addEventListener('mousedown', start);
+        layerCanvas.addEventListener('mousemove', move);
+        layerCanvas.addEventListener('mouseup', end);
+        layerCanvas.addEventListener('mouseleave', end);
+        layerCanvas.addEventListener('touchstart', start, { passive: false });
+        layerCanvas.addEventListener('touchmove', move, { passive: false });
+        layerCanvas.addEventListener('touchend', end);
+    });
     window.addEventListener('resize', initNoteOverlayCanvas);
 }
 
-function loadNoteOverlay(dataUrl, attempt) {
-    noteOverlayData = dataUrl || '';
+function loadNoteOverlay(backDataUrl, frontDataUrl, attempt) {
+    noteOverlayData = backDataUrl || '';
+    noteOverlayDataFront = frontDataUrl || '';
     initNoteOverlayCanvas();
     attempt = attempt || 0;
-    if (!noteOverlayCtx || !noteOverlayCanvas) {
+    if (!noteOverlayCtx || !noteOverlayCanvas || !noteOverlayCtxFront || !noteOverlayCanvasFront) {
         if (attempt < 3) {
-            setTimeout(function() { loadNoteOverlay(noteOverlayData, attempt + 1); }, 80);
+            setTimeout(function() { loadNoteOverlay(noteOverlayData, noteOverlayDataFront, attempt + 1); }, 80);
         }
         return;
     }
-    noteOverlayCtx.clearRect(0, 0, noteOverlayCanvas.width, noteOverlayCanvas.height);
-    if (!noteOverlayData) return;
-    var img = new Image();
-    img.onload = function() {
-        if (!noteOverlayCtx || !noteOverlayCanvas) return;
-        noteOverlayCtx.clearRect(0, 0, noteOverlayCanvas.width, noteOverlayCanvas.height);
-        noteOverlayCtx.drawImage(img, 0, 0, noteOverlayCanvas.width, noteOverlayCanvas.height);
-    };
-    img.src = noteOverlayData;
+    [
+        { ctx: noteOverlayCtx, canvas: noteOverlayCanvas, data: noteOverlayData },
+        { ctx: noteOverlayCtxFront, canvas: noteOverlayCanvasFront, data: noteOverlayDataFront }
+    ].forEach(function(layer) {
+        layer.ctx.clearRect(0, 0, layer.canvas.width, layer.canvas.height);
+        if (!layer.data) return;
+        var img = new Image();
+        img.onload = function() {
+            if (!layer.ctx || !layer.canvas) return;
+            layer.ctx.clearRect(0, 0, layer.canvas.width, layer.canvas.height);
+            layer.ctx.drawImage(img, 0, 0, layer.canvas.width, layer.canvas.height);
+        };
+        img.src = layer.data;
+    });
 }
 
 function loadNote(id) {
@@ -2920,7 +2999,8 @@ function loadNote(id) {
     } else {
         setNoteFont('Inter, sans-serif', 'font-sans', true);
     }
-    loadNoteOverlay(n.handwritingLayer || '');
+    loadNoteOverlay(n.handwritingLayerBehind || n.handwritingLayer || '', n.handwritingLayerAbove || '');
+    syncNoteGroqContext();
     renderNotes(); updateNoteCount();
 }
 function saveNote() {
@@ -2930,8 +3010,11 @@ function saveNote() {
     n.body = document.getElementById('note-editor').innerHTML;
     n.font = document.getElementById('note-editor').style.fontFamily;
     n.fontClass = noteFontActive;
+    n.handwritingLayerBehind = noteOverlayData || '';
+    n.handwritingLayerAbove = noteOverlayDataFront || '';
     n.handwritingLayer = noteOverlayData || '';
     DB.set('os_notes', notes); renderNotes(); updateNoteCount();
+    syncNoteGroqContext();
 }
 function createNewNote() {
     notes.unshift({ id: Date.now(), title: '', body: '' });
@@ -3184,18 +3267,25 @@ function syncGroqNotesUI() {
     if (keyInput) keyInput.value = groqNotesConfig.apiKey || '';
     var p10KeyInput = document.getElementById('p10-groq-api-key');
     if (p10KeyInput) p10KeyInput.value = groqNotesConfig.apiKey || '';
+    var p10GeminiInput = document.getElementById('p10-gemini-api-key');
+    if (p10GeminiInput) p10GeminiInput.value = groqNotesConfig.geminiApiKey || '';
+    var geminiInput = document.getElementById('gemini-api-key');
+    if (geminiInput) geminiInput.value = groqNotesConfig.geminiApiKey || '';
 
     var settingModel = document.getElementById('groq-default-model');
-    if (settingModel) settingModel.value = groqNotesConfig.defaultModel || 'llama-3.1-8b-instant';
+    if (settingModel) settingModel.value = normalizeNotesAiModel(groqNotesConfig.defaultModel || 'groq:llama-3.1-8b-instant');
     var p10SettingModel = document.getElementById('p10-groq-default-model');
-    if (p10SettingModel) p10SettingModel.value = groqNotesConfig.defaultModel || 'llama-3.1-8b-instant';
+    if (p10SettingModel) p10SettingModel.value = normalizeNotesAiModel(groqNotesConfig.defaultModel || 'groq:llama-3.1-8b-instant');
     var chatModel = document.getElementById('note-groq-model-select');
-    if (chatModel) chatModel.value = groqNotesConfig.defaultModel || 'llama-3.1-8b-instant';
+    if (chatModel) chatModel.value = normalizeNotesAiModel(groqNotesConfig.defaultModel || 'groq:llama-3.1-8b-instant');
 
     var chatBtn = document.getElementById('note-groq-chat-btn');
     if (chatBtn) chatBtn.classList.toggle('hidden', !enabled);
+    if (chatBtn) chatBtn.classList.remove('active');
     var panel = document.getElementById('note-groq-chat-panel');
     if (!enabled && panel) panel.classList.add('hidden');
+    var layout = document.getElementById('notes-layout');
+    if (!enabled && layout) layout.classList.remove('ai-sidebar-open');
 }
 
 function toggleGroqNotesEnabled() {
@@ -3209,24 +3299,45 @@ function setGroqNotesApiKey(v) {
     DB.set('os_notes_groq_cfg', groqNotesConfig);
 }
 
+function setGeminiNotesApiKey(v) {
+    groqNotesConfig.geminiApiKey = (v || '').trim();
+    DB.set('os_notes_groq_cfg', groqNotesConfig);
+}
+
 function setGroqDefaultModel(model) {
-    groqNotesConfig.defaultModel = model || 'llama-3.1-8b-instant';
+    groqNotesConfig.defaultModel = normalizeNotesAiModel(model || 'groq:llama-3.1-8b-instant');
     DB.set('os_notes_groq_cfg', groqNotesConfig);
     var settingModel = document.getElementById('groq-default-model');
     if (settingModel && settingModel.value !== groqNotesConfig.defaultModel) settingModel.value = groqNotesConfig.defaultModel;
+    var p10SettingModel = document.getElementById('p10-groq-default-model');
+    if (p10SettingModel && p10SettingModel.value !== groqNotesConfig.defaultModel) p10SettingModel.value = groqNotesConfig.defaultModel;
     var chatModel = document.getElementById('note-groq-model-select');
     if (chatModel && chatModel.value !== groqNotesConfig.defaultModel) chatModel.value = groqNotesConfig.defaultModel;
 }
 
+function syncNoteGroqContext() {
+    var label = document.getElementById('note-groq-chat-context');
+    if (!label) return;
+    var n = notes.find(function(x) { return x.id === activeNote; });
+    var title = n && n.title ? n.title.trim() : '';
+    label.textContent = title ? ('Connected to: ' + title) : 'Connected to current note';
+}
+
 function toggleNoteGroqChat() {
     if (!groqNotesConfig.enabled) {
-        showAlert('Groq chat is disabled', 'Enable Groq Notes Chat in Settings first.');
+        showAlert('Notes AI is disabled', 'Enable Groq Notes Chat in Settings first.');
         return;
     }
     var panel = document.getElementById('note-groq-chat-panel');
+    var layout = document.getElementById('notes-layout');
+    var btn = document.getElementById('note-groq-chat-btn');
     if (!panel) return;
     panel.classList.toggle('hidden');
-    if (!panel.classList.contains('hidden')) {
+    var open = !panel.classList.contains('hidden');
+    if (layout) layout.classList.toggle('ai-sidebar-open', open);
+    if (btn) btn.classList.toggle('active', open);
+    if (open) {
+        syncNoteGroqContext();
         renderNoteGroqMessages();
         var input = document.getElementById('note-groq-chat-input');
         if (input) input.focus();
@@ -3245,7 +3356,7 @@ function renderNoteGroqMessages() {
     if (!noteGroqMessages.length) {
         var hint = document.createElement('div');
         hint.className = 'text-xs text-[var(--text-muted)]';
-        hint.textContent = 'Ask about your current note. Answers are based on the note text.';
+        hint.textContent = 'Use a quick question above or ask anything about this note.';
         box.appendChild(hint);
         return;
     }
@@ -3260,16 +3371,22 @@ function renderNoteGroqMessages() {
 
 async function sendNoteGroqMessage() {
     if (noteGroqBusy) return;
-    if (!groqNotesConfig.enabled) return showAlert('Groq chat is disabled', 'Enable Groq Notes Chat in Settings first.');
-    if (!groqNotesConfig.apiKey) return showAlert('Missing API key', 'Add your Groq API key in Settings.');
+    if (!groqNotesConfig.enabled) return showAlert('Notes AI is disabled', 'Enable Groq Notes Chat in Settings first.');
 
     var input = document.getElementById('note-groq-chat-input');
     var text = input ? input.value.trim() : '';
     if (!text) return;
 
     var modelEl = document.getElementById('note-groq-model-select');
-    var model = (modelEl && modelEl.value) || groqNotesConfig.defaultModel || 'llama-3.1-8b-instant';
-    setGroqDefaultModel(model);
+    var selected = normalizeNotesAiModel((modelEl && modelEl.value) || groqNotesConfig.defaultModel || 'groq:llama-3.1-8b-instant');
+    setGroqDefaultModel(selected);
+    var parts = selected.split(':');
+    var provider = parts[0];
+    var model = parts.slice(1).join(':');
+    var providerKey = provider === 'gemini' ? (groqNotesConfig.geminiApiKey || '') : (groqNotesConfig.apiKey || '');
+    if (!providerKey) {
+        return showAlert('Missing API key', provider === 'gemini' ? 'Add your Gemini API key in Settings.' : 'Add your Groq API key in Settings.');
+    }
 
     noteGroqMessages.push({ role: 'user', content: text });
     if (input) input.value = '';
@@ -3294,25 +3411,58 @@ async function sendNoteGroqMessage() {
             return { role: m.role, content: m.content };
         }));
 
-        var res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': 'Bearer ' + groqNotesConfig.apiKey
-            },
-            body: JSON.stringify({
-                model: model,
-                messages: reqMessages,
-                temperature: 0.2
-            })
-        });
-        var data = await res.json();
-        if (!res.ok) {
-            var msg = (data && data.error && data.error.message) || 'Groq request failed.';
-            throw new Error(msg);
+        var reply = '';
+        if (provider === 'gemini') {
+            var historyText = noteGroqMessages.slice(-10).map(function(m) {
+                return (m.role === 'user' ? 'User: ' : 'Assistant: ') + (m.content || '');
+            }).join('\n\n');
+            var geminiPrompt = [
+                'You are a helpful study assistant.',
+                'Use the note content as primary context and clearly say when the note does not contain enough information.',
+                '',
+                'Current note content:',
+                noteContext.slice(0, 12000),
+                '',
+                'Conversation:',
+                historyText
+            ].join('\n');
+            var geminiRes = await fetch('https://generativelanguage.googleapis.com/v1beta/models/' + encodeURIComponent(model) + ':generateContent?key=' + encodeURIComponent(providerKey), {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    contents: [{ role: 'user', parts: [{ text: geminiPrompt }] }],
+                    generationConfig: { temperature: 0.2 }
+                })
+            });
+            var geminiData = await geminiRes.json();
+            if (!geminiRes.ok) {
+                var geminiMsg = (geminiData && geminiData.error && geminiData.error.message) || 'Gemini request failed.';
+                throw new Error(geminiMsg);
+            }
+            var geminiParts = ((((geminiData || {}).candidates || [])[0] || {}).content || {}).parts || [];
+            reply = geminiParts.map(function(p) { return p && p.text ? p.text : ''; }).join('\n').trim();
+        } else {
+            var res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': 'Bearer ' + providerKey
+                },
+                body: JSON.stringify({
+                    model: model,
+                    messages: reqMessages,
+                    temperature: 0.2
+                })
+            });
+            var data = await res.json();
+            if (!res.ok) {
+                var msg = (data && data.error && data.error.message) || 'Groq request failed.';
+                throw new Error(msg);
+            }
+            var answer = (((data || {}).choices || [])[0] || {}).message;
+            reply = (answer && answer.content) ? answer.content.trim() : '';
         }
-        var answer = (((data || {}).choices || [])[0] || {}).message;
-        var reply = (answer && answer.content) ? answer.content.trim() : 'No response from model.';
+        if (!reply) reply = 'No response from model.';
         noteGroqMessages.push({ role: 'assistant', content: reply });
     } catch (e) {
         noteGroqMessages.push({ role: 'assistant', content: 'Error: ' + (e && e.message ? e.message : 'Request failed') });
@@ -3320,6 +3470,13 @@ async function sendNoteGroqMessage() {
         noteGroqBusy = false;
         if (sendBtn) sendBtn.disabled = false;
         renderNoteGroqMessages();
+    }
+
+    function askPresetNoteQuestion(question) {
+        var input = document.getElementById('note-groq-chat-input');
+        if (!input) return;
+        input.value = question || '';
+        sendNoteGroqMessage();
     }
 }
 
@@ -3384,6 +3541,7 @@ function initNoteSketchCanvas() {
         slider.addEventListener('input', function() {
             applyNoteSketchTool(noteSketchCtx);
             applyNoteSketchTool(noteOverlayCtx);
+            applyNoteSketchTool(noteOverlayCtxFront);
         });
     });
 }
@@ -3391,8 +3549,7 @@ function initNoteSketchCanvas() {
 function openNoteSketch() {
     initNoteOverlayCanvas();
     noteOverlayEnabled = !noteOverlayEnabled;
-    var canvas = document.getElementById('note-overlay-canvas');
-    if (canvas) canvas.classList.toggle('drawing-enabled', noteOverlayEnabled);
+    syncNoteOverlayLayerUI();
     var btn = document.getElementById('note-sketch-btn');
     if (btn) btn.classList.toggle('active', noteOverlayEnabled);
     showToast(noteOverlayEnabled ? 'Handwriting mode on' : 'Handwriting mode off');
@@ -3404,6 +3561,12 @@ function setNoteSketchColor(color) {
     if (picker && picker.value !== noteSketchColor) picker.value = noteSketchColor;
     applyNoteSketchTool(noteSketchCtx);
     applyNoteSketchTool(noteOverlayCtx);
+    applyNoteSketchTool(noteOverlayCtxFront);
+}
+
+function setNoteSketchLayer(mode) {
+    noteSketchLayerMode = (mode === 'above' || mode === 'behind') ? mode : 'auto';
+    syncNoteSketchToolUI();
 }
 
 function setNoteSketchTool(tool) {
@@ -3411,14 +3574,14 @@ function setNoteSketchTool(tool) {
     initNoteOverlayCanvas();
     if (!noteOverlayEnabled) {
         noteOverlayEnabled = true;
-        var canvas = document.getElementById('note-overlay-canvas');
-        if (canvas) canvas.classList.add('drawing-enabled');
+        syncNoteOverlayLayerUI();
         var btn = document.getElementById('note-sketch-btn');
         if (btn) btn.classList.add('active');
     }
     syncNoteSketchToolUI();
     applyNoteSketchTool(noteSketchCtx);
     applyNoteSketchTool(noteOverlayCtx);
+    applyNoteSketchTool(noteOverlayCtxFront);
     var menu = document.getElementById('tbar-handwriting-menu');
     if (menu) menu.classList.remove('open');
 }
@@ -3427,6 +3590,12 @@ function clearNoteSketch() {
     if (noteOverlayCanvas && noteOverlayCtx) {
         noteOverlayCtx.clearRect(0, 0, noteOverlayCanvas.width, noteOverlayCanvas.height);
         noteOverlayData = '';
+    }
+    if (noteOverlayCanvasFront && noteOverlayCtxFront) {
+        noteOverlayCtxFront.clearRect(0, 0, noteOverlayCanvasFront.width, noteOverlayCanvasFront.height);
+        noteOverlayDataFront = '';
+    }
+    if (noteOverlayCanvas || noteOverlayCanvasFront) {
         saveNote();
     }
     var canvas = document.getElementById('note-sketch-canvas');
