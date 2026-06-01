@@ -294,12 +294,16 @@ button:active { transform: scale(.96); transition: transform .1s; }
     border-bottom: 1px solid rgba(255,255,255,.07);
     padding-bottom: 6px;
 }
-.notes-layout > .min-card:last-child {
+#notes-main-panel {
     border-radius: var(--card-radius) !important;
     overflow: hidden;
     display: flex;
     flex-direction: column;
     min-height: 0;
+}
+#note-groq-chat-panel {
+    max-height: 260px;
+    min-height: 180px;
 }
 #note-editor {
     flex: 1;

@@ -552,7 +552,7 @@
                 <div id="notes-sidebar" class="space-y-1 overflow-y-auto flex-1"></div>
             </div>
             <!-- RIGHT PANEL: editor -->
-            <div class="min-card p-0 flex flex-col overflow-visible">
+            <div id="notes-main-panel" class="min-card p-0 flex flex-col overflow-visible">
                 <!-- ===== COMPACT NOTES TOOLBAR ===== -->
                 <div class="note-toolbar-compact" id="note-toolbar">
                     <!-- Title -->
@@ -690,7 +690,7 @@
                                 </div>
                             </div>
                         </div>
-                        <button onclick="toggleNoteGroqChat()" id="note-groq-chat-btn" class="nt-btn hidden" title="Ask your notes (Groq)"><i class="ph ph-chat-circle text-xs"></i></button>
+                        <button onclick="toggleNoteGroqChat()" id="note-groq-chat-btn" class="nt-btn hidden" title="Toggle Notes AI sidebar"><i class="ph ph-sparkle text-xs"></i></button>
                         <button onclick="toggleNotesSidebar()" id="notes-sidebar-toggle-btn" class="nt-btn" title="Toggle Sidebar (Ctrl+\)"><i class="ph ph-sidebar text-xs"></i></button>
                         <button onclick="deleteCurrentNote()" class="nt-btn hover:text-red-400" title="Delete note"><i class="fa-solid fa-trash text-xs"></i></button>
                     </div>
@@ -699,28 +699,33 @@
                     <div id="note-editor" contenteditable="true" class="h-full p-8 outline-none text-[var(--text-main)] leading-relaxed overflow-y-auto relative z-[1]" placeholder="Start writing…" style="font-family:'Inter',sans-serif;font-size:1rem;line-height:1.8;"></div>
                     <canvas id="note-overlay-canvas" class="note-overlay-canvas"></canvas>
                 </div>
-                <div id="note-groq-chat-panel" class="hidden note-chat-panel border-t border-[var(--glass-border)]">
-                    <div class="note-chat-top">
-                        <div class="text-xs font-semibold">Notes AI (Groq)</div>
-                        <div class="flex items-center gap-2">
-                            <label for="note-groq-model-select" class="text-[10px] text-[var(--text-muted)]">Model</label>
-                            <select id="note-groq-model-select" class="bare-input text-xs py-1 px-2" onchange="setGroqDefaultModel(this.value)">
-                                <option value="llama-3.1-8b-instant">llama-3.1-8b-instant</option>
-                                <option value="llama-3.3-70b-versatile">llama-3.3-70b-versatile</option>
-                                <option value="mixtral-8x7b-32768">mixtral-8x7b-32768</option>
-                                <option value="gemma2-9b-it">gemma2-9b-it</option>
-                            </select>
-                            <button onclick="toggleNoteGroqChat()" class="nt-btn" title="Hide chat"><i class="ph ph-x text-xs"></i></button>
-                        </div>
-                    </div>
-                    <div id="note-groq-chat-messages" class="note-chat-messages"></div>
-                    <div class="note-chat-input-row">
-                        <input type="text" id="note-groq-chat-input" class="bare-input text-sm flex-1" placeholder="Ask something about this note…" onkeypress="if(event.key==='Enter')sendNoteGroqMessage()">
-                        <button onclick="clearNoteGroqChat()" class="text-xs px-2 py-1 rounded-lg bg-[var(--glass-hover)] hover:bg-[var(--glass-panel)] transition">Clear</button>
-                        <button onclick="sendNoteGroqMessage()" id="note-groq-send-btn" class="text-xs px-3 py-1 rounded-lg bg-[var(--accent)] text-white hover:opacity-90 transition">Send</button>
+            </div>
+            <aside id="note-groq-chat-panel" class="hidden note-chat-panel min-card">
+                <div class="note-chat-top">
+                    <div class="text-xs font-semibold">Notes AI</div>
+                    <div class="flex items-center gap-2">
+                        <select id="note-groq-model-select" class="bare-input text-xs py-1 px-2" onchange="setGroqDefaultModel(this.value)">
+                            <option value="groq:llama-3.1-8b-instant">Groq · llama-3.1-8b-instant</option>
+                            <option value="groq:llama-3.3-70b-versatile">Groq · llama-3.3-70b-versatile</option>
+                            <option value="gemini:gemini-2.0-flash">Gemini · gemini-2.0-flash</option>
+                            <option value="gemini:gemini-1.5-flash">Gemini · gemini-1.5-flash</option>
+                        </select>
+                        <button onclick="toggleNoteGroqChat()" class="nt-btn" title="Hide AI sidebar"><i class="ph ph-x text-xs"></i></button>
                     </div>
                 </div>
-            </div>
+                <div class="note-chat-quick">
+                    <button class="note-chat-chip" onclick="askPresetNoteQuestion('Summarize this note in 5 bullets.')">Summarize</button>
+                    <button class="note-chat-chip" onclick="askPresetNoteQuestion('What are the key terms and definitions in this note?')">Key terms</button>
+                    <button class="note-chat-chip" onclick="askPresetNoteQuestion('Give me 3 quiz questions from this note.')">Quiz me</button>
+                    <button class="note-chat-chip" onclick="askPresetNoteQuestion('What should I study next based on this note?')">Study next</button>
+                </div>
+                <div id="note-groq-chat-messages" class="note-chat-messages"></div>
+                <div class="note-chat-input-row">
+                    <input type="text" id="note-groq-chat-input" class="bare-input text-sm flex-1" placeholder="Quick question about this note…" onkeypress="if(event.key==='Enter')sendNoteGroqMessage()">
+                    <button onclick="clearNoteGroqChat()" class="text-xs px-2 py-1 rounded-lg bg-[var(--glass-hover)] hover:bg-[var(--glass-panel)] transition">Clear</button>
+                    <button onclick="sendNoteGroqMessage()" id="note-groq-send-btn" class="text-xs px-3 py-1 rounded-lg bg-[var(--accent)] text-white hover:opacity-90 transition">Send</button>
+                </div>
+            </aside>
         </div>
     </div>
 
@@ -1487,16 +1492,20 @@
                     <span class="text-sm">Groq API Key</span>
                     <input type="password" id="groq-api-key" placeholder="gsk_..." class="bare-input text-sm w-full" oninput="setGroqNotesApiKey(this.value)">
                 </div>
+                <div class="settings-row items-start flex-col gap-2">
+                    <span class="text-sm">Gemini API Key</span>
+                    <input type="password" id="gemini-api-key" placeholder="AIza..." class="bare-input text-sm w-full" oninput="setGeminiNotesApiKey(this.value)">
+                </div>
                 <div class="settings-row">
                     <span class="text-sm">Default Chat Model</span>
                     <select id="groq-default-model" onchange="setGroqDefaultModel(this.value)" class="bare-input text-sm bg-transparent w-56 text-right cursor-pointer">
-                        <option value="llama-3.1-8b-instant">llama-3.1-8b-instant</option>
-                        <option value="llama-3.3-70b-versatile">llama-3.3-70b-versatile</option>
-                        <option value="mixtral-8x7b-32768">mixtral-8x7b-32768</option>
-                        <option value="gemma2-9b-it">gemma2-9b-it</option>
+                        <option value="groq:llama-3.1-8b-instant">Groq · llama-3.1-8b-instant</option>
+                        <option value="groq:llama-3.3-70b-versatile">Groq · llama-3.3-70b-versatile</option>
+                        <option value="gemini:gemini-2.0-flash">Gemini · gemini-2.0-flash</option>
+                        <option value="gemini:gemini-1.5-flash">Gemini · gemini-1.5-flash</option>
                     </select>
                 </div>
-                <p class="text-xs text-[var(--text-muted)] leading-relaxed">Setup: add your own Groq API key, switch this on, then use the notes chat icon. See the full guide in <code>docs/GROQ_NOTES_CHAT.md</code>.</p>
+                <p class="text-xs text-[var(--text-muted)] leading-relaxed">Setup: add your Groq and/or Gemini key, enable Notes AI, then open the sparkle button in Notes for quick questions. Your keys are saved in your synced account data. Full guide: <code>docs/GROQ_NOTES_CHAT.md</code>.</p>
             </div>
             <div class="settings-section">
                 <div class="text-xs text-[var(--text-muted)] uppercase tracking-widest font-bold mb-3">Data</div>

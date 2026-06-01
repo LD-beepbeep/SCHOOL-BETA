@@ -270,6 +270,7 @@ function _defaultUserDoc() {
         os_card_stats:  {},
         os_streak:      { count: 0, lastDate: '' },
         os_quick_note:  '',
+        os_notes_groq_cfg: { enabled: false, apiKey: '', geminiApiKey: '', defaultModel: 'groq:llama-3.1-8b-instant' },
         os_theme:       'dark',
         os_lang:        'en',
         os_accent:      '#3b82f6',
@@ -286,7 +287,7 @@ function _collectLocalStorage() {
         'os_font_scale','os_clock_color','os_bg_color','os_name','os_profile',
         'os_widgets','os_wb_boards','os_wb_active','os_boards','os_cal_url',
         'os_pomo_times','os_pomo_autobreak','os_pomo_session','os_pomo_today',
-        'os_timer_sound','os_notif_cal','os_notif_tasks'
+        'os_timer_sound','os_notif_cal','os_notif_tasks','os_notes_groq_cfg'
     ];
     const data = {};
     let found = false;
@@ -317,7 +318,7 @@ function _clearLocalStorage() {
         'os_font_scale','os_clock_color','os_bg_color','os_name','os_profile',
         'os_widgets','os_wb_boards','os_wb_active','os_boards','os_cal_url',
         'os_pomo_times','os_pomo_autobreak','os_pomo_session','os_pomo_today',
-        'os_timer_sound','os_notif_cal','os_notif_tasks'
+        'os_timer_sound','os_notif_cal','os_notif_tasks','os_notes_groq_cfg'
     ];
     keys.forEach(k => localStorage.removeItem(k));
 }
@@ -444,7 +445,8 @@ function initApp() {
     groqNotesConfig     = DB.get('os_notes_groq_cfg', {
         enabled: false,
         apiKey: '',
-        defaultModel: 'llama-3.1-8b-instant'
+        geminiApiKey: '',
+        defaultModel: 'groq:llama-3.1-8b-instant'
     });
 
     // Apply accent / font / clock / bg that were previously self-invoking
@@ -2683,7 +2685,8 @@ var notesSidebarHidden = false;
 var groqNotesConfig = DB.get('os_notes_groq_cfg', {
     enabled: false,
     apiKey: '',
-    defaultModel: 'llama-3.1-8b-instant'
+    geminiApiKey: '',
+    defaultModel: 'groq:llama-3.1-8b-instant'
 });
 var noteGroqMessages = [];
 var noteGroqBusy = false;
@@ -2705,7 +2708,18 @@ function normalizeGroqNotesConfig() {
     }
     groqNotesConfig.enabled = !!groqNotesConfig.enabled;
     groqNotesConfig.apiKey = typeof groqNotesConfig.apiKey === 'string' ? groqNotesConfig.apiKey.trim() : '';
-    groqNotesConfig.defaultModel = groqNotesConfig.defaultModel || 'llama-3.1-8b-instant';
+    groqNotesConfig.geminiApiKey = typeof groqNotesConfig.geminiApiKey === 'string' ? groqNotesConfig.geminiApiKey.trim() : '';
+    groqNotesConfig.defaultModel = normalizeNotesAiModel(groqNotesConfig.defaultModel || 'groq:llama-3.1-8b-instant');
+}
+
+function normalizeNotesAiModel(model) {
+    var raw = (model || '').trim();
+    if (!raw) return 'groq:llama-3.1-8b-instant';
+    if (raw.indexOf(':') === -1) {
+        if (raw.indexOf('gemini-') === 0) return 'gemini:' + raw;
+        return 'groq:' + raw;
+    }
+    return raw;
 }
 
 function getNoteSketchSize() {
@@ -3184,18 +3198,25 @@ function syncGroqNotesUI() {
     if (keyInput) keyInput.value = groqNotesConfig.apiKey || '';
     var p10KeyInput = document.getElementById('p10-groq-api-key');
     if (p10KeyInput) p10KeyInput.value = groqNotesConfig.apiKey || '';
+    var p10GeminiInput = document.getElementById('p10-gemini-api-key');
+    if (p10GeminiInput) p10GeminiInput.value = groqNotesConfig.geminiApiKey || '';
+    var geminiInput = document.getElementById('gemini-api-key');
+    if (geminiInput) geminiInput.value = groqNotesConfig.geminiApiKey || '';
 
     var settingModel = document.getElementById('groq-default-model');
-    if (settingModel) settingModel.value = groqNotesConfig.defaultModel || 'llama-3.1-8b-instant';
+    if (settingModel) settingModel.value = normalizeNotesAiModel(groqNotesConfig.defaultModel || 'groq:llama-3.1-8b-instant');
     var p10SettingModel = document.getElementById('p10-groq-default-model');
-    if (p10SettingModel) p10SettingModel.value = groqNotesConfig.defaultModel || 'llama-3.1-8b-instant';
+    if (p10SettingModel) p10SettingModel.value = normalizeNotesAiModel(groqNotesConfig.defaultModel || 'groq:llama-3.1-8b-instant');
     var chatModel = document.getElementById('note-groq-model-select');
-    if (chatModel) chatModel.value = groqNotesConfig.defaultModel || 'llama-3.1-8b-instant';
+    if (chatModel) chatModel.value = normalizeNotesAiModel(groqNotesConfig.defaultModel || 'groq:llama-3.1-8b-instant');
 
     var chatBtn = document.getElementById('note-groq-chat-btn');
     if (chatBtn) chatBtn.classList.toggle('hidden', !enabled);
+    if (chatBtn) chatBtn.classList.remove('active');
     var panel = document.getElementById('note-groq-chat-panel');
     if (!enabled && panel) panel.classList.add('hidden');
+    var layout = document.getElementById('notes-layout');
+    if (!enabled && layout) layout.classList.remove('ai-sidebar-open');
 }
 
 function toggleGroqNotesEnabled() {
@@ -3209,24 +3230,36 @@ function setGroqNotesApiKey(v) {
     DB.set('os_notes_groq_cfg', groqNotesConfig);
 }
 
+function setGeminiNotesApiKey(v) {
+    groqNotesConfig.geminiApiKey = (v || '').trim();
+    DB.set('os_notes_groq_cfg', groqNotesConfig);
+}
+
 function setGroqDefaultModel(model) {
-    groqNotesConfig.defaultModel = model || 'llama-3.1-8b-instant';
+    groqNotesConfig.defaultModel = normalizeNotesAiModel(model || 'groq:llama-3.1-8b-instant');
     DB.set('os_notes_groq_cfg', groqNotesConfig);
     var settingModel = document.getElementById('groq-default-model');
     if (settingModel && settingModel.value !== groqNotesConfig.defaultModel) settingModel.value = groqNotesConfig.defaultModel;
+    var p10SettingModel = document.getElementById('p10-groq-default-model');
+    if (p10SettingModel && p10SettingModel.value !== groqNotesConfig.defaultModel) p10SettingModel.value = groqNotesConfig.defaultModel;
     var chatModel = document.getElementById('note-groq-model-select');
     if (chatModel && chatModel.value !== groqNotesConfig.defaultModel) chatModel.value = groqNotesConfig.defaultModel;
 }
 
 function toggleNoteGroqChat() {
     if (!groqNotesConfig.enabled) {
-        showAlert('Groq chat is disabled', 'Enable Groq Notes Chat in Settings first.');
+        showAlert('Notes AI is disabled', 'Enable Groq Notes Chat in Settings first.');
         return;
     }
     var panel = document.getElementById('note-groq-chat-panel');
+    var layout = document.getElementById('notes-layout');
+    var btn = document.getElementById('note-groq-chat-btn');
     if (!panel) return;
     panel.classList.toggle('hidden');
-    if (!panel.classList.contains('hidden')) {
+    var open = !panel.classList.contains('hidden');
+    if (layout) layout.classList.toggle('ai-sidebar-open', open);
+    if (btn) btn.classList.toggle('active', open);
+    if (open) {
         renderNoteGroqMessages();
         var input = document.getElementById('note-groq-chat-input');
         if (input) input.focus();
@@ -3245,7 +3278,7 @@ function renderNoteGroqMessages() {
     if (!noteGroqMessages.length) {
         var hint = document.createElement('div');
         hint.className = 'text-xs text-[var(--text-muted)]';
-        hint.textContent = 'Ask about your current note. Answers are based on the note text.';
+        hint.textContent = 'Use a quick question above or ask anything about this note.';
         box.appendChild(hint);
         return;
     }
@@ -3260,16 +3293,22 @@ function renderNoteGroqMessages() {
 
 async function sendNoteGroqMessage() {
     if (noteGroqBusy) return;
-    if (!groqNotesConfig.enabled) return showAlert('Groq chat is disabled', 'Enable Groq Notes Chat in Settings first.');
-    if (!groqNotesConfig.apiKey) return showAlert('Missing API key', 'Add your Groq API key in Settings.');
+    if (!groqNotesConfig.enabled) return showAlert('Notes AI is disabled', 'Enable Groq Notes Chat in Settings first.');
 
     var input = document.getElementById('note-groq-chat-input');
     var text = input ? input.value.trim() : '';
     if (!text) return;
 
     var modelEl = document.getElementById('note-groq-model-select');
-    var model = (modelEl && modelEl.value) || groqNotesConfig.defaultModel || 'llama-3.1-8b-instant';
-    setGroqDefaultModel(model);
+    var selected = normalizeNotesAiModel((modelEl && modelEl.value) || groqNotesConfig.defaultModel || 'groq:llama-3.1-8b-instant');
+    setGroqDefaultModel(selected);
+    var parts = selected.split(':');
+    var provider = parts[0];
+    var model = parts.slice(1).join(':');
+    var providerKey = provider === 'gemini' ? (groqNotesConfig.geminiApiKey || '') : (groqNotesConfig.apiKey || '');
+    if (!providerKey) {
+        return showAlert('Missing API key', provider === 'gemini' ? 'Add your Gemini API key in Settings.' : 'Add your Groq API key in Settings.');
+    }
 
     noteGroqMessages.push({ role: 'user', content: text });
     if (input) input.value = '';
@@ -3294,25 +3333,58 @@ async function sendNoteGroqMessage() {
             return { role: m.role, content: m.content };
         }));
 
-        var res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': 'Bearer ' + groqNotesConfig.apiKey
-            },
-            body: JSON.stringify({
-                model: model,
-                messages: reqMessages,
-                temperature: 0.2
-            })
-        });
-        var data = await res.json();
-        if (!res.ok) {
-            var msg = (data && data.error && data.error.message) || 'Groq request failed.';
-            throw new Error(msg);
+        var reply = '';
+        if (provider === 'gemini') {
+            var historyText = noteGroqMessages.slice(-10).map(function(m) {
+                return (m.role === 'user' ? 'User: ' : 'Assistant: ') + (m.content || '');
+            }).join('\n\n');
+            var geminiPrompt = [
+                'You are a helpful study assistant.',
+                'Use the note content as primary context and clearly say when the note does not contain enough information.',
+                '',
+                'Current note content:',
+                noteContext.slice(0, 12000),
+                '',
+                'Conversation:',
+                historyText
+            ].join('\n');
+            var geminiRes = await fetch('https://generativelanguage.googleapis.com/v1beta/models/' + encodeURIComponent(model) + ':generateContent?key=' + encodeURIComponent(providerKey), {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    contents: [{ role: 'user', parts: [{ text: geminiPrompt }] }],
+                    generationConfig: { temperature: 0.2 }
+                })
+            });
+            var geminiData = await geminiRes.json();
+            if (!geminiRes.ok) {
+                var geminiMsg = (geminiData && geminiData.error && geminiData.error.message) || 'Gemini request failed.';
+                throw new Error(geminiMsg);
+            }
+            var geminiParts = ((((geminiData || {}).candidates || [])[0] || {}).content || {}).parts || [];
+            reply = geminiParts.map(function(p) { return p && p.text ? p.text : ''; }).join('\n').trim();
+        } else {
+            var res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': 'Bearer ' + providerKey
+                },
+                body: JSON.stringify({
+                    model: model,
+                    messages: reqMessages,
+                    temperature: 0.2
+                })
+            });
+            var data = await res.json();
+            if (!res.ok) {
+                var msg = (data && data.error && data.error.message) || 'Groq request failed.';
+                throw new Error(msg);
+            }
+            var answer = (((data || {}).choices || [])[0] || {}).message;
+            reply = (answer && answer.content) ? answer.content.trim() : '';
         }
-        var answer = (((data || {}).choices || [])[0] || {}).message;
-        var reply = (answer && answer.content) ? answer.content.trim() : 'No response from model.';
+        if (!reply) reply = 'No response from model.';
         noteGroqMessages.push({ role: 'assistant', content: reply });
     } catch (e) {
         noteGroqMessages.push({ role: 'assistant', content: 'Error: ' + (e && e.message ? e.message : 'Request failed') });
@@ -3320,6 +3392,13 @@ async function sendNoteGroqMessage() {
         noteGroqBusy = false;
         if (sendBtn) sendBtn.disabled = false;
         renderNoteGroqMessages();
+    }
+
+    function askPresetNoteQuestion(question) {
+        var input = document.getElementById('note-groq-chat-input');
+        if (!input) return;
+        input.value = question || '';
+        sendNoteGroqMessage();
     }
 }
 
@@ -3392,7 +3471,9 @@ function openNoteSketch() {
     initNoteOverlayCanvas();
     noteOverlayEnabled = !noteOverlayEnabled;
     var canvas = document.getElementById('note-overlay-canvas');
+    var wrap = document.getElementById('note-editor-wrap');
     if (canvas) canvas.classList.toggle('drawing-enabled', noteOverlayEnabled);
+    if (wrap) wrap.classList.toggle('overlay-drawing', noteOverlayEnabled);
     var btn = document.getElementById('note-sketch-btn');
     if (btn) btn.classList.toggle('active', noteOverlayEnabled);
     showToast(noteOverlayEnabled ? 'Handwriting mode on' : 'Handwriting mode off');
@@ -3412,7 +3493,9 @@ function setNoteSketchTool(tool) {
     if (!noteOverlayEnabled) {
         noteOverlayEnabled = true;
         var canvas = document.getElementById('note-overlay-canvas');
+        var wrap = document.getElementById('note-editor-wrap');
         if (canvas) canvas.classList.add('drawing-enabled');
+        if (wrap) wrap.classList.add('overlay-drawing');
         var btn = document.getElementById('note-sketch-btn');
         if (btn) btn.classList.add('active');
     }
