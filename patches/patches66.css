@@ -1,0 +1,57 @@
+/* ================================================================
+   StudentOS — patches66.css (Comprehensive Extensions)
+   ================================================================ */
+
+/* Auth Panel Container Positioning Layer */
+.p66-login-wrap {
+    perspective: 1000px;
+    animation: p66FadeIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.p66-glass-box {
+    background: var(--glass-panel) !important;
+    border-color: var(--glass-border) !important;
+    backdrop-filter: blur(24px) saturate(120%);
+    -webkit-backdrop-filter: blur(24px) saturate(120%);
+    transition: transform 0.3s ease, border-color 0.3s ease;
+}
+
+.p66-glass-box:hover {
+    border-color: rgba(255, 255, 255, 0.15) !important;
+}
+
+/* Custom Scrollbar Stripping Engine */
+.p66-no-scrollbar::-webkit-scrollbar {
+    display: none !important;
+}
+.p66-no-scrollbar {
+    -ms-overflow-style: none !important;
+    scrollbar-width: none !important;
+}
+
+/* Dynamic List Chips Styling Rules */
+.p66-list-chip.p66-chip-active {
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.25);
+    border-color: transparent !important;
+}
+
+/* Premium Side-Drawer Animations */
+.p66-ai-sidebar-container {
+    backdrop-filter: blur(30px);
+    -webkit-backdrop-filter: blur(30px);
+    box-shadow: -10px 0 40px rgba(0, 0, 0, 0.3) !important;
+    transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes p66FadeIn {
+    from { opacity: 0; transform: translateY(12px) scale(0.99); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* Mobile Responsiveness Adjustment overrides */
+@media (max-width: 768px) {
+    .p66-ai-sidebar-container {
+        width: 100% !important;
+        z-index: 99999 !important;
+    }
+}
