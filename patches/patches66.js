@@ -1,10 +1,9 @@
 /* ================================================================
    StudentOS — patches66.js (Comprehensive Update)
-   1. Premium Login & Authentication UI Grid Layout
-   2. Offline Local Storage Guest Workspace Controller
+   1. Native Authentication Integration (Original Menu Preserved)
+   2. Embedded Glassmorphism Privacy Policy & Terms Modal Engine
    3. Dynamic Multi-List Tasks Filter Layer (School, Hobbies, etc.)
    4. Fully Redesigned AI Dedicated Workspace Panel (No Button Duplication)
-   5. Embedded Glassmorphism Privacy Policy & Terms Modal Engine
    ================================================================ */
 
 (function _p66_comprehensive_init() {
@@ -21,97 +20,34 @@
         })();
     }
 
-    // Default Fallback Storage Structure
-    function _p66DefaultDoc() {
-        return {
-            os_tasks: [], os_notes: [], os_decks: [], os_goals: [], os_events: {},
-            os_subjects: [], os_links: [], os_note_groups: [], os_deck_groups: [],
-            os_card_stats: {}, os_streak: { count: 0, lastDate: '' }, os_quick_note: '',
-            os_theme: 'dark', os_lang: 'en', os_accent: '#3b82f6', os_font_scale: 1,
-            os_task_lists: ['Schoolwork', 'Hobbies', 'Personal'],
-            os_active_task_list: 'Schoolwork',
-            _createdAt: new Date().toISOString()
-        };
-    }
-
-/* ── 1. REFINED ORIGINAL AUTHENTICATION OVERLAY ──────────────── */
+    /* ── 1. ORIGINAL AUTHENTICATION INTEGRATION ─────────────────── */
     _wait(function() {
         const overlay = document.getElementById('login-overlay');
         if (!overlay) return false;
-        if (overlay.classList.contains('hidden') || overlay.dataset.p66Active === 'true') return false;
+        if (overlay.dataset.p66PrivacyAdded === 'true') return true;
 
-        // Apply a smooth, immersive background gradient frame to the parent overlay
-        overlay.className = "fixed inset-0 z-[99999] flex flex-col items-center justify-center overflow-y-auto p-4 md:p-8 transition-all duration-300";
-        overlay.style.backgroundColor = "var(--bg-color)";
-        overlay.style.backgroundImage = "radial-gradient(circle at 50% -20%, rgba(59,130,246,0.12), transparent 55%)";
+        // Target your original login card container automatically without overwriting it
+        const loginBox = overlay.querySelector('div > div') || overlay.querySelector('.rounded-2xl') || overlay.firstElementChild;
+        if (!loginBox) return false;
 
-        // Upgraded frosted-glass centralized card layout
-        overlay.innerHTML = `
-            <div class="p66-login-card w-full max-w-md mx-auto p-6 md:p-8 rounded-2xl border bg-[var(--glass-panel)] backdrop-blur-xl shadow-2xl flex flex-col relative overflow-hidden animate-fade-in" style="border-color: var(--glass-border);">
-                <div class="text-center mb-6">
-                    <div class="w-12 h-12 rounded-xl bg-[var(--accent)] text-white shadow-lg shadow-[var(--accent)]/20 flex items-center justify-center mx-auto mb-3 animate-pulse">
-                        <i class="fa-solid fa-graduation-cap text-xl"></i>
-                    </div>
-                    <h2 class="text-xl font-bold text-[var(--text-main)] tracking-tight">Student OS</h2>
-                    <p class="text-xs text-[var(--text-muted)] mt-1">Sign in to sync your workspace</p>
-                </div>
+        // Append the privacy framework link cleanly to your original menu box
+        if (!document.getElementById('p66-trigger-privacy')) {
+            const privacyDiv = document.createElement('div');
+            privacyDiv.className = "mt-5 text-center text-xs text-[var(--text-muted)] opacity-80";
+            privacyDiv.innerHTML = `
+                By entering your workspace, you agree to the 
+                <button id="p66-trigger-privacy" class="underline text-[var(--text-main)] hover:text-[var(--accent)] transition ml-0.5">Privacy Framework</button>.
+            `;
+            loginBox.appendChild(privacyDiv);
 
-                <div class="space-y-4">
-                    <div>
-                        <label class="text-[10px] font-bold uppercase tracking-wider text-[var(--text-muted)] block mb-1">Email Address</label>
-                        <input type="email" id="login-email" class="w-full p-3 rounded-xl border bg-black/20 text-[var(--text-main)] text-sm focus:outline-none focus:border-[var(--accent)] transition" style="border-color: var(--glass-border);" placeholder="student@university.edu">
-                    </div>
-                    <div>
-                        <div class="flex justify-between items-center mb-1">
-                            <label class="text-[10px] font-bold uppercase tracking-wider text-[var(--text-muted)] block">Password</label>
-                            <button id="p66-action-forgot" class="text-[10px] text-[var(--text-muted)] hover:text-[var(--text-main)] transition underline">Forgot?</button>
-                        </div>
-                        <input type="password" id="login-password" class="w-full p-3 rounded-xl border bg-black/20 text-[var(--text-main)] text-sm focus:outline-none focus:border-[var(--accent)] transition" style="border-color: var(--glass-border);" placeholder="••••••••">
-                    </div>
-                </div>
+            document.getElementById('p66-trigger-privacy').onclick = function(e) {
+                e.preventDefault();
+                _p66RenderPrivacyModal();
+            };
+        }
 
-                <div id="login-error" class="hidden text-xs mt-4 p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400"></div>
-
-                <div class="mt-6 space-y-3">
-                    <button id="p66-action-login" class="w-full py-3 rounded-xl bg-[var(--accent)] hover:opacity-95 font-semibold text-white transition flex items-center justify-center gap-2 text-sm shadow-sm">
-                        <i class="fa-solid fa-right-to-bracket text-xs"></i> Sign In
-                    </button>
-                    <button id="p66-action-signup" class="w-full py-3 rounded-xl border text-sm font-semibold text-[var(--text-main)] hover:bg-[var(--glass-hover)] transition flex items-center justify-center gap-2" style="border-color: var(--glass-border);">
-                        <i class="fa-solid fa-user-plus text-xs"></i> Register Account
-                    </button>
-                </div>
-
-                <div class="relative flex py-4 items-center">
-                    <div class="flex-grow border-t" style="border-color: var(--glass-border);"></div>
-                    <span class="flex-shrink mx-3 text-[10px] uppercase tracking-widest text-[var(--text-muted)] font-medium">or alternative</span>
-                    <div class="flex-grow border-t" style="border-color: var(--glass-border);"></div>
-                </div>
-
-                <button id="p66-action-google" class="w-full py-2.5 rounded-xl border text-xs font-medium text-[var(--text-main)] hover:bg-[var(--glass-hover)] transition flex items-center justify-center gap-2" style="border-color: var(--glass-border);">
-                    <i class="fa-brands fa-google text-red-400"></i> Continue with Google Workspace
-                </button>
-
-                <div class="mt-6 text-center text-[11px] text-[var(--text-muted)]">
-                    By accessing your cloud data, you agree to the 
-                    <button id="p66-trigger-privacy" class="underline text-[var(--text-main)] hover:text-[var(--accent)] transition ml-0.5">Privacy Framework</button>.
-                </div>
-            </div>
-        `;
-
-        overlay.dataset.p66Active = 'true';
-
-        // Direct event mapping proxies to your existing Firebase code hooks
-        document.getElementById('p66-action-login').onclick  = function() { if (typeof window.signInWithEmail === 'function') window.signInWithEmail(); };
-        document.getElementById('p66-action-signup').onclick = function() { if (typeof window.signUpWithEmail === 'function') window.signUpWithEmail(); };
-        document.getElementById('p66-action-forgot').onclick = function() { if (typeof window.resetPassword === 'function') window.resetPassword(); };
-        document.getElementById('p66-action-google').onclick = function() { if (typeof window.signInWithGoogle === 'function') window.signInWithGoogle(); };
-
-        document.getElementById('p66-trigger-privacy').onclick = function(e) {
-            e.preventDefault();
-            _p66RenderPrivacyModal(); // Launches the modular privacy disclosure pop-up
-        };
-
-        return false;
+        overlay.dataset.p66PrivacyAdded = 'true';
+        return true;
     }, 200, 30000);
 
     /* ── 2. LEGAL & PRIVACY POLICY COMPONENT ──────────────────────── */
@@ -119,9 +55,9 @@
         if (document.getElementById('p66-privacy-modal')) return;
         const modal = document.createElement('div');
         modal.id = 'p66-privacy-modal';
-        modal.className = "fixed inset-0 z-[100000] flex items-center justify-center p-4 bg-black/60 backdrop-blur-md animate-fade-in";
+        modal.className = "fixed inset-0 z-[100000] flex items-center justify-center p-4 bg-black/60 backdrop-blur-md";
         modal.innerHTML = `
-            <div class="p66-glass-box w-full max-w-2xl rounded-2xl border p-6 flex flex-col max-h-[85vh]">
+            <div class="p66-glass-box w-full max-w-2xl rounded-2xl border p-6 flex flex-col max-h-[85vh]" style="background: var(--glass-panel); border-color: var(--glass-border);">
                 <div class="flex items-center justify-between border-b pb-3 mb-4" style="border-color: var(--glass-border);">
                     <h3 class="text-lg font-bold text-[var(--text-main)] flex items-center gap-2">
                         <i class="fa-solid fa-shield-halved text-[var(--accent)]"></i> Privacy Framework & Terms
@@ -130,9 +66,8 @@
                 </div>
                 <div class="overflow-y-auto pr-2 text-sm text-[var(--text-muted)] space-y-4 leading-relaxed">
                     <p class="font-semibold text-[var(--text-main)]">StudentOS Operational Workspace Transparency Statement</p>
-                    <p><strong>1. Data Infrastructure:</strong> When using Cloud Sync, your variables, notebooks, layouts, and system metrics are handled via highly secure Firebase standard operations. When operating in Guest Mode, 100% of your configurations are written directly into local device client storage loops.</p>
-                    <p><strong>2. Keys & API Endpoints:</strong> Your conversational access keys (such as Groq or Gemini AI tokens) are dispatched directly from your browser engine to the official endpoints. These tokens are saved locally or in your encrypted private document trees, completely safe from external interceptor mirrors.</p>
-                    <p><strong>3. Telemetry & Identity:</strong> This setup does not sell, track, analyze, or process your individual workflows. It serves purely as an organic execution container for student productivity optimization.</p>
+                    <p><strong>1. Data Infrastructure:</strong> Your variables, notebooks, layouts, and system metrics are handled via secure Firebase standard operations. Local sessions store variables directly in device client cache loops.</p>
+                    <p><strong>2. Keys & API Endpoints:</strong> Conversational access tokens (Groq or Gemini) are dispatched straight from your browser to official cloud endpoints. Tokens are never exposed to external analytical proxy trackers.</p>
                 </div>
                 <div class="mt-6 pt-3 border-t text-right" style="border-color: var(--glass-border);">
                     <button id="p66-confirm-privacy" class="px-5 py-2 rounded-xl bg-[var(--accent)] text-white text-xs font-semibold hover:opacity-90 transition">Acknowledge</button>
@@ -155,44 +90,35 @@
         container.id = 'p66-task-list-nav';
         container.className = "w-full mb-4 flex flex-wrap items-center justify-between gap-3 p-3 rounded-xl border border-[var(--glass-border)] bg-black/10";
         container.innerHTML = `
-            <div class="flex items-center gap-2 overflow-x-auto p66-no-scrollbar" id="p66-task-chips">
-                </div>
+            <div class="flex items-center gap-2 overflow-x-auto p66-no-scrollbar" id="p66-task-chips"></div>
             <button id="p66-add-task-list" class="text-xs px-3 py-1.5 rounded-lg border border-[var(--glass-border)] hover:bg-[var(--glass-hover)] text-[var(--text-main)] transition flex items-center gap-1.5">
                 <i class="fa-solid fa-plus text-[var(--accent)]"></i> New List
             </button>
         `;
         taskHeader.insertAdjacentElement('afterend', container);
 
-        // Intercept rendering to filter tasks natively
         if (typeof window.renderTasks === 'function') {
             const originalRenderTasks = window.renderTasks;
             window.renderTasks = function() {
                 _p66UpdateTaskChips();
-                
-                // Temporarily swap DB.get array filter to keep existing elements untouched
                 const activeList = (window.DB && typeof window.DB.get === 'function') ? window.DB.get('os_active_task_list', 'Schoolwork') : 'Schoolwork';
                 const originalGet = window.DB.get;
                 
                 window.DB.get = function(key, fallback) {
                     if (key === 'os_tasks') {
-                        const allTasks = originalGet.call(window.DB, 'os_tasks', []);
-                        return allTasks.filter(t => (t.listId || 'Schoolwork') === activeList);
+                        return originalGet.call(window.DB, 'os_tasks', []).filter(t => (t.listId || 'Schoolwork') === activeList);
                     }
                     return originalGet.call(window.DB, key, fallback);
                 };
-
                 originalRenderTasks.apply(this, arguments);
-                window.DB.get = originalGet; // Restore Immediately
+                window.DB.get = originalGet;
             };
         }
 
-        // Intercept task saving to append category tagging
         if (typeof window.addTask === 'function') {
             const originalAddTask = window.addTask;
             window.addTask = function() {
                 const activeList = (window.DB && typeof window.DB.get === 'function') ? window.DB.get('os_active_task_list', 'Schoolwork') : 'Schoolwork';
-                
-                // Hook into array manipulation before save triggers
                 const originalSet = window.DB.set;
                 window.DB.set = function(key, value) {
                     if (key === 'os_tasks' && Array.isArray(value)) {
@@ -200,22 +126,19 @@
                     }
                     return originalSet.call(window.DB, key, value);
                 };
-                
                 originalAddTask.apply(this, arguments);
-                window.DB.set = originalSet; // Restore Immediately
+                window.DB.set = originalSet;
             };
         }
 
         document.getElementById('p66-add-task-list').onclick = function() {
-            const name = prompt("Enter new list classification name (e.g. Hobbies, Work):");
+            const name = prompt("Enter new list classification name:");
             if (!name || !name.trim()) return;
             let lists = (window.DB && typeof window.DB.get === 'function') ? window.DB.get('os_task_lists', ['Schoolwork', 'Hobbies']) : ['Schoolwork', 'Hobbies'];
             if (!lists.includes(name.trim())) {
                 lists.push(name.trim());
-                if (window.DB) {
-                    window.DB.set('os_task_lists', lists);
-                    window.DB.set('os_active_task_list', name.trim());
-                }
+                window.DB.set('os_task_lists', lists);
+                window.DB.set('os_active_task_list', name.trim());
                 if (typeof window.renderTasks === 'function') window.renderTasks();
             }
         };
@@ -227,15 +150,14 @@
             const activeList = (window.DB && typeof window.DB.get === 'function') ? window.DB.get('os_active_task_list', 'Schoolwork') : 'Schoolwork';
             
             chipsBox.innerHTML = lists.map(list => `
-                <button class="p66-list-chip text-xs px-3 py-1.5 rounded-lg font-medium transition whitespace-nowrap ${list === activeList ? 'p66-chip-active bg-[var(--accent)] text-white' : 'text-[var(--text-muted)] border border-[var(--glass-border)] hover:bg-[var(--glass-hover)]'}" data-list="${list}">
+                <button class="p66-list-chip text-xs px-3 py-1.5 rounded-lg font-medium transition ${list === activeList ? 'bg-[var(--accent)] text-white shadow-md' : 'text-[var(--text-muted)] border border-[var(--glass-border)] hover:bg-[var(--glass-hover)]'}" data-list="${list}">
                     <i class="fa-solid fa-list-check opacity-70 mr-1"></i> ${list}
                 </button>
             `).join('');
 
             chipsBox.querySelectorAll('.p66-list-chip').forEach(btn => {
                 btn.onclick = function() {
-                    const selected = this.dataset.list;
-                    if (window.DB) window.DB.set('os_active_task_list', selected);
+                    window.DB.set('os_active_task_list', this.dataset.list);
                     if (typeof window.renderTasks === 'function') window.renderTasks();
                 };
             });
@@ -250,75 +172,43 @@
         const oldChatPanel = document.getElementById('note-groq-chat-panel') || document.querySelector('.note-chat-panel');
         if (!oldChatPanel || oldChatPanel.dataset.p66Overhauled === 'true') return false;
 
-        // Strip duplicate triggers or button duplicates cleanly
+        // Cleanly isolate structural duplicate trigger items
         const triggerBtns = document.querySelectorAll('#note-groq-btn, .groq-trigger-dup');
         if (triggerBtns.length > 1) {
             for (let i = 1; i < triggerBtns.length; i++) triggerBtns[i].remove();
         }
 
-        oldChatPanel.className = "p66-ai-sidebar-container fixed right-0 top-0 bottom-0 w-80 md:w-96 border-l shadow-2xl flex flex-col justify-between z-[5000] hidden animate-slide-in";
-        oldChatPanel.style.backgroundColor = "var(--bg-color)";
+        oldChatPanel.className = "fixed right-0 top-0 bottom-0 w-80 md:w-96 border-l shadow-2xl flex flex-col justify-between z-[5000] hidden backdrop-blur-xl bg-[var(--bg-color)]";
         oldChatPanel.style.borderColor = "var(--glass-border)";
         oldChatPanel.dataset.p66Overhauled = 'true';
 
-        // Re-engineer inner layout structurally for deep focus
         oldChatPanel.innerHTML = `
             <div class="p-4 border-b flex items-center justify-between bg-black/10" style="border-color: var(--glass-border);">
                 <div class="flex items-center gap-2">
                     <div class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></div>
-                    <span class="text-xs font-bold uppercase tracking-widest text-[var(--text-main)]">Integrated Core Intelligence</span>
+                    <span class="text-xs font-bold uppercase tracking-widest text-[var(--text-main)]">Core Intelligence</span>
                 </div>
-                <button id="p66-close-ai-panel" class="text-[var(--text-muted)] hover:text-[var(--text-main)] transition text-sm">
-                    <i class="fa-solid fa-arrow-right-to-bracket"></i>
-                </button>
+                <button id="p66-close-ai-panel" class="text-[var(--text-muted)] hover:text-[var(--text-main)] transition text-sm"><i class="fa-solid fa-arrow-right-to-bracket"></i></button>
             </div>
-            
             <div id="note-groq-chat-output" class="flex-1 overflow-y-auto p-4 space-y-4 text-sm scroll-smooth">
                 <div class="text-xs text-[var(--text-muted)] text-center my-6">
                     <i class="fa-solid fa-microchip block text-lg mb-2 text-[var(--accent)]"></i>
-                    Workspace engine loaded. Ask questions directly against your active workspace or flashcard data matrices.
+                    Workspace core loaded. Query your notes and databases seamlessly.
                 </div>
             </div>
-
             <div class="p-4 border-t bg-black/5" style="border-color: var(--glass-border);">
-                <div class="flex gap-2 overflow-x-auto pb-3 p66-no-scrollbar" id="p66-ai-presets">
-                    <button class="p66-preset-btn text-[10px] uppercase font-bold tracking-wider px-2.5 py-1 rounded-md bg-[var(--glass-panel)] hover:bg-[var(--glass-hover)] border border-[var(--glass-border)] text-[var(--text-muted)] hover:text-[var(--text-main)] transition" data-prompt="Summarize my notebook collection cleanly.">Summarize</button>
-                    <button class="p66-preset-btn text-[10px] uppercase font-bold tracking-wider px-2.5 py-1 rounded-md bg-[var(--glass-panel)] hover:bg-[var(--glass-hover)] border border-[var(--glass-border)] text-[var(--text-muted)] hover:text-[var(--text-main)] transition" data-prompt="Extract the core formulas and generate a study guide.">Formulas</button>
-                    <button class="p66-preset-btn text-[10px] uppercase font-bold tracking-wider px-2.5 py-1 rounded-md bg-[var(--glass-panel)] hover:bg-[var(--glass-hover)] border border-[var(--glass-border)] text-[var(--text-muted)] hover:text-[var(--text-main)] transition" data-prompt="Generate 5 random test definitions from my notes.">Quiz Me</button>
-                </div>
                 <div class="flex items-center gap-2 bg-black/20 rounded-xl border border-[var(--glass-border)] p-1.5 focus-within:border-[var(--accent)] transition">
                     <input type="text" id="note-groq-chat-input" class="flex-1 bg-transparent border-none text-sm text-[var(--text-main)] focus:outline-none pl-2.5" placeholder="Query ecosystem...">
-                    <button id="note-groq-chat-send" class="w-8 h-8 rounded-lg bg-[var(--accent)] text-white flex items-center justify-center hover:opacity-90 transition">
-                        <i class="fa-solid fa-paper-plane text-xs"></i>
-                    </button>
+                    <button id="note-groq-chat-send" class="w-8 h-8 rounded-lg bg-[var(--accent)] text-white flex items-center justify-center hover:opacity-90 transition"><i class="fa-solid fa-paper-plane text-xs"></i></button>
                 </div>
             </div>
         `;
 
-        // Safe panel close proxy mapping
-        document.getElementById('p66-close-ai-panel').onclick = function() {
-            oldChatPanel.classList.add('hidden');
-        };
-
-        // Preset Prompt Action Controller
-        oldChatPanel.querySelectorAll('.p66-preset-btn').forEach(btn => {
-            btn.onclick = function() {
-                const promptVal = this.dataset.prompt;
-                const inputElement = document.getElementById('note-groq-chat-input');
-                if (inputElement) {
-                    inputElement.value = promptVal;
-                    document.getElementById('note-groq-chat-send').click();
-                }
-            };
-        });
-
-        // Wire up custom trigger override button cleanly so it reveals our gorgeous interface
+        document.getElementById('p66-close-ai-panel').onclick = () => oldChatPanel.classList.add('hidden');
+        
         const originalTrigger = document.getElementById('note-groq-btn');
         if (originalTrigger) {
-            originalTrigger.onclick = function(e) {
-                e.preventDefault();
-                oldChatPanel.classList.toggle('hidden');
-            };
+            originalTrigger.onclick = (e) => { e.preventDefault(); oldChatPanel.classList.toggle('hidden'); };
         }
         return false;
     }, 1000, 25000);
