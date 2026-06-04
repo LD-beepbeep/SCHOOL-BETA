@@ -1,0 +1,90 @@
+/* ================================================================
+   StudentOS — patches65.css
+   AI Sidebar UI Overhaul & Fixes
+   ================================================================ */
+
+/* ================================================================
+   1. AI SETTINGS INSTRUCTIONS & UI
+   ================================================================ */
+.p65-ai-instructions {
+    background: rgba(59, 130, 246, 0.08);
+    border: 1px solid rgba(59, 130, 246, 0.2);
+    padding: 12px;
+    border-radius: 10px;
+    margin: 10px 0 16px;
+}
+
+.p65-ai-instructions h4 {
+    color: var(--accent);
+    margin: 0 0 4px 0;
+    font-size: 0.85rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.p65-ai-instructions p {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    margin: 0;
+    line-height: 1.4;
+}
+
+.p65-ai-instructions a {
+    color: var(--text-main);
+    text-decoration: underline;
+    text-decoration-color: var(--accent);
+}
+
+/* ================================================================
+   2. AI CHAT SIDEBAR OVERHAUL
+   ================================================================ */
+.note-chat-panel {
+    background: var(--bg-color) !important;
+    border-left: 1px solid var(--glass-border) !important;
+    border-radius: 0 !important; /* Sidebar feel instead of floating box */
+    box-shadow: -4px 0 20px rgba(0,0,0,0.1) !important;
+}
+
+/* Upgrade the AI Chat Icon */
+#note-groq-btn i {
+    background: linear-gradient(135deg, var(--accent), #a855f7);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    font-size: 1.1rem;
+}
+
+/* Quick Questions Wrapper */
+.p65-quick-questions {
+    scrollbar-width: none; /* Firefox */
+}
+.p65-quick-questions::-webkit-scrollbar {
+    display: none; /* Chrome/Safari */
+}
+
+/* Quick Question Buttons */
+.p65-quick-btn {
+    background: var(--glass-panel);
+    border: var(--glass-border);
+    color: var(--text-muted);
+    font-size: 0.7rem;
+    padding: 6px 12px;
+    border-radius: 99px;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    cursor: pointer;
+}
+
+.p65-quick-btn:hover {
+    background: var(--glass-hover);
+    color: var(--text-main);
+    transform: translateY(-1px);
+    border-color: rgba(255,255,255,0.2);
+}
+
+.p65-quick-btn i {
+    color: var(--accent);
+}
