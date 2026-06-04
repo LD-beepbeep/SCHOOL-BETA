@@ -34,98 +34,73 @@
         };
     }
 
-    /* ── 1. AUTHENTICATION GRID & PRIVACY COMPONENT ──────────────── */
+/* ── 1. REFINED ORIGINAL AUTHENTICATION OVERLAY ──────────────── */
     _wait(function() {
         const overlay = document.getElementById('login-overlay');
         if (!overlay) return false;
         if (overlay.classList.contains('hidden') || overlay.dataset.p66Active === 'true') return false;
 
+        // Apply a smooth, immersive background gradient frame to the parent overlay
         overlay.className = "fixed inset-0 z-[99999] flex flex-col items-center justify-center overflow-y-auto p-4 md:p-8 transition-all duration-300";
         overlay.style.backgroundColor = "var(--bg-color)";
-        overlay.style.backgroundImage = "radial-gradient(circle at 50% -20%, rgba(59,130,246,0.08), transparent 50%)";
+        overlay.style.backgroundImage = "radial-gradient(circle at 50% -20%, rgba(59,130,246,0.12), transparent 55%)";
 
+        // Upgraded frosted-glass centralized card layout
         overlay.innerHTML = `
-            <div class="p66-login-wrap w-full max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-6 lg:gap-8 items-stretch my-auto">
-                <div class="p66-glass-box flex flex-col justify-between p-6 md:p-8 rounded-2xl border relative overflow-hidden">
-                    <div>
-                        <div class="flex items-center gap-3 mb-4">
-                            <div class="w-10 h-10 rounded-xl flex items-center justify-center bg-blue-500 text-white shadow-lg shadow-blue-500/20">
-                                <i class="fa-solid fa-cloud-arrow-up text-lg"></i>
-                            </div>
-                            <div>
-                                <h3 class="text-lg md:text-xl font-bold text-[var(--text-main)]">Cloud Workspace</h3>
-                                <p class="text-xs text-[var(--text-muted)]">Highly recommended for data sync</p>
-                            </div>
-                        </div>
-                        <p class="text-sm text-[var(--text-muted)] mb-6 leading-relaxed">
-                            Securely back up your tasks, class notebooks, flashcards, and metrics safely to the cloud. Access your synchronized dashboard on any machine instantly.
-                        </p>
-                        <div class="space-y-4">
-                            <div>
-                                <label class="text-[10px] font-bold uppercase tracking-wider text-[var(--text-muted)] block mb-1">Email Address</label>
-                                <input type="email" id="login-email" class="w-full p-3 rounded-xl border bg-black/20 text-[var(--text-main)] focus:outline-none focus:border-[var(--accent)] transition" style="border-color: var(--glass-border);" placeholder="student@university.edu">
-                            </div>
-                            <div>
-                                <label class="text-[10px] font-bold uppercase tracking-wider text-[var(--text-muted)] block mb-1">Password</label>
-                                <input type="password" id="login-password" class="w-full p-3 rounded-xl border bg-black/20 text-[var(--text-main)] focus:outline-none focus:border-[var(--accent)] transition" style="border-color: var(--glass-border);" placeholder="••••••••">
-                            </div>
-                        </div>
-                        <div id="login-error" class="hidden text-xs mt-3 p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400"></div>
+            <div class="p66-login-card w-full max-w-md mx-auto p-6 md:p-8 rounded-2xl border bg-[var(--glass-panel)] backdrop-blur-xl shadow-2xl flex flex-col relative overflow-hidden animate-fade-in" style="border-color: var(--glass-border);">
+                <div class="text-center mb-6">
+                    <div class="w-12 h-12 rounded-xl bg-[var(--accent)] text-white shadow-lg shadow-[var(--accent)]/20 flex items-center justify-center mx-auto mb-3 animate-pulse">
+                        <i class="fa-solid fa-graduation-cap text-xl"></i>
                     </div>
-                    <div class="mt-8 space-y-4">
-                        <div class="grid grid-cols-2 gap-3">
-                            <button id="p66-action-login" class="py-3 px-4 rounded-xl bg-[var(--accent)] hover:opacity-90 font-semibold text-white transition flex items-center justify-center gap-2 shadow-sm"><i class="fa-solid fa-right-to-bracket text-xs"></i> Sign In</button>
-                            <button id="p66-action-signup" class="py-3 px-4 rounded-xl border font-semibold text-[var(--text-main)] hover:bg-[var(--glass-hover)] transition flex items-center justify-center gap-2" style="border-color: var(--glass-border);"><i class="fa-solid fa-user-plus text-xs"></i> Register</button>
+                    <h2 class="text-xl font-bold text-[var(--text-main)] tracking-tight">Student OS</h2>
+                    <p class="text-xs text-[var(--text-muted)] mt-1">Sign in to sync your workspace</p>
+                </div>
+
+                <div class="space-y-4">
+                    <div>
+                        <label class="text-[10px] font-bold uppercase tracking-wider text-[var(--text-muted)] block mb-1">Email Address</label>
+                        <input type="email" id="login-email" class="w-full p-3 rounded-xl border bg-black/20 text-[var(--text-main)] text-sm focus:outline-none focus:border-[var(--accent)] transition" style="border-color: var(--glass-border);" placeholder="student@university.edu">
+                    </div>
+                    <div>
+                        <div class="flex justify-between items-center mb-1">
+                            <label class="text-[10px] font-bold uppercase tracking-wider text-[var(--text-muted)] block">Password</label>
+                            <button id="p66-action-forgot" class="text-[10px] text-[var(--text-muted)] hover:text-[var(--text-main)] transition underline">Forgot?</button>
                         </div>
-                        <div class="text-center">
-                            <button id="p66-action-forgot" class="text-xs text-[var(--text-muted)] hover:text-[var(--text-main)] transition underline">Forgot credentials?</button>
-                        </div>
-                        <div class="relative flex py-2 items-center">
-                            <div class="flex-grow border-t" style="border-color: var(--glass-border);"></div>
-                            <span class="flex-shrink mx-3 text-[10px] uppercase tracking-widest text-[var(--text-muted)] font-medium">Single Sign-On</span>
-                            <div class="flex-grow border-t" style="border-color: var(--glass-border);"></div>
-                        </div>
-                        <div class="grid grid-cols-2 gap-3">
-                            <button id="p66-action-google" class="py-2.5 px-4 rounded-xl border font-medium text-xs text-[var(--text-main)] hover:bg-[var(--glass-hover)] transition flex items-center justify-center gap-2" style="border-color: var(--glass-border);"><i class="fa-brands fa-google text-red-400"></i> Google</button>
-                            <button id="p66-action-github" class="py-2.5 px-4 rounded-xl border font-medium text-xs text-[var(--text-main)] hover:bg-[var(--glass-hover)] transition flex items-center justify-center gap-2" style="border-color: var(--glass-border);"><i class="fa-brands fa-github text-purple-400"></i> GitHub</button>
-                        </div>
+                        <input type="password" id="login-password" class="w-full p-3 rounded-xl border bg-black/20 text-[var(--text-main)] text-sm focus:outline-none focus:border-[var(--accent)] transition" style="border-color: var(--glass-border);" placeholder="••••••••">
                     </div>
                 </div>
 
-                <div class="p66-glass-box flex flex-col justify-between p-6 md:p-8 rounded-2xl border relative overflow-hidden">
-                    <div>
-                        <div class="flex items-center gap-3 mb-4">
-                            <div class="w-10 h-10 rounded-xl flex items-center justify-center bg-purple-500 text-white shadow-lg shadow-purple-500/20">
-                                <i class="fa-solid fa-box-archive text-lg"></i>
-                            </div>
-                            <div>
-                                <h3 class="text-lg md:text-xl font-bold text-[var(--text-main)]">Guest Mode</h3>
-                                <p class="text-xs text-[var(--text-muted)]">100% Offline Local Session</p>
-                            </div>
-                        </div>
-                        <p class="text-sm text-[var(--text-muted)] mb-6 leading-relaxed">
-                            Skip database setup. Running locally creates a fully private workspace that commits actions straight into your immediate device cache.
-                        </p>
-                        <div class="p-4 rounded-xl border border-amber-500/20 bg-amber-500/5 text-xs text-amber-400/90 space-y-2 leading-relaxed">
-                            <div class="font-bold flex items-center gap-1.5 text-amber-400"><i class="fa-solid fa-triangle-exclamation"></i> Storage Constraint Details</div>
-                            <p>Data remains exclusively locked to this current browser instance. Purging system cookies, upgrading hardware setups, or shifting workspace windows will lose local data permanently.</p>
-                        </div>
-                    </div>
-                    <div class="mt-8">
-                        <button id="p66-action-guest" class="w-full py-4 px-4 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:opacity-95 font-bold text-white shadow-md shadow-indigo-500/10 transition flex items-center justify-center gap-2"><i class="fa-solid fa-laptop text-sm"></i> Launch Guest Workspace</button>
-                    </div>
-                </div>
-            </div>
+                <div id="login-error" class="hidden text-xs mt-4 p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400"></div>
 
-            <div class="mt-6 text-center text-xs text-[var(--text-muted)]">
-                By entering this system, you agree to the 
-                <button id="p66-trigger-privacy" class="underline text-[var(--text-main)] hover:text-[var(--accent)] ml-0.5 transition">Privacy Framework</button>.
+                <div class="mt-6 space-y-3">
+                    <button id="p66-action-login" class="w-full py-3 rounded-xl bg-[var(--accent)] hover:opacity-95 font-semibold text-white transition flex items-center justify-center gap-2 text-sm shadow-sm">
+                        <i class="fa-solid fa-right-to-bracket text-xs"></i> Sign In
+                    </button>
+                    <button id="p66-action-signup" class="w-full py-3 rounded-xl border text-sm font-semibold text-[var(--text-main)] hover:bg-[var(--glass-hover)] transition flex items-center justify-center gap-2" style="border-color: var(--glass-border);">
+                        <i class="fa-solid fa-user-plus text-xs"></i> Register Account
+                    </button>
+                </div>
+
+                <div class="relative flex py-4 items-center">
+                    <div class="flex-grow border-t" style="border-color: var(--glass-border);"></div>
+                    <span class="flex-shrink mx-3 text-[10px] uppercase tracking-widest text-[var(--text-muted)] font-medium">or alternative</span>
+                    <div class="flex-grow border-t" style="border-color: var(--glass-border);"></div>
+                </div>
+
+                <button id="p66-action-google" class="w-full py-2.5 rounded-xl border text-xs font-medium text-[var(--text-main)] hover:bg-[var(--glass-hover)] transition flex items-center justify-center gap-2" style="border-color: var(--glass-border);">
+                    <i class="fa-brands fa-google text-red-400"></i> Continue with Google Workspace
+                </button>
+
+                <div class="mt-6 text-center text-[11px] text-[var(--text-muted)]">
+                    By accessing your cloud data, you agree to the 
+                    <button id="p66-trigger-privacy" class="underline text-[var(--text-main)] hover:text-[var(--accent)] transition ml-0.5">Privacy Framework</button>.
+                </div>
             </div>
         `;
 
         overlay.dataset.p66Active = 'true';
 
-        // Action Bindings
+        // Direct event mapping proxies to your existing Firebase code hooks
         document.getElementById('p66-action-login').onclick  = function() { if (typeof window.signInWithEmail === 'function') window.signInWithEmail(); };
         document.getElementById('p66-action-signup').onclick = function() { if (typeof window.signUpWithEmail === 'function') window.signUpWithEmail(); };
         document.getElementById('p66-action-forgot').onclick = function() { if (typeof window.resetPassword === 'function') window.resetPassword(); };
@@ -133,31 +108,9 @@
 
         document.getElementById('p66-trigger-privacy').onclick = function(e) {
             e.preventDefault();
-            _p66RenderPrivacyModal();
+            _p66RenderPrivacyModal(); // Launches the modular privacy disclosure pop-up
         };
 
-        document.getElementById('p66-action-github').onclick = async function() {
-            try {
-                const appMod  = await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js");
-                const authMod = await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js");
-                const authInstance = authMod.getAuth(appMod.getApp());
-                const githubProvider = new authMod.GithubAuthProvider();
-                await authMod.signInWithPopup(authInstance, githubProvider);
-            } catch(err) {
-                console.error("GitHub Login Exception:", err);
-                const errorBox = document.getElementById('login-error');
-                if (errorBox) { errorBox.textContent = err.message; errorBox.classList.remove('hidden'); }
-            }
-        };
-
-        document.getElementById('p66-action-guest').onclick = function() {
-            window.isGuestMode = true;
-            overlay.classList.add('hidden');
-            if (window.DB && typeof window.DB._hydrate === 'function') {
-                window.DB._hydrate(_p66DefaultDoc());
-                if (typeof window.initApp === 'function') window.initApp();
-            }
-        };
         return false;
     }, 200, 30000);
 
