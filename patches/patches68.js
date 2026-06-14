@@ -1,6 +1,6 @@
 /* ================================================================
    StudentOS — patches68.js
-   Post-testing refinements
+   Post-testing refinementss
 
    FIX-01  Login flash — suppress old card immediately via early style
    FIX-02  GitHub login — loading state + popup-blocked fallback
