@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Privacy Policy — Student OS</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        :root {
+            --bg:      #0f172a;
+            --surface: rgba(255,255,255,.05);
+            --border:  rgba(255,255,255,.08);
+            --text:    #e2e8f0;
+            --muted:   #94a3b8;
+            --accent:  #3b82f6;
+        }
+
+        body {
+            font-family:      'Inter', system-ui, sans-serif;
+            background-color: var(--bg);
+            color:            var(--text);
+            line-height:      1.65;
+            min-height:       100vh;
+        }
+
+        /* Subtle gradient backdrop */
+        body::before {
+            content:  '';
+            position: fixed;
+            inset:    0;
+            background: radial-gradient(ellipse 80% 60% at 20% 10%, rgba(59,130,246,.08) 0%, transparent 70%),
+                        radial-gradient(ellipse 60% 50% at 80% 80%, rgba(139,92,246,.06) 0%, transparent 70%);
+            pointer-events: none;
+            z-index:  0;
+        }
+
+        .page {
+            position:  relative;
+            z-index:   1;
+            max-width: 720px;
+            margin:    0 auto;
+            padding:   48px 24px 80px;
+        }
+
+        /* Back link */
+        .back-link {
+            display:         inline-flex;
+            align-items:     center;
+            gap:             7px;
+            font-size:       .8rem;
+            color:           var(--muted);
+            text-decoration: none;
+            margin-bottom:   36px;
+            transition:      color .15s;
+        }
+        .back-link:hover { color: var(--text); }
+
+        /* Header */
+        .doc-header {
+            margin-bottom: 40px;
+            padding-bottom: 28px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .doc-badge {
+            display:       inline-flex;
+            align-items:   center;
+            gap:           6px;
+            background:    rgba(59,130,246,.12);
+            border:        1px solid rgba(59,130,246,.2);
+            color:         var(--accent);
+            font-size:     .68rem;
+            font-weight:   700;
+            text-transform: uppercase;
+            letter-spacing: .1em;
+            padding:       4px 12px;
+            border-radius: 99px;
+            margin-bottom: 16px;
+        }
+
+        h1 {
+            font-size:     2rem;
+            font-weight:   700;
+            letter-spacing: -.03em;
+            margin-bottom: 10px;
+            color:         var(--text);
+        }
+
+        .doc-meta {
+            font-size: .8rem;
+            color:     var(--muted);
+            display:   flex;
+            gap:       16px;
+            flex-wrap: wrap;
+        }
+
+        .doc-meta span { display: flex; align-items: center; gap: 5px; }
+
+        /* Intro box */
+        .intro-box {
+            background:    rgba(59,130,246,.07);
+            border:        1px solid rgba(59,130,246,.15);
+            border-radius: 16px;
+            padding:       20px 22px;
+            margin-bottom: 36px;
+            font-size:     .88rem;
+            color:         var(--muted);
+            line-height:   1.6;
+        }
+        .intro-box strong { color: var(--text); }
+
+        /* Sections */
+        .section {
+            margin-bottom: 36px;
+        }
+
+        .section-num {
+            font-size:      .68rem;
+            font-weight:    700;
+            text-transform: uppercase;
+            letter-spacing: .12em;
+            color:          var(--accent);
+            margin-bottom:  6px;
+        }
+
+        h2 {
+            font-size:     1.05rem;
+            font-weight:   700;
+            color:         var(--text);
+            margin-bottom: 12px;
+            display:       flex;
+            align-items:   center;
+            gap:           9px;
+        }
+
+        h2 i {
+            width:           28px;
+            height:          28px;
+            border-radius:   8px;
+            background:      rgba(59,130,246,.1);
+            display:         inline-flex;
+            align-items:     center;
+            justify-content: center;
+            font-size:       .75rem;
+            color:           var(--accent);
+            flex-shrink:     0;
+        }
+
+        p {
+            font-size:     .88rem;
+            color:         var(--muted);
+            margin-bottom: 10px;
+            line-height:   1.65;
+        }
+
+        p:last-child { margin-bottom: 0; }
+
+        ul {
+            padding-left:   0;
+            list-style:     none;
+            display:        flex;
+            flex-direction: column;
+            gap:            7px;
+        }
+
+        ul li {
+            font-size:   .87rem;
+            color:       var(--muted);
+            display:     flex;
+            align-items: flex-start;
+            gap:         8px;
+            line-height: 1.5;
+        }
+
+        ul li::before {
+            content:      '\f058';
+            font-family:  'Font Awesome 6 Free';
+            font-weight:  900;
+            color:        var(--accent);
+            font-size:    .65rem;
+            margin-top:   .3em;
+            flex-shrink:  0;
+        }
+
+        strong { color: var(--text); font-weight: 600; }
+
+        a {
+            color:           var(--accent);
+            text-decoration: underline;
+            text-underline-offset: 2px;
+        }
+
+        /* Highlight card */
+        .highlight {
+            background:    var(--surface);
+            border:        1px solid var(--border);
+            border-radius: 14px;
+            padding:       16px 18px;
+            margin-top:    12px;
+        }
+
+        .highlight p { margin: 0; }
+
+        /* Contact box */
+        .contact-box {
+            background:    rgba(59,130,246,.07);
+            border:        1px solid rgba(59,130,246,.18);
+            border-radius: 16px;
+            padding:       20px 22px;
+            display:       flex;
+            align-items:   center;
+            gap:           16px;
+            margin-top:    12px;
+        }
+
+        .contact-icon {
+            width:           44px;
+            height:          44px;
+            border-radius:   12px;
+            background:      rgba(59,130,246,.15);
+            display:         flex;
+            align-items:     center;
+            justify-content: center;
+            font-size:       1.1rem;
+            color:           var(--accent);
+            flex-shrink:     0;
+        }
+
+        .contact-box p { margin: 0; font-size: .85rem; }
+        .contact-box .contact-label { font-size: .7rem; color: var(--muted); margin-bottom: 2px; }
+
+        /* Footer */
+        .doc-footer {
+            margin-top:    48px;
+            padding-top:   24px;
+            border-top:    1px solid var(--border);
+            font-size:     .75rem;
+            color:         var(--muted);
+            display:       flex;
+            justify-content: space-between;
+            flex-wrap:     wrap;
+            gap:           8px;
+        }
+
+        @media (max-width: 540px) {
+            h1 { font-size: 1.5rem; }
+            .doc-footer { flex-direction: column; }
+        }
+    </style>
+</head>
+<body>
+    <div class="page">
+
+        <a href="index.html" class="back-link">
+            <i class="fa-solid fa-arrow-left"></i> Back to Student OS
+        </a>
+
+        <header class="doc-header">
+            <div class="doc-badge"><i class="fa-solid fa-shield-halved"></i> Legal</div>
+            <h1>Privacy Policy</h1>
+            <div class="doc-meta">
+                <span><i class="fa-regular fa-calendar"></i> Effective date: June 2026</span>
+                <span><i class="fa-solid fa-tag"></i> Version 2.0</span>
+            </div>
+        </header>
+
+        <div class="intro-box">
+            <strong>Short version:</strong> Student OS stores your study data (notes, tasks, grades, flashcards) in your own Firebase account so it can sync across devices. We collect no advertising data, sell nothing to anyone, and you can delete everything at any time.
+        </div>
+
+        <!-- 1 -->
+        <div class="section">
+            <div class="section-num">Section 1</div>
+            <h2><i class="fa-solid fa-building"></i> Who We Are</h2>
+            <p>Student OS is a personal productivity tool created by Lars Dehairs. It is an open-source project licenced under the <strong>GNU Affero General Public License v3.0 (AGPL-3.0)</strong>.</p>
+            <p>Source code: <a href="https://github.com/LD-beepbeep/SCHOOL" target="_blank">github.com/LD-beepbeep/SCHOOL</a><br>
+               Beta repository: <a href="https://github.com/LD-beepbeep/SCHOOL-BETA" target="_blank">github.com/LD-beepbeep/SCHOOL-BETA</a></p>
+        </div>
+
+        <!-- 2 -->
+        <div class="section">
+            <div class="section-num">Section 2</div>
+            <h2><i class="fa-solid fa-database"></i> Data We Store</h2>
+            <p>When you are signed in, the following data is saved to <strong>your</strong> Firestore database document:</p>
+            <ul>
+                <li>Notes (title, content, creation date, version history)</li>
+                <li>Tasks and task lists</li>
+                <li>Grade entries and course information</li>
+                <li>Flashcard decks and individual cards</li>
+                <li>Pomodoro session statistics</li>
+                <li>App preferences (theme, font, widget layout)</li>
+                <li>AI provider API keys you choose to save (Groq, Gemini) — stored in your Firestore document, not on any server we control</li>
+            </ul>
+
+            <div class="highlight">
+                <p><strong>Guest / offline mode:</strong> If you use Student OS without signing in, all data is stored exclusively in your browser's <code>localStorage</code>. It never leaves your device.</p>
+            </div>
+        </div>
+
+        <!-- 3 -->
+        <div class="section">
+            <div class="section-num">Section 3</div>
+            <h2><i class="fa-solid fa-ban"></i> What We Do Not Do</h2>
+            <ul>
+                <li>We do not sell, rent, or share your data with any third party.</li>
+                <li>We do not display advertisements.</li>
+                <li>We do not run analytics or tracking scripts beyond Firebase's own infrastructure logging.</li>
+                <li>We do not read the content of your notes, tasks, or grades.</li>
+                <li>We do not store your AI API keys on any server we operate — they go directly to Firestore under your own account.</li>
+            </ul>
+        </div>
+
+        <!-- 4 -->
+        <div class="section">
+            <div class="section-num">Section 4</div>
+            <h2><i class="fa-brands fa-google"></i> Firebase as Data Processor</h2>
+            <p>Student OS uses <strong>Google Firebase</strong> (Authentication and Firestore) to handle identity and cloud storage. Firebase acts as a data processor on our behalf. Your data is stored on Google's servers under the Firebase free Spark plan.</p>
+            <p>Google's privacy practices for Firebase are described at <a href="https://firebase.google.com/support/privacy" target="_blank">firebase.google.com/support/privacy</a>.</p>
+        </div>
+
+        <!-- 5 -->
+        <div class="section">
+            <div class="section-num">Section 5</div>
+            <h2><i class="fa-solid fa-key"></i> Authentication</h2>
+            <p>You can sign in using:</p>
+            <ul>
+                <li><strong>Google</strong> — handled entirely by Firebase/Google OAuth.</li>
+                <li><strong>GitHub</strong> — handled by Firebase's GitHub provider. We only receive your GitHub display name and email to create your account record.</li>
+                <li><strong>Email and password</strong> — stored in Firebase Authentication, not in Firestore or any database we control directly.</li>
+            </ul>
+            <p>We never see or store your passwords.</p>
+        </div>
+
+        <!-- 6 -->
+        <div class="section">
+            <div class="section-num">Section 6</div>
+            <h2><i class="fa-solid fa-user-shield"></i> Your Rights</h2>
+            <ul>
+                <li><strong>Access:</strong> You can export all your data at any time using the Auto-Backup feature in Settings.</li>
+                <li><strong>Correction:</strong> You can edit any note, task, grade, or flashcard directly in the app.</li>
+                <li><strong>Deletion:</strong> You can delete individual items at any time. To delete your entire account and all associated data, use Settings &rsaquo; Account &rsaquo; Delete Account, or contact us directly.</li>
+                <li><strong>Portability:</strong> The Auto-Backup export produces a standard JSON file you can keep or import into other tools.</li>
+            </ul>
+        </div>
+
+        <!-- 7 -->
+        <div class="section">
+            <div class="section-num">Section 7</div>
+            <h2><i class="fa-solid fa-child"></i> Children</h2>
+            <p>Student OS is designed for students of all ages. We do not knowingly collect personal information from children under 13 beyond what Firebase Authentication requires for account creation. If you believe a child under 13 has created an account, contact us and we will delete the data promptly.</p>
+        </div>
+
+        <!-- 8 -->
+        <div class="section">
+            <div class="section-num">Section 8</div>
+            <h2><i class="fa-solid fa-rotate"></i> Changes to This Policy</h2>
+            <p>If we make material changes to this policy, we will update the effective date at the top of this page and display a notice inside the app. Continuing to use Student OS after the notice constitutes acceptance of the updated terms.</p>
+        </div>
+
+        <!-- 9 -->
+        <div class="section">
+            <div class="section-num">Section 9</div>
+            <h2><i class="fa-solid fa-envelope"></i> Contact</h2>
+            <p>Questions, deletion requests, or concerns about this policy:</p>
+            <div class="contact-box">
+                <div class="contact-icon"><i class="fa-brands fa-github"></i></div>
+                <div>
+                    <div class="contact-label">Open an issue or reach out via GitHub</div>
+                    <a href="https://github.com/LD-beepbeep/SCHOOL/issues" target="_blank">github.com/LD-beepbeep/SCHOOL/issues</a>
+                </div>
+            </div>
+        </div>
+
+        <footer class="doc-footer">
+            <span>Student OS &copy; 2026 Lars Dehairs &mdash; AGPL-3.0</span>
+            <span><a href="index.html">Back to the app</a></span>
+        </footer>
+
+    </div>
+</body>
+</html>
