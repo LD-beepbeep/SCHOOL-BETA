@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Changelog — Student OS</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        :root {
+            --bg:      #0f172a;
+            --surface: rgba(255,255,255,.05);
+            --border:  rgba(255,255,255,.08);
+            --text:    #e2e8f0;
+            --muted:   #94a3b8;
+            --accent:  #3b82f6;
+            --green:   #4ade80;
+            --yellow:  #fbbf24;
+            --red:     #f87171;
+            --purple:  #a78bfa;
+        }
+
+        body {
+            font-family:      'Inter', system-ui, sans-serif;
+            background-color: var(--bg);
+            color:            var(--text);
+            min-height:       100vh;
+        }
+
+        body::before {
+            content:  '';
+            position: fixed;
+            inset:    0;
+            background: radial-gradient(ellipse 70% 50% at 15% 10%, rgba(59,130,246,.09) 0%, transparent 70%),
+                        radial-gradient(ellipse 50% 40% at 85% 85%, rgba(139,92,246,.07) 0%, transparent 70%);
+            pointer-events: none;
+            z-index:  0;
+        }
+
+        .page {
+            position:  relative;
+            z-index:   1;
+            max-width: 780px;
+            margin:    0 auto;
+            padding:   48px 24px 80px;
+        }
+
+        .back-link {
+            display:         inline-flex;
+            align-items:     center;
+            gap:             7px;
+            font-size:       .8rem;
+            color:           var(--muted);
+            text-decoration: none;
+            margin-bottom:   36px;
+            transition:      color .15s;
+        }
+        .back-link:hover { color: var(--text); }
+
+        .doc-header {
+            margin-bottom:  40px;
+            padding-bottom: 28px;
+            border-bottom:  1px solid var(--border);
+        }
+
+        .doc-badge {
+            display:        inline-flex;
+            align-items:    center;
+            gap:            6px;
+            background:     rgba(59,130,246,.12);
+            border:         1px solid rgba(59,130,246,.2);
+            color:          var(--accent);
+            font-size:      .68rem;
+            font-weight:    700;
+            text-transform: uppercase;
+            letter-spacing: .1em;
+            padding:        4px 12px;
+            border-radius:  99px;
+            margin-bottom:  16px;
+        }
+
+        h1 {
+            font-size:     2rem;
+            font-weight:   700;
+            letter-spacing: -.03em;
+            margin-bottom: 8px;
+        }
+
+        .doc-sub {
+            font-size: .85rem;
+            color:     var(--muted);
+        }
+
+        /* Timeline */
+        .timeline {
+            position: relative;
+            padding-left: 28px;
+        }
+
+        .timeline::before {
+            content:    '';
+            position:   absolute;
+            left:       7px;
+            top:        8px;
+            bottom:     0;
+            width:      1px;
+            background: linear-gradient(to bottom, var(--accent), transparent);
+            opacity:    .25;
+        }
+
+        .release {
+            position:      relative;
+            margin-bottom: 52px;
+        }
+
+        /* Timeline dot */
+        .release::before {
+            content:          '';
+            position:         absolute;
+            left:             -24px;
+            top:              10px;
+            width:            10px;
+            height:           10px;
+            border-radius:    50%;
+            background:       var(--accent);
+            box-shadow:       0 0 0 3px rgba(59,130,246,.2);
+        }
+
+        .release.latest::before {
+            background:  var(--green);
+            box-shadow:  0 0 0 3px rgba(74,222,128,.2);
+            animation:   dotpulse 2s ease infinite;
+        }
+
+        @keyframes dotpulse {
+            0%,100% { box-shadow: 0 0 0 3px rgba(74,222,128,.2); }
+            50%      { box-shadow: 0 0 0 6px rgba(74,222,128,.08); }
+        }
+
+        .release-header {
+            display:     flex;
+            align-items: center;
+            gap:         12px;
+            margin-bottom: 16px;
+            flex-wrap:   wrap;
+        }
+
+        .version-tag {
+            font-family:   'JetBrains Mono', monospace;
+            font-size:     1.1rem;
+            font-weight:   700;
+            color:         var(--text);
+            letter-spacing: -.02em;
+        }
+
+        .badge {
+            display:        inline-flex;
+            align-items:    center;
+            gap:            4px;
+            font-size:      .65rem;
+            font-weight:    700;
+            text-transform: uppercase;
+            letter-spacing: .08em;
+            padding:        3px 9px;
+            border-radius:  99px;
+        }
+
+        .badge-latest  { background: rgba(74,222,128,.12);  color: var(--green);  border: 1px solid rgba(74,222,128,.25);  }
+        .badge-feature { background: rgba(59,130,246,.1);   color: var(--accent); border: 1px solid rgba(59,130,246,.2);   }
+        .badge-fix     { background: rgba(251,191,36,.1);   color: var(--yellow); border: 1px solid rgba(251,191,36,.2);   }
+        .badge-break   { background: rgba(248,113,113,.1);  color: var(--red);    border: 1px solid rgba(248,113,113,.2);  }
+
+        .release-date {
+            font-size:   .75rem;
+            color:       var(--muted);
+            margin-left: auto;
+        }
+
+        /* Change groups */
+        .change-group {
+            margin-bottom: 16px;
+        }
+
+        .group-label {
+            font-size:      .67rem;
+            font-weight:    700;
+            text-transform: uppercase;
+            letter-spacing: .1em;
+            margin-bottom:  8px;
+            display:        flex;
+            align-items:    center;
+            gap:            6px;
+        }
+
+        .group-label.features { color: var(--accent); }
+        .group-label.fixes    { color: var(--yellow); }
+        .group-label.removed  { color: var(--red);    }
+        .group-label.improved { color: var(--purple); }
+
+        .change-list {
+            list-style:     none;
+            padding:        0;
+            display:        flex;
+            flex-direction: column;
+            gap:            6px;
+        }
+
+        .change-list li {
+            font-size:   .85rem;
+            color:       var(--muted);
+            display:     flex;
+            align-items: flex-start;
+            gap:         8px;
+            line-height: 1.5;
+            padding:     8px 12px;
+            background:  var(--surface);
+            border:      1px solid var(--border);
+            border-radius: 10px;
+            transition:  border-color .15s;
+        }
+
+        .change-list li:hover { border-color: rgba(255,255,255,.14); }
+
+        .change-list li i {
+            font-size:   .7rem;
+            margin-top:  .28em;
+            flex-shrink: 0;
+        }
+
+        .change-list li i.feat  { color: var(--accent); }
+        .change-list li i.fix   { color: var(--yellow); }
+        .change-list li i.rem   { color: var(--red);    }
+        .change-list li i.impr  { color: var(--purple); }
+
+        strong { color: var(--text); font-weight: 600; }
+
+        /* Divider between releases */
+        .release + .release::after {
+            content: none;
+        }
+
+        /* Footer */
+        .doc-footer {
+            margin-top:    48px;
+            padding-top:   24px;
+            border-top:    1px solid var(--border);
+            font-size:     .75rem;
+            color:         var(--muted);
+            display:       flex;
+            justify-content: space-between;
+            flex-wrap:     wrap;
+            gap:           8px;
+        }
+
+        a { color: var(--accent); text-decoration: underline; text-underline-offset: 2px; }
+
+        @media (max-width: 540px) {
+            h1 { font-size: 1.5rem; }
+            .release-date { margin-left: 0; width: 100%; }
+        }
+    </style>
+</head>
+<body>
+    <div class="page">
+
+        <a href="index.html" class="back-link">
+            <i class="fa-solid fa-arrow-left"></i> Back to Student OS
+        </a>
+
+        <header class="doc-header">
+            <div class="doc-badge"><i class="fa-solid fa-scroll"></i> Changelog</div>
+            <h1>What's New in Student OS</h1>
+            <p class="doc-sub">A full history of every update, fix, and improvement.</p>
+        </header>
+
+        <div class="timeline">
+
+            <!-- ── v2.0 ── -->
+            <div class="release latest">
+                <div class="release-header">
+                    <span class="version-tag">v2.0.0</span>
+                    <span class="badge badge-latest"><i class="fa-solid fa-circle-dot"></i> Latest</span>
+                    <span class="badge badge-feature">Major</span>
+                    <span class="release-date"><i class="fa-regular fa-calendar" style="margin-right:4px;"></i>June 2026</span>
+                </div>
+
+                <div class="change-group">
+                    <div class="group-label features"><i class="fa-solid fa-plus"></i> New Features</div>
+                    <ul class="change-list">
+                        <li><i class="fa-solid fa-circle-plus feat"></i> <span><strong>Login screen redesigned</strong> — two-card layout with Sign In and Guest Mode side by side. Much cleaner first impression.</span></li>
+                        <li><i class="fa-solid fa-circle-plus feat"></i> <span><strong>GitHub OAuth</strong> — sign in with your GitHub account in addition to Google and email.</span></li>
+                        <li><i class="fa-solid fa-circle-plus feat"></i> <span><strong>Guest Mode</strong> — use all features without an account; data saves to local storage on the device.</span></li>
+                        <li><i class="fa-solid fa-circle-plus feat"></i> <span><strong>Onboarding flow</strong> — new users are guided through theme selection and display name setup. Restartable from Settings any time.</span></li>
+                        <li><i class="fa-solid fa-circle-plus feat"></i> <span><strong>GeoGebra Graphing Calculator</strong> — a new Graphing tab in the Calculator section embeds the full GeoGebra suite for free.</span></li>
+                        <li><i class="fa-solid fa-circle-plus feat"></i> <span><strong>Pomodoro session statistics</strong> — total sessions completed, daily streak, and all-time best streak, displayed below the timer.</span></li>
+                        <li><i class="fa-solid fa-circle-plus feat"></i> <span><strong>Brain Dump inbox</strong> — a raw textarea at the top of the Dashboard. Hit "Sort Later" to save the contents as a new note instantly.</span></li>
+                        <li><i class="fa-solid fa-circle-plus feat"></i> <span><strong>Notes reading time</strong> — live word count and estimated reading time shown below the note title as you type.</span></li>
+                        <li><i class="fa-solid fa-circle-plus feat"></i> <span><strong>Offline indicator</strong> — a subtle badge in the sidebar turns red with a warning when the connection drops.</span></li>
+                        <li><i class="fa-solid fa-circle-plus feat"></i> <span><strong>Privacy Policy</strong> — a full privacy.html page accessible from the login screen and About section.</span></li>
+                        <li><i class="fa-solid fa-circle-plus feat"></i> <span><strong>Changelog</strong> — this page, plus an in-app modal accessible from About. A "What's new" banner appears once after upgrades.</span></li>
+                        <li><i class="fa-solid fa-circle-plus feat"></i> <span><strong>Multiple task lists</strong> — create named lists (Schoolwork, Hobbies, etc.) with tab switching (patches66).</span></li>
+                    </ul>
+                </div>
+
+                <div class="change-group">
+                    <div class="group-label improved"><i class="fa-solid fa-arrow-up"></i> Improvements</div>
+                    <ul class="change-list">
+                        <li><i class="fa-solid fa-circle-arrow-up impr"></i> <span><strong>In-app modal engine</strong> — every native browser confirm / alert / prompt dialog replaced with styled in-app modals that match the glassmorphism theme.</span></li>
+                        <li><i class="fa-solid fa-circle-arrow-up impr"></i> <span><strong>Light theme contrast</strong> — backgrounds now have subtle depth; white-on-white modal text is fixed; all inputs and dropdowns are legible.</span></li>
+                        <li><i class="fa-solid fa-circle-arrow-up impr"></i> <span><strong>AI Notes sidebar</strong> — rebuilt as a right-side slide-in panel with Groq + Gemini support, quick-prompt buttons, and API key sync to Firestore (patches65 / patches66).</span></li>
+                        <li><i class="fa-solid fa-circle-arrow-up impr"></i> <span><strong>Whiteboard brush</strong> — brush colour now auto-inverts when the canvas background changes (light canvas = dark brush, dark canvas = light brush).</span></li>
+                        <li><i class="fa-solid fa-circle-arrow-up impr"></i> <span><strong>Mind-map overhaul</strong> — drag-and-drop nodes, double-click to edit, right-click context menu, 5 px drag threshold to prevent micro-tremor moves (patches57).</span></li>
+                        <li><i class="fa-solid fa-circle-arrow-up impr"></i> <span><strong>Flashcard star button</strong> — added to both the study view header and every row in the card list (patches58).</span></li>
+                        <li><i class="fa-solid fa-circle-arrow-up impr"></i> <span><strong>Whiteboard appearance settings</strong> — default background, pen colour, and grid-on-load moved to the correct Settings tab (patches62).</span></li>
+                        <li><i class="fa-solid fa-circle-arrow-up impr"></i> <span><strong>Routine modal</strong> — now scrollable on small screens (patches62).</span></li>
+                    </ul>
+                </div>
+
+                <div class="change-group">
+                    <div class="group-label fixes"><i class="fa-solid fa-wrench"></i> Bug Fixes</div>
+                    <ul class="change-list">
+                        <li><i class="fa-solid fa-circle-check fix"></i> <span><strong>Flashcard dashboard count</strong> — count was reading from a stale cache, showing wrong values (115 → 67 → 68 for the same deck). Now a live total from Firestore.</span></li>
+                        <li><i class="fa-solid fa-circle-check fix"></i> <span><strong>Pomodoro settings panel</strong> — clicking the gear icon inside the focus view did nothing. Event listener restored and a fallback button injected if the primary target is absent.</span></li>
+                        <li><i class="fa-solid fa-circle-check fix"></i> <span><strong>Formula block colour</strong> — the worksheet formula block was highlighted in accent blue. Now uses the same neutral glass colour as every other block (patches60 – patches63).</span></li>
+                        <li><i class="fa-solid fa-circle-check fix"></i> <span><strong>Duplicate star buttons</strong> — patches58 and patches56 were both injecting a star button on each flashcard row. patches59 deduplicates them.</span></li>
+                        <li><i class="fa-solid fa-circle-check fix"></i> <span><strong>Whiteboard settings duplication</strong> — whiteboard rows were appearing in the Widgets settings tab and the Appearance tab simultaneously. Aggressive DOM cleanup in patches59 – 62 resolves this.</span></li>
+                        <li><i class="fa-solid fa-circle-check fix"></i> <span><strong>Task list "New List" native prompt</strong> — patches66 used the browser's native prompt() dialog. Now replaced with the styled in-app prompt modal.</span></li>
+                        <li><i class="fa-solid fa-circle-check fix"></i> <span><strong>Settings sync</strong> — short break, long break, sessions before long break, grade scale, week start, and exam warning days were not restoring correctly when settings opened (patches64).</span></li>
+                        <li><i class="fa-solid fa-circle-check fix"></i> <span><strong>Marker highlight under text</strong> — the highlighter tool in Notes handwriting mode now renders on the canvas layer below the text layer (patches65).</span></li>
+                    </ul>
+                </div>
+
+                <div class="change-group">
+                    <div class="group-label removed"><i class="fa-solid fa-minus"></i> Removed</div>
+                    <ul class="change-list">
+                        <li><i class="fa-solid fa-circle-xmark rem"></i> <span><strong>Mistral and Gemma model options</strong> removed from the AI assistant — both are discontinued (patches65).</span></li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- ── v1.x placeholder ── -->
+            <div class="release">
+                <div class="release-header">
+                    <span class="version-tag">v1.x</span>
+                    <span class="badge badge-feature">Foundation</span>
+                    <span class="release-date"><i class="fa-regular fa-calendar" style="margin-right:4px;"></i>2025 – early 2026</span>
+                </div>
+
+                <div class="change-group">
+                    <div class="group-label features"><i class="fa-solid fa-plus"></i> Original Feature Set</div>
+                    <ul class="change-list">
+                        <li><i class="fa-solid fa-circle-plus feat"></i> Notes with rich text editing and AI assistant (Groq)</li>
+                        <li><i class="fa-solid fa-circle-plus feat"></i> Tasks with due dates and priority flags</li>
+                        <li><i class="fa-solid fa-circle-plus feat"></i> Flashcard decks with flip-card study mode</li>
+                        <li><i class="fa-solid fa-circle-plus feat"></i> Whiteboard with free-draw and mind-map mode</li>
+                        <li><i class="fa-solid fa-circle-plus feat"></i> Grade tracker with GPA calculation</li>
+                        <li><i class="fa-solid fa-circle-plus feat"></i> Pomodoro timer with configurable intervals</li>
+                        <li><i class="fa-solid fa-circle-plus feat"></i> Calculator (basic, scientific, programmer modes)</li>
+                        <li><i class="fa-solid fa-circle-plus feat"></i> Study music player with YouTube embeds</li>
+                        <li><i class="fa-solid fa-circle-plus feat"></i> Customisable dashboard widgets</li>
+                        <li><i class="fa-solid fa-circle-plus feat"></i> Google Auth, email login, and offline mode</li>
+                        <li><i class="fa-solid fa-circle-plus feat"></i> Cloud sync via Firebase Firestore</li>
+                        <li><i class="fa-solid fa-circle-plus feat"></i> Dark and light themes with glassmorphism design</li>
+                        <li><i class="fa-solid fa-circle-plus feat"></i> Community forum for questions and discussion</li>
+                        <li><i class="fa-solid fa-circle-plus feat"></i> Study habits tracker widget</li>
+                        <li><i class="fa-solid fa-circle-plus feat"></i> Exam countdown widget</li>
+                        <li><i class="fa-solid fa-circle-plus feat"></i> Worksheet with formula blocks, tables, and canvas draw</li>
+                        <li><i class="fa-solid fa-circle-plus feat"></i> Routine / schedule builder</li>
+                        <li><i class="fa-solid fa-circle-plus feat"></i> Weather widget</li>
+                        <li><i class="fa-solid fa-circle-plus feat"></i> Quote of the Day widget</li>
+                    </ul>
+                </div>
+            </div>
+
+        </div><!-- /timeline -->
+
+        <footer class="doc-footer">
+            <span>Student OS &copy; 2026 Lars Dehairs &mdash; AGPL-3.0</span>
+            <span><a href="index.html">Back to the app</a> &nbsp;&middot;&nbsp; <a href="https://github.com/LD-beepbeep/SCHOOL" target="_blank">GitHub</a></span>
+        </footer>
+
+    </div>
+</body>
+</html>
