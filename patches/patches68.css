@@ -1,0 +1,685 @@
+/* ================================================================
+   StudentOS — patches68.css
+   UI Uniformization + companion styles for patches68.js
+
+   SECTIONS
+   1.  Remove offline badge permanently
+   2.  Brain Dump widget
+   3.  Clickable toast
+   4.  GeoGebra split panel
+   5.  AI sidebar compact
+   6.  Design system tokens — single source of truth
+   7.  Card / panel uniformization
+   8.  Button uniformization
+   9.  Form element uniformization
+   10. Modal uniformization
+   11. Section header uniformization (Settings)
+   12. Widget item uniformization
+   13. Misc patch-specific overrides
+   14. Dragging state
+   ================================================================ */
+
+/* ================================================================
+   1.  OFFLINE BADGE — PERMANENT HIDE (user requested removal)
+   ================================================================ */
+#p67-net-badge { display: none !important; }
+
+/* ================================================================
+   2.  BRAIN DUMP WIDGET
+   ================================================================ */
+#widget-brain-dump {
+    display:        flex;
+    flex-direction: column;
+    gap:            0;
+    padding:        0 !important; /* inner sections handle spacing */
+}
+
+.p68-bd-hdr {
+    display:         flex;
+    align-items:     center;
+    justify-content: space-between;
+    padding:         14px 16px 10px;
+    border-bottom:   1px solid var(--glass-border);
+}
+
+.p68-bd-label {
+    display:        flex;
+    align-items:    center;
+    gap:            7px;
+    font-size:      .68rem;
+    font-weight:    700;
+    text-transform: uppercase;
+    letter-spacing: .1em;
+    color:          var(--text-muted);
+}
+
+.p68-bd-label i { color: var(--accent, #3b82f6); }
+
+.p68-bd-area {
+    width:       100%;
+    background:  transparent;
+    border:      none;
+    outline:     none;
+    resize:      none;
+    color:       var(--text-main);
+    font-size:   .87rem;
+    line-height: 1.65;
+    min-height:  80px;
+    max-height:  160px;
+    font-family: inherit;
+    padding:     12px 16px;
+    box-sizing:  border-box;
+    flex:        1;
+}
+.p68-bd-area::placeholder { color: var(--text-muted); opacity: .4; }
+
+.p68-bd-footer {
+    display:         flex;
+    align-items:     center;
+    justify-content: space-between;
+    padding:         8px 14px 12px;
+    border-top:      1px solid var(--glass-border);
+}
+
+.p68-bd-wc {
+    font-size: .67rem;
+    color:     var(--text-muted);
+    opacity:   .45;
+}
+
+.p68-bd-sort {
+    display:       flex;
+    align-items:   center;
+    gap:           6px;
+    padding:       7px 16px;
+    background:    var(--accent, #3b82f6);
+    color:         #fff;
+    border:        none;
+    border-radius: 10px;
+    font-size:     .76rem;
+    font-weight:   700;
+    cursor:        pointer;
+    transition:    opacity .15s;
+}
+.p68-bd-sort:hover { opacity: .85; }
+
+/* Dragging state */
+#widget-brain-dump[draggable="true"] { cursor: grab; }
+#widget-brain-dump.dragging          { opacity: .6; cursor: grabbing; }
+
+/* ================================================================
+   3.  CLICKABLE TOAST
+   ================================================================ */
+.p68-toast {
+    position:      fixed;
+    bottom:        28px;
+    left:          50%;
+    transform:     translateX(-50%);
+    z-index:       9999999;
+    background:    var(--glass-panel);
+    border:        1px solid var(--glass-border);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    color:         var(--text-main);
+    padding:       10px 20px;
+    border-radius: 12px;
+    font-size:     .82rem;
+    font-weight:   500;
+    white-space:   nowrap;
+    box-shadow:    0 4px 20px rgba(0,0,0,.25);
+    transition:    opacity .35s;
+    pointer-events: none;
+}
+
+.p68-toast-click {
+    pointer-events: all;
+    cursor:         pointer;
+    border-color:   var(--accent, #3b82f6);
+    color:          var(--accent, #3b82f6);
+    font-weight:    600;
+}
+.p68-toast-click:hover { background: rgba(59,130,246,.08); }
+
+/* ================================================================
+   4.  GEOGEBRA SPLIT PANEL
+   ================================================================ */
+#view-calc {
+    transition: none; /* Prevent layout animation flash */
+}
+
+#p67-ggb-panel {
+    background: var(--glass-panel);
+}
+
+#p68-ggb-close {
+    transition: color .15s, background .15s;
+    border-radius: 7px;
+}
+#p68-ggb-close:hover {
+    background: var(--glass-hover);
+    color:      var(--text-main) !important;
+}
+
+/* ================================================================
+   5.  AI SIDEBAR COMPACT
+   ================================================================ */
+#note-groq-chat-panel {
+    border-radius: 18px !important;
+    top:    auto !important;
+    bottom: 76px !important;
+    right:  18px !important;
+    width:  296px !important;
+    max-height: 420px !important;
+}
+
+#note-groq-chat-panel.hidden { display: none !important; }
+
+/* Header inside the AI panel — make it compact */
+#note-groq-chat-panel > div:first-child {
+    padding: 10px 14px !important;
+    border-radius: 18px 18px 0 0;
+}
+
+/* Chat output area — limit height */
+#note-groq-chat-output {
+    max-height: 220px !important;
+}
+
+/* Input area at the bottom */
+#note-groq-chat-panel > div:last-child {
+    padding: 10px 12px !important;
+    border-radius: 0 0 18px 18px;
+}
+
+/* Quick prompt buttons row — scrollable, compact */
+.p65-quick-questions {
+    padding: 0 12px 4px !important;
+}
+
+.p65-quick-btn {
+    font-size: .68rem !important;
+    padding:   5px 10px !important;
+}
+
+/* ================================================================
+   6.  DESIGN SYSTEM TOKENS
+   One canonical set of values that every patch should use.
+   Other rules below reference these where possible.
+   ================================================================ */
+:root {
+    /* Radius scale */
+    --r-sm:   8px;
+    --r-md:   12px;
+    --r-lg:   16px;
+    --r-xl:   20px;
+    --r-card: 18px;
+    --r-pill: 99px;
+
+    /* Font sizes */
+    --fs-label: .67rem;
+    --fs-sm:    .78rem;
+    --fs-body:  .87rem;
+    --fs-h3:    .95rem;
+    --fs-h2:    1.05rem;
+    --fs-h1:    1.2rem;
+
+    /* Transitions */
+    --ease-out: cubic-bezier(.16, 1, .3, 1);
+    --t-fast:   .15s;
+    --t-med:    .22s;
+}
+
+/* ================================================================
+   7.  CARD / PANEL UNIFORMIZATION
+   Every widget card, section card, and panel gets the same base.
+   ================================================================ */
+
+/* Base card reset — applied to anything min-card-like across patches */
+.min-card,
+[id^="widget-"],
+.p10-section,
+.p19-ws-block,
+.p67-login-card,
+.p67-ob-card,
+.p67-cl-box > *,
+.p66-glass-box {
+    border-radius: var(--r-card) !important;
+}
+
+/* Consistent glass background for all panels that float */
+.modal-panel,
+[class*="modal-box"],
+.p67-modal-box,
+.p67-ob-card,
+.p67-cl-box,
+#p67-modal-box {
+    background:   var(--bg-color)     !important;
+    border:       1px solid var(--glass-border) !important;
+    border-radius: var(--r-xl)        !important;
+}
+
+/* Worksheet blocks — uniform border and subtle shadow */
+.p19-ws-block {
+    border:        1px solid var(--glass-border) !important;
+    border-left:   1.5px solid var(--glass-border) !important;
+    box-shadow:    0 2px 8px rgba(0,0,0,.08)     !important;
+    border-radius: var(--r-md)                   !important;
+    transition:    border-color var(--t-fast) !important;
+}
+.p19-ws-block:hover {
+    border-color: rgba(255,255,255,.16) !important;
+}
+[data-theme="light"] .p19-ws-block:hover {
+    border-color: rgba(0,0,0,.15) !important;
+}
+
+/* ================================================================
+   8.  BUTTON UNIFORMIZATION
+   All interactive buttons that aren't already styled get these
+   base properties. Specific patches can still override colour.
+   ================================================================ */
+
+/* Primary action button (accent fill) */
+.p10-save-btn,
+.p10-btn[class*="primary"],
+button[id*="save"],
+button[id*="confirm"],
+.p67-ob-btn-pri,
+.p67-mbtn-primary,
+.p67-btn-primary,
+.p67-bd-sort,
+.p68-bd-sort {
+    background:    var(--accent, #3b82f6) !important;
+    color:         #fff !important;
+    border:        none !important;
+    border-radius: var(--r-md) !important;
+    font-weight:   700 !important;
+    cursor:        pointer !important;
+    transition:    opacity var(--t-fast) !important;
+}
+
+/* Secondary / ghost button */
+.p67-ob-btn-sec,
+.p67-mbtn-secondary,
+.p10-cancel-btn {
+    background:    var(--glass-hover)    !important;
+    color:         var(--text-muted)     !important;
+    border:        1px solid var(--glass-border) !important;
+    border-radius: var(--r-md) !important;
+    font-weight:   600 !important;
+    cursor:        pointer !important;
+    transition:    opacity var(--t-fast), background var(--t-fast) !important;
+}
+.p67-ob-btn-sec:hover,
+.p10-cancel-btn:hover { background: rgba(255,255,255,.1) !important; }
+
+/* Danger / destructive */
+.p67-mbtn-danger { border-radius: var(--r-md) !important; }
+
+/* Nav buttons — consistent icon button look */
+.nav-btn {
+    width:           40px !important;
+    height:          40px !important;
+    border-radius:   var(--r-sm) !important;
+    display:         flex !important;
+    align-items:     center !important;
+    justify-content: center !important;
+    border:          1px solid transparent !important;
+    transition:      background var(--t-fast), border-color var(--t-fast) !important;
+    cursor:          pointer !important;
+}
+.nav-btn:hover {
+    background:   var(--glass-hover)   !important;
+    border-color: var(--glass-border)  !important;
+}
+
+/* ================================================================
+   9.  FORM ELEMENT UNIFORMIZATION
+   All text inputs, textareas, and selects share the same base.
+   ================================================================ */
+.bare-input,
+input[type="text"]:not([type="color"]):not([type="range"]),
+input[type="email"],
+input[type="password"],
+input[type="number"],
+textarea:not(.p68-bd-area) {
+    background:    var(--glass-hover)   !important;
+    border:        1px solid var(--glass-border) !important;
+    border-radius: var(--r-md)          !important;
+    color:         var(--text-main)     !important;
+    font-family:   inherit              !important;
+    font-size:     var(--fs-body)       !important;
+    padding:       9px 12px             !important;
+    outline:       none                 !important;
+    transition:    border-color var(--t-fast) !important;
+    width:         100%                 !important;
+    box-sizing:    border-box           !important;
+}
+
+.bare-input:focus,
+input[type="text"]:focus,
+input[type="email"]:focus,
+input[type="password"]:focus,
+input[type="number"]:focus,
+textarea:not(.p68-bd-area):focus {
+    border-color: var(--accent, #3b82f6) !important;
+    box-shadow:   0 0 0 2px rgba(59,130,246,.15) !important;
+}
+
+/* Placeholder */
+.bare-input::placeholder,
+input::placeholder,
+textarea::placeholder {
+    color:   var(--text-muted) !important;
+    opacity: .5 !important;
+}
+
+/* Light mode inputs */
+[data-theme="light"] .bare-input,
+[data-theme="light"] input:not([type="color"]):not([type="range"]):not([type="checkbox"]):not([type="radio"]),
+[data-theme="light"] textarea {
+    background:   rgba(255,255,255,.9)  !important;
+    border-color: rgba(0,0,0,.14)       !important;
+    color:        #111827               !important;
+}
+
+/* Select elements */
+select {
+    background:    var(--glass-hover)   !important;
+    border:        1px solid var(--glass-border) !important;
+    border-radius: var(--r-md)          !important;
+    color:         var(--text-main)     !important;
+    font-family:   inherit              !important;
+    font-size:     var(--fs-body)       !important;
+    padding:       8px 12px             !important;
+    cursor:        pointer              !important;
+}
+
+[data-theme="light"] select {
+    background:   rgba(255,255,255,.9) !important;
+    color:        #111827              !important;
+    border-color: rgba(0,0,0,.14)      !important;
+}
+
+select option {
+    background: var(--bg-color,  #0f172a);
+    color:      var(--text-main, #e5e7eb);
+}
+
+[data-theme="light"] select option {
+    background: #fff    !important;
+    color:      #111827 !important;
+}
+
+/* Toggle switches — unified pill style across all patches */
+.p10-toggle,
+.wp-toggle,
+.p62-wb-grid-toggle {
+    width:         44px        !important;
+    height:        24px        !important;
+    border-radius: var(--r-pill) !important;
+    position:      relative    !important;
+    cursor:        pointer     !important;
+    flex-shrink:   0           !important;
+    border:        1px solid var(--glass-border) !important;
+    background:    rgba(255,255,255,.08) !important;
+    transition:    background var(--t-fast) !important;
+}
+
+[data-theme="light"] .p10-toggle,
+[data-theme="light"] .wp-toggle {
+    background:   rgba(0,0,0,.1) !important;
+    border-color: rgba(0,0,0,.12) !important;
+}
+
+.p10-toggle.on,
+.wp-toggle.on {
+    background:   var(--accent, #3b82f6) !important;
+    border-color: transparent !important;
+}
+
+.p10-toggle::after,
+.wp-toggle::after {
+    content:       '' !important;
+    position:      absolute !important;
+    width:         18px !important;
+    height:        18px !important;
+    border-radius: 50% !important;
+    background:    #fff !important;
+    top:           2px !important;
+    left:          2px !important;
+    transition:    transform var(--t-fast) !important;
+    box-shadow:    0 1px 4px rgba(0,0,0,.2) !important;
+}
+
+.p10-toggle.on::after,
+.wp-toggle.on::after { transform: translateX(20px) !important; }
+
+/* ================================================================
+   10. MODAL UNIFORMIZATION
+   All modals and overlays get the same backdrop and card styling.
+   ================================================================ */
+
+/* Backdrop */
+.p67-modal-overlay,
+.p67-ob-overlay,
+.p67-cl-overlay,
+#p67-onboarding,
+#p66-privacy-modal,
+#p67-changelog-modal {
+    background:       rgba(0,0,0,.58)  !important;
+    backdrop-filter:  blur(8px)        !important;
+    -webkit-backdrop-filter: blur(8px) !important;
+}
+
+/* Card inside modal */
+.p67-modal-box,
+.p67-ob-card,
+.p67-cl-box,
+.p66-glass-box {
+    box-shadow: 0 24px 64px rgba(0,0,0,.4) !important;
+}
+
+/* Consistent close button in all modals */
+[id*="-close"], [id*="-x"],
+button[onclick*="closeModals"], button[onclick*="modal.remove"] {
+    background:   none       !important;
+    border:       none       !important;
+    color:        var(--text-muted) !important;
+    cursor:       pointer    !important;
+    border-radius: var(--r-sm) !important;
+    padding:      4px 6px   !important;
+    transition:   color var(--t-fast), background var(--t-fast) !important;
+    font-size:    .85rem     !important;
+}
+[id*="-close"]:hover, [id*="-x"]:hover {
+    color:      var(--text-main) !important;
+    background: var(--glass-hover) !important;
+}
+
+/* ================================================================
+   11. SECTION HEADER UNIFORMIZATION (Settings pages)
+   ================================================================ */
+.p10-section-title,
+[class*="-section-title"],
+[class*="-group-title"] {
+    font-size:      var(--fs-label) !important;
+    font-weight:    700             !important;
+    text-transform: uppercase       !important;
+    letter-spacing: .1em            !important;
+    color:          var(--text-muted) !important;
+    margin-bottom:  12px            !important;
+    padding-bottom: 6px             !important;
+    border-bottom:  1px solid var(--glass-border) !important;
+}
+
+/* Row inside settings section */
+.p10-row {
+    display:         flex          !important;
+    align-items:     center        !important;
+    justify-content: space-between !important;
+    padding:         10px 0        !important;
+    border-bottom:   1px solid rgba(255,255,255,.04) !important;
+    gap:             12px          !important;
+}
+[data-theme="light"] .p10-row {
+    border-bottom-color: rgba(0,0,0,.05) !important;
+}
+.p10-row:last-child { border-bottom: none !important; }
+
+/* Row label */
+.p10-row-lbl {
+    font-size:   var(--fs-body) !important;
+    font-weight: 500            !important;
+    color:       var(--text-main) !important;
+}
+
+/* Row sub-label */
+.p10-row-sub {
+    font-size: var(--fs-sm)   !important;
+    color:     var(--text-muted) !important;
+    margin-top: 2px !important;
+}
+
+/* ================================================================
+   12. WIDGET UNIFORMIZATION
+   All dashboard widgets get consistent card base.
+   ================================================================ */
+.widget-item,
+[id^="widget-"] {
+    border:        1px solid var(--glass-border) !important;
+    border-radius: var(--r-card)                 !important;
+    transition:    border-color var(--t-fast), box-shadow var(--t-fast) !important;
+}
+
+.widget-item:hover,
+[id^="widget-"]:hover {
+    border-color: rgba(255,255,255,.12) !important;
+    box-shadow:   0 4px 20px rgba(0,0,0,.12) !important;
+}
+
+[data-theme="light"] .widget-item:hover,
+[data-theme="light"] [id^="widget-"]:hover {
+    border-color: rgba(0,0,0,.14) !important;
+}
+
+/* Hidden widgets */
+.widget-hidden,
+[id^="widget-"].widget-hidden { display: none !important; }
+
+/* ================================================================
+   13. PATCH-SPECIFIC OVERRIDES (Normalize remaining gaps)
+   ================================================================ */
+
+/* patches65 — AI quick action buttons */
+.p65-quick-questions {
+    gap:         6px   !important;
+    flex-wrap:   wrap  !important;
+    padding:     0 12px 8px !important;
+}
+
+/* patches66 — task list chips */
+.p66-list-chip {
+    border-radius: var(--r-md) !important;
+    font-size:     var(--fs-sm) !important;
+    font-weight:   600         !important;
+    transition:    background var(--t-fast), color var(--t-fast) !important;
+}
+
+/* patches66 — task list nav bar */
+#p66-task-list-nav {
+    border-radius: var(--r-lg) !important;
+    border-color:  var(--glass-border) !important;
+}
+
+/* patches67 — login screen cards */
+.p67-login-card {
+    box-shadow: 0 8px 32px rgba(0,0,0,.18) !important;
+}
+
+/* patches67 — onboarding progress dots */
+.p67-ob-dot {
+    transition: background var(--t-med), transform var(--t-med) !important;
+}
+.p67-ob-dot.active { transform: scale(1.2) !important; }
+
+/* patches67 — pomodoro stat chips */
+.p67-stat-chip {
+    transition: border-color var(--t-fast), box-shadow var(--t-fast) !important;
+}
+.p67-stat-chip:hover {
+    border-color: rgba(255,255,255,.14) !important;
+    box-shadow:   0 2px 12px rgba(0,0,0,.1) !important;
+}
+
+/* patches19 — worksheet toolbar buttons */
+.p19-ws-toolbar-btn,
+[id*="ws-toolbar"] button,
+#p19-ws-toolbar button {
+    border-radius: var(--r-sm) !important;
+    transition:    background var(--t-fast), color var(--t-fast) !important;
+}
+
+/* patches19 — block picker buttons */
+.p19-picker-type-btn {
+    border-radius: var(--r-md) !important;
+    font-size:     var(--fs-sm) !important;
+    transition:    background var(--t-fast), border-color var(--t-fast) !important;
+}
+
+/* Worksheet block picker modal */
+[id*="picker"][class*="modal"],
+[id*="picker"][class*="panel"] {
+    border-radius: var(--r-xl) !important;
+    border:        1px solid var(--glass-border) !important;
+}
+
+/* patches62 — whiteboard colour swatches */
+.p62-wb-preset-btn,
+.p62-wb-color-swatch {
+    transition: transform var(--t-fast), border-color var(--t-fast) !important;
+}
+
+/* Light mode — toggle dropdowns and option panels that were white-on-white */
+[data-theme="light"] .dropdown,
+[data-theme="light"] [class*="dropdown"],
+[data-theme="light"] [class*="popup-panel"],
+[data-theme="light"] [class*="toggle-content"] {
+    background:   rgba(255,255,255,.96) !important;
+    border:       1px solid rgba(0,0,0,.1) !important;
+    color:        #111827 !important;
+    border-radius: var(--r-lg) !important;
+    box-shadow:   0 4px 16px rgba(0,0,0,.12) !important;
+}
+
+/* Light mode text that was unreadable */
+[data-theme="light"] p,
+[data-theme="light"] label,
+[data-theme="light"] span:not([style*="color"]),
+[data-theme="light"] li {
+    color: var(--text-main);
+}
+
+/* Ensure all headings inside modals are readable in light mode */
+[data-theme="light"] h2,
+[data-theme="light"] h3,
+[data-theme="light"] h4 {
+    color: var(--text-main);
+}
+
+/* ================================================================
+   14. DRAGGING STATE (Dashboard widget reordering)
+   ================================================================ */
+.widget-item[draggable="true"] { cursor: grab; }
+.widget-item.dragging {
+    opacity:    .55;
+    cursor:     grabbing;
+    box-shadow: 0 8px 32px rgba(0,0,0,.3) !important;
+    transform:  scale(1.01);
+}
+
+/* Drop target highlight */
+.widget-item.drag-over {
+    border-color: var(--accent, #3b82f6) !important;
+    box-shadow:   0 0 0 2px rgba(59,130,246,.25) !important;
+}
