@@ -1,1 +1,591 @@
+/* ================================================================
+   StudentOS — patches69.css
+   Calculator rebuild · Login polish · Cornell Notes · Splash
+   Black-belt-at-bottom fix · AI sidebar · UI consistency
+   ================================================================ */
 
+/* ================================================================
+   1.  BLACK BELT FIX
+       Several things can create a persistent dark stripe at the
+       bottom: overflowing fixed elements, safe-area insets, or a
+       stray background on html/body. This block corrects them all.
+   ================================================================ */
+html {
+    overflow-x:       hidden;
+    background-color: var(--bg-color, #0f172a);
+    height:           100%;
+}
+
+body {
+    overflow-x:          hidden;
+    min-height:          100%;
+    background-color:    var(--bg-color, #0f172a);
+    /* Account for iOS notch / Android nav bar */
+    padding-bottom:      env(safe-area-inset-bottom, 0px);
+}
+
+/* Make sure no patch creates an accidental bottom stripe */
+body::after,
+body::before { display: none !important; }
+
+/* Hide any leftover stray elements at the very bottom */
+#p67-net-badge,
+.p67-net-badge { display: none !important; }
+
+/* ================================================================
+   2.  LOADING SPLASH
+   ================================================================ */
+#p69-splash {
+    animation: p69splashIn .2s ease both;
+}
+
+@keyframes p69splashIn {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+}
+
+.p69-spinner {
+    width:         32px;
+    height:        32px;
+    border:        3px solid rgba(255,255,255,.1);
+    border-top-color: var(--accent, #3b82f6);
+    border-radius: 50%;
+    animation:     p69spin .7s linear infinite;
+}
+
+@keyframes p69spin {
+    to { transform: rotate(360deg); }
+}
+
+/* ================================================================
+   3.  LOGIN SCREEN POLISH  (p69 version)
+   ================================================================ */
+
+/* Suppress old single-card to prevent any residual flash */
+#login-overlay > .relative.z-10:not(.p67-login-wrap):not(.p69-login-wrap) {
+    display: none !important;
+}
+/* Also hide patches67 wrapper once patches69 takes over */
+#login-overlay > .p67-login-wrap {
+    display: none !important;
+}
+
+.p69-login-wrap {
+    display:        flex;
+    flex-direction: column;
+    align-items:    center;
+    gap:            22px;
+    padding:        20px 16px;
+    max-width:      800px;
+    width:          100%;
+    animation:      p69loginIn .4s cubic-bezier(.16,1,.3,1) both;
+}
+
+@keyframes p69loginIn {
+    from { opacity: 0; transform: translateY(16px); }
+    to   { opacity: 1; transform: translateY(0);    }
+}
+
+/* Logo bar */
+.p69-login-logo {
+    display:     flex;
+    align-items: center;
+    gap:         14px;
+}
+
+.p69-login-logo-icon {
+    width:           52px;
+    height:          52px;
+    border-radius:   16px;
+    background:      var(--accent, #3b82f6);
+    display:         flex;
+    align-items:     center;
+    justify-content: center;
+    box-shadow:      0 6px 24px rgba(59,130,246,.45);
+    flex-shrink:     0;
+}
+
+/* Two-column grid */
+.p69-login-cols {
+    display:     flex;
+    gap:         14px;
+    width:       100%;
+    align-items: stretch;
+}
+
+@media (max-width: 580px) {
+    .p69-login-cols { flex-direction: column; }
+}
+
+/* Login card base */
+.p69-login-card {
+    flex:              1;
+    background:        var(--glass-panel);
+    border:            1px solid var(--glass-border);
+    border-radius:     22px;
+    padding:           24px 22px;
+    display:           flex;
+    flex-direction:    column;
+    gap:               10px;
+    backdrop-filter:   blur(40px);
+    -webkit-backdrop-filter: blur(40px);
+    box-shadow:        0 8px 40px rgba(0,0,0,.18);
+    transition:        border-color .2s;
+}
+
+.p69-card-main { border-color: rgba(59,130,246,.3); }
+.p69-card-main:focus-within { border-color: rgba(59,130,246,.5); box-shadow: 0 8px 40px rgba(59,130,246,.1); }
+
+.p69-card-tag {
+    font-size:      .67rem;
+    font-weight:    800;
+    text-transform: uppercase;
+    letter-spacing: .12em;
+    color:          var(--accent, #3b82f6);
+    display:        flex;
+    align-items:    center;
+    gap:            6px;
+    margin-bottom:  2px;
+}
+
+.p69-tag-muted { color: var(--text-muted); }
+
+.p69-card-hint {
+    font-size:   .8rem;
+    color:       var(--text-muted);
+    line-height: 1.5;
+    margin:      0;
+}
+
+/* Auth buttons */
+.p69-auth-row {
+    width:           100%;
+    display:         flex;
+    align-items:     center;
+    justify-content: center;
+    gap:             9px;
+    padding:         11px 14px;
+    border-radius:   13px;
+    font-size:       .83rem;
+    font-weight:     600;
+    cursor:          pointer;
+    border:          1px solid var(--glass-border);
+    transition:      opacity .15s, transform .1s;
+    text-align:      center;
+}
+.p69-auth-row:hover  { opacity: .85; }
+.p69-auth-row:active { transform: scale(.97); }
+
+.p69-auth-google  { background: var(--glass-hover); color: var(--text-main); }
+.p69-auth-github  { background: #24292e; color: #fff; border-color: rgba(255,255,255,.08); }
+.p69-auth-primary { background: var(--accent, #3b82f6); color: #fff; border-color: transparent; }
+.p69-auth-ghost   { background: var(--glass-hover); color: var(--text-main); }
+
+.p69-divider {
+    display:        flex;
+    align-items:    center;
+    gap:            8px;
+    color:          var(--text-muted);
+    font-size:      .67rem;
+    text-transform: uppercase;
+    letter-spacing: .08em;
+    opacity:        .5;
+    margin:         2px 0;
+}
+.p69-divider::before, .p69-divider::after { content: ''; flex: 1; height: 1px; background: currentColor; }
+
+.p69-link-btn {
+    background:            none;
+    border:                none;
+    color:                 var(--text-muted);
+    font-size:             .72rem;
+    cursor:                pointer;
+    padding:               0;
+    text-decoration:       underline;
+    text-underline-offset: 2px;
+    opacity:               .6;
+    transition:            opacity .15s;
+}
+.p69-link-btn:hover { opacity: 1; }
+
+.p69-legal {
+    font-size:   .67rem;
+    color:       var(--text-muted);
+    text-align:  center;
+    opacity:     .5;
+    margin:      auto 0 0;
+    line-height: 1.4;
+}
+
+.p69-feature-list {
+    list-style:     none;
+    padding:        0;
+    margin:         0;
+    display:        flex;
+    flex-direction: column;
+    gap:            7px;
+}
+.p69-feature-list li {
+    font-size:   .8rem;
+    color:       var(--text-muted);
+    display:     flex;
+    align-items: center;
+    gap:         8px;
+}
+
+/* ================================================================
+   4.  CALCULATOR REBUILD
+   ================================================================ */
+.p69-calc-wrap {
+    display:        flex;
+    flex-direction: column;
+    gap:            10px;
+    max-width:      380px;
+    margin:         0 auto;
+    width:          100%;
+}
+
+/* Display */
+.p69-calc-display {
+    background:    var(--glass-panel);
+    border:        1px solid var(--glass-border);
+    border-radius: 16px;
+    padding:       18px 20px 14px;
+    min-height:    88px;
+    display:       flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    gap:           4px;
+}
+
+.p69-expr {
+    font-size:     .82rem;
+    color:         var(--text-muted);
+    text-align:    right;
+    min-height:    18px;
+    word-break:    break-all;
+    font-family:   'JetBrains Mono', 'Fira Code', monospace;
+}
+
+.p69-result {
+    font-size:   2rem;
+    font-weight: 700;
+    color:       var(--text-main);
+    text-align:  right;
+    line-height: 1;
+    word-break:  break-all;
+    font-family: 'JetBrains Mono', 'Fira Code', monospace;
+    letter-spacing: -.02em;
+}
+
+/* Mode tabs */
+.p69-modes {
+    display:       flex;
+    gap:           6px;
+    background:    var(--glass-panel);
+    border:        1px solid var(--glass-border);
+    border-radius: 12px;
+    padding:       4px;
+}
+
+.p69-mode {
+    flex:          1;
+    padding:       7px 8px;
+    border:        none;
+    border-radius: 9px;
+    font-size:     .78rem;
+    font-weight:   600;
+    cursor:        pointer;
+    background:    transparent;
+    color:         var(--text-muted);
+    transition:    background .15s, color .15s;
+}
+.p69-mode.active {
+    background: var(--accent, #3b82f6);
+    color:      #fff;
+}
+.p69-mode:not(.active):hover {
+    background: var(--glass-hover);
+    color:      var(--text-main);
+}
+
+/* Button grid */
+.p69-grid {
+    display:       flex;
+    flex-direction: column;
+    gap:           6px;
+}
+
+.p69-row {
+    display: flex;
+    gap:     6px;
+}
+
+/* All calc buttons */
+.p69-btn {
+    flex:          1;
+    aspect-ratio:  1;
+    border:        1px solid var(--glass-border);
+    border-radius: 12px;
+    font-size:     1rem;
+    font-weight:   600;
+    cursor:        pointer;
+    transition:    background .1s, transform .1s, border-color .1s;
+    display:       flex;
+    align-items:   center;
+    justify-content: center;
+    line-height:   1;
+    user-select:   none;
+}
+.p69-btn:active { transform: scale(.93); }
+
+/* Number buttons */
+.p69-btn-num {
+    background: var(--glass-panel);
+    color:      var(--text-main);
+}
+.p69-btn-num:hover { background: var(--glass-hover); border-color: rgba(255,255,255,.14); }
+
+/* Operator buttons */
+.p69-btn-op {
+    background: rgba(59,130,246,.1);
+    color:      var(--accent, #3b82f6);
+    border-color: rgba(59,130,246,.2);
+    font-size:  1.15rem;
+}
+.p69-btn-op:hover { background: rgba(59,130,246,.18); border-color: rgba(59,130,246,.35); }
+
+/* Function buttons (C, backspace) */
+.p69-btn-fn {
+    background: var(--glass-hover);
+    color:      var(--text-muted);
+}
+.p69-btn-fn:hover { background: rgba(239,68,68,.1); color: #ef4444; border-color: rgba(239,68,68,.2); }
+
+/* Equals button — full width */
+.p69-row-eq .p69-btn-eq {
+    flex:        1;
+    aspect-ratio: auto;
+    height:      48px;
+    background:  var(--accent, #3b82f6);
+    color:       #fff;
+    border-color: transparent;
+    font-size:   1.3rem;
+}
+.p69-row-eq .p69-btn-eq:hover { opacity: .88; }
+
+/* Scientific buttons */
+.p69-btn-sci {
+    background: rgba(139,92,246,.08);
+    color:      #a78bfa;
+    border-color: rgba(139,92,246,.18);
+    font-size:  .78rem;
+}
+.p69-btn-sci:hover { background: rgba(139,92,246,.16); border-color: rgba(139,92,246,.3); }
+
+/* Deg/Rad row */
+.p69-row-degrad { margin-bottom: 2px; }
+
+.p69-degbtn {
+    flex:          1;
+    padding:       6px;
+    border:        1px solid var(--glass-border);
+    border-radius: 8px;
+    font-size:     .72rem;
+    font-weight:   700;
+    cursor:        pointer;
+    background:    var(--glass-panel);
+    color:         var(--text-muted);
+    letter-spacing: .06em;
+    transition:    background .15s, color .15s;
+}
+.p69-degbtn.active {
+    background:   var(--accent, #3b82f6);
+    color:        #fff;
+    border-color: transparent;
+}
+
+/* Light mode adjustments for calculator */
+[data-theme="light"] .p69-btn-num  { background: rgba(255,255,255,.8); }
+[data-theme="light"] .p69-btn-op   { background: rgba(59,130,246,.08); }
+[data-theme="light"] .p69-btn-fn   { background: rgba(0,0,0,.06); }
+[data-theme="light"] .p69-btn-sci  { background: rgba(139,92,246,.06); }
+[data-theme="light"] .p69-calc-display { background: rgba(255,255,255,.8); }
+
+/* ================================================================
+   5.  CORNELL NOTES
+   ================================================================ */
+.p69-toolbar-btn {
+    width:           32px;
+    height:          32px;
+    display:         inline-flex;
+    align-items:     center;
+    justify-content: center;
+    border:          1px solid var(--glass-border);
+    border-radius:   8px;
+    background:      var(--glass-panel);
+    color:           var(--text-muted);
+    cursor:          pointer;
+    font-size:       .82rem;
+    transition:      background .15s, color .15s, border-color .15s;
+    flex-shrink:     0;
+}
+.p69-toolbar-btn:hover {
+    background:   var(--glass-hover);
+    color:        var(--text-main);
+    border-color: rgba(255,255,255,.18);
+}
+
+/* Cornell layout inside contenteditable */
+.p69-cornell {
+    border:        1px solid var(--glass-border);
+    border-radius: 12px;
+    overflow:      hidden;
+    margin:        12px 0;
+    font-size:     .88rem;
+}
+
+.p69-cornell-header {
+    background:  var(--glass-panel);
+    padding:     10px 14px;
+    border-bottom: 1px solid var(--glass-border);
+    font-size:   .85rem;
+    color:       var(--text-main);
+}
+
+.p69-cornell-body {
+    display: flex;
+    min-height: 180px;
+}
+
+.p69-cornell-cues {
+    width:          30%;
+    min-width:      120px;
+    border-right:   1px solid var(--glass-border);
+    padding:        12px;
+    background:     rgba(59,130,246,.04);
+    outline:        none;
+}
+
+.p69-cornell-notes {
+    flex:    1;
+    padding: 12px;
+    outline: none;
+}
+
+.p69-cornell-col-label {
+    font-size:      .65rem;
+    font-weight:    700;
+    text-transform: uppercase;
+    letter-spacing: .1em;
+    color:          var(--text-muted);
+    margin-bottom:  8px;
+    opacity:        .65;
+}
+
+.p69-cornell-summary {
+    padding:       12px;
+    border-top:    1px solid var(--glass-border);
+    background:    rgba(251,191,36,.04);
+    outline:       none;
+    min-height:    70px;
+}
+
+.p69-cornell-title {
+    min-width:  120px;
+    display:    inline-block;
+    outline:    none;
+    border-bottom: 1px dashed var(--glass-border);
+    color:      var(--text-main);
+}
+
+/* Print styles for Cornell */
+@media print {
+    .p69-cornell { border: 1px solid #ccc !important; background: #fff !important; }
+    .p69-cornell-header { background: #f5f5f5 !important; }
+    .p69-cornell-cues   { background: #f9f9f9 !important; border-right: 1px solid #ccc !important; }
+    .p69-cornell-summary { background: #fffde7 !important; border-top: 1px solid #ccc !important; }
+    .p69-cornell-col-label { color: #555 !important; }
+}
+
+/* ================================================================
+   6.  AI SIDEBAR — STUDENT FRIENDLY + COMPACT
+   ================================================================ */
+#note-groq-chat-panel {
+    border-radius: 18px !important;
+    /* Compact floating position */
+    position:    fixed     !important;
+    right:       18px      !important;
+    bottom:      72px      !important;
+    top:         auto      !important;
+    width:       290px     !important;
+    max-height:  400px     !important;
+    border:      1px solid var(--glass-border) !important;
+    box-shadow:  0 8px 32px rgba(0,0,0,.22) !important;
+    background:  var(--bg-color) !important;
+    overflow:    hidden !important;
+    z-index:     4999 !important;
+    display:     flex !important;
+    flex-direction: column !important;
+}
+
+#note-groq-chat-panel.hidden { display: none !important; }
+
+/* Header */
+#note-groq-chat-panel > div:first-child {
+    padding:       9px 13px  !important;
+    border-radius: 18px 18px 0 0 !important;
+    font-size:     .7rem     !important;
+}
+
+/* Scrollable chat area */
+#note-groq-chat-output {
+    flex:       1    !important;
+    overflow-y: auto !important;
+    max-height: 220px !important;
+    font-size:  .83rem !important;
+}
+
+/* Input row */
+#note-groq-chat-panel > div:last-child {
+    padding:       9px 11px  !important;
+    border-radius: 0 0 18px 18px !important;
+}
+
+/* Trigger button — clean icon, no gradient */
+#note-groq-btn i {
+    background:              none    !important;
+    -webkit-background-clip: unset  !important;
+    -webkit-text-fill-color: unset  !important;
+    color:                   var(--accent, #3b82f6) !important;
+    font-size:               .95rem !important;
+}
+
+/* ================================================================
+   7.  CONSISTENCY ACROSS PATCHES
+       Fill gaps that patches67 / 68 didn't fully cover.
+   ================================================================ */
+
+/* Consistent focus ring for all interactive elements */
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+    outline:     2px solid var(--accent, #3b82f6) !important;
+    outline-offset: 2px !important;
+}
+
+/* Scrollbar uniformization (WebKit) */
+::-webkit-scrollbar            { width: 5px; height: 5px; }
+::-webkit-scrollbar-track      { background: transparent; }
+::-webkit-scrollbar-thumb      { background: rgba(255,255,255,.12); border-radius: 99px; }
+::-webkit-scrollbar-thumb:hover{ background: rgba(255,255,255,.22); }
+
+[data-theme="light"] ::-webkit-scrollbar-thumb      { background: rgba(0,0,0,.12); }
+[data-theme="light"] ::-webkit-scrollbar-thumb:hover { background: rgba(0,0,0,.22); }
+
+/* Ensure all modals that cover the screen don't leave a bottom gap */
+[id*="modal"].fixed,
+.fixed.inset-0 {
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+}
