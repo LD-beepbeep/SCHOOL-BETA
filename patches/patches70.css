@@ -1,0 +1,681 @@
+/* ================================================================
+   StudentOS — patches70.css
+   Emergency login fix · Study modes · Flashcard sharing ·
+   Community browser · Image URL support · QR modal
+   ================================================================ */
+
+/* ================================================================
+   EMERGENCY  LOGIN FIX
+   patches69.css accidentally hid .p67-login-wrap.
+   This rule wins over that one (same specificity, later in load order).
+   ================================================================ */
+#login-overlay > .p67-login-wrap,
+#login-overlay > .p69-login-wrap {
+    display:    flex         !important;
+    visibility: visible      !important;
+    opacity:    1            !important;
+    animation:  p69loginIn .35s cubic-bezier(.16,1,.3,1) both;
+}
+
+/* Keep the old single-card invisible so there is no flash */
+#login-overlay > .relative.z-10:not(.p67-login-wrap):not(.p69-login-wrap) {
+    display: none !important;
+}
+
+/* ================================================================
+   STUDY MODE SELECTOR
+   ================================================================ */
+.p70-mode-overlay {
+    position:         fixed;
+    inset:            0;
+    z-index:          1800000;
+    display:          flex;
+    align-items:      center;
+    justify-content:  center;
+    background:       rgba(0,0,0,.6);
+    backdrop-filter:  blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    animation:        p67fadeIn .18s ease;
+}
+
+.p70-mode-card {
+    background:    var(--bg-color);
+    border:        1px solid var(--glass-border);
+    border-radius: 22px;
+    padding:       28px 26px 22px;
+    max-width:     440px;
+    width:         92vw;
+    box-shadow:    0 24px 64px rgba(0,0,0,.4);
+    animation:     p67slideUp .22s cubic-bezier(.16,1,.3,1);
+}
+
+.p70-mode-title {
+    font-size:     .95rem;
+    font-weight:   700;
+    color:         var(--text-main);
+    margin-bottom: 18px;
+    display:       flex;
+    align-items:   center;
+    gap:           8px;
+}
+
+.p70-mode-grid {
+    display:               grid;
+    grid-template-columns: 1fr 1fr;
+    gap:                   10px;
+    margin-bottom:         16px;
+}
+
+.p70-mode-opt {
+    display:        flex;
+    flex-direction: column;
+    align-items:    center;
+    gap:            6px;
+    padding:        16px 12px;
+    border:         1px solid var(--glass-border);
+    border-radius:  14px;
+    background:     var(--glass-panel);
+    color:          var(--text-muted);
+    cursor:         pointer;
+    transition:     border-color .15s, background .15s, color .15s;
+    text-align:     center;
+}
+
+.p70-mode-opt i    { font-size: 1.2rem; }
+.p70-mode-opt span { font-size: .83rem; font-weight: 600; color: var(--text-main); }
+.p70-mode-opt small{ font-size: .68rem; opacity: .65; }
+
+.p70-mode-opt:hover {
+    background:   var(--glass-hover);
+    border-color: rgba(255,255,255,.14);
+}
+
+.p70-mode-opt.active {
+    background:   rgba(59,130,246,.1);
+    border-color: var(--accent, #3b82f6);
+    color:        var(--accent, #3b82f6);
+}
+.p70-mode-opt.active span { color: var(--accent, #3b82f6); }
+
+/* Timed config */
+.p70-timed-cfg {
+    background:    var(--glass-panel);
+    border:        1px solid var(--glass-border);
+    border-radius: 12px;
+    padding:       12px 14px;
+    margin-bottom: 14px;
+}
+
+.p70-sec-btn {
+    padding:       7px 16px;
+    border:        1px solid var(--glass-border);
+    border-radius: 8px;
+    background:    var(--glass-hover);
+    color:         var(--text-muted);
+    font-size:     .8rem;
+    font-weight:   600;
+    cursor:        pointer;
+    transition:    background .15s, color .15s, border-color .15s;
+}
+.p70-sec-btn.active {
+    background:   var(--accent, #3b82f6);
+    color:        #fff;
+    border-color: transparent;
+}
+
+.p70-mode-actions {
+    display:         flex;
+    justify-content: flex-end;
+    gap:             10px;
+    margin-top:      6px;
+}
+
+.p70-mode-btn-pri {
+    padding:       9px 22px;
+    background:    var(--accent, #3b82f6);
+    color:         #fff;
+    border:        none;
+    border-radius: 12px;
+    font-size:     .85rem;
+    font-weight:   700;
+    cursor:        pointer;
+    display:       flex;
+    align-items:   center;
+    gap:           7px;
+    transition:    opacity .15s;
+}
+.p70-mode-btn-pri:hover { opacity: .85; }
+
+.p70-mode-btn-sec {
+    padding:       9px 18px;
+    background:    var(--glass-hover);
+    color:         var(--text-muted);
+    border:        1px solid var(--glass-border);
+    border-radius: 12px;
+    font-size:     .85rem;
+    font-weight:   600;
+    cursor:        pointer;
+    transition:    opacity .15s;
+}
+
+/* ================================================================
+   MULTIPLE CHOICE
+   ================================================================ */
+.p70-mc-wrap {
+    display:        flex;
+    flex-direction: column;
+    gap:            16px;
+    padding:        16px;
+    width:          100%;
+    box-sizing:     border-box;
+}
+
+.p70-mc-question {
+    font-size:   1.1rem;
+    font-weight: 600;
+    color:       var(--text-main);
+    text-align:  center;
+    line-height: 1.45;
+    padding:     12px;
+}
+
+.p70-mc-options {
+    display:        flex;
+    flex-direction: column;
+    gap:            8px;
+}
+
+.p70-mc-opt {
+    display:     flex;
+    align-items: center;
+    gap:         12px;
+    padding:     12px 16px;
+    border:      1.5px solid var(--glass-border);
+    border-radius: 12px;
+    background:  var(--glass-panel);
+    color:       var(--text-main);
+    cursor:      pointer;
+    text-align:  left;
+    font-size:   .88rem;
+    line-height: 1.4;
+    transition:  background .15s, border-color .15s;
+    width:       100%;
+}
+.p70-mc-opt:hover:not(:disabled) {
+    background:   var(--glass-hover);
+    border-color: rgba(255,255,255,.16);
+}
+
+.p70-mc-letter {
+    width:           26px;
+    height:          26px;
+    border-radius:   8px;
+    background:      var(--glass-hover);
+    display:         flex;
+    align-items:     center;
+    justify-content: center;
+    font-size:       .75rem;
+    font-weight:     700;
+    flex-shrink:     0;
+    color:           var(--text-muted);
+}
+
+.p70-mc-opt.correct       { background: rgba(74,222,128,.12); border-color: #4ade80; }
+.p70-mc-opt.wrong         { background: rgba(248,113,113,.08); border-color: rgba(248,113,113,.3); opacity: .6; }
+.p70-mc-opt.selected-correct .p70-mc-letter { background: #4ade80; color: #fff; }
+.p70-mc-opt.selected-wrong   .p70-mc-letter { background: #f87171; color: #fff; }
+
+/* ================================================================
+   WRITTEN MODE
+   ================================================================ */
+.p70-written-wrap {
+    display:        flex;
+    flex-direction: column;
+    gap:            14px;
+    padding:        16px;
+    width:          100%;
+    box-sizing:     border-box;
+}
+
+.p70-written-question {
+    font-size:   1.1rem;
+    font-weight: 600;
+    color:       var(--text-main);
+    text-align:  center;
+    line-height: 1.45;
+    padding:     8px 12px;
+}
+
+.p70-written-input-wrap {
+    display: flex;
+    gap:     8px;
+}
+
+.p70-written-inp {
+    flex: 1 !important;
+}
+
+.p70-written-btn {
+    padding:       9px 18px;
+    background:    var(--accent, #3b82f6);
+    color:         #fff;
+    border:        none;
+    border-radius: 11px;
+    font-size:     .83rem;
+    font-weight:   600;
+    cursor:        pointer;
+    display:       flex;
+    align-items:   center;
+    gap:           6px;
+    white-space:   nowrap;
+    transition:    opacity .15s;
+    flex-shrink:   0;
+}
+.p70-written-btn:hover    { opacity: .85; }
+.p70-written-btn:disabled { opacity: .5; cursor: default; }
+
+.p70-written-fb {
+    padding:       10px 14px;
+    border-radius: 10px;
+    font-size:     .85rem;
+    font-weight:   500;
+    display:       flex;
+    align-items:   center;
+    gap:           8px;
+    line-height:   1.4;
+}
+.p70-written-fb i    { font-size: 1rem; flex-shrink: 0; }
+.p70-fb-correct { background: rgba(74,222,128,.12); color: #4ade80; border: 1px solid rgba(74,222,128,.25); }
+.p70-fb-wrong   { background: rgba(248,113,113,.1); color: #f87171; border: 1px solid rgba(248,113,113,.22); }
+.p70-fb-wrong strong { color: var(--text-main); }
+
+/* ================================================================
+   TIMED MODE  — countdown bar
+   ================================================================ */
+.p70-timed-bar-wrap {
+    display:       flex;
+    align-items:   center;
+    gap:           10px;
+    padding:       10px 16px 0;
+}
+
+.p70-timed-bar {
+    flex:          1;
+    height:        5px;
+    border-radius: 99px;
+    background:    var(--accent, #3b82f6);
+    transition:    width 1s linear, background .5s;
+}
+
+/* Turn red in last 5 s */
+.p70-timed-bar[style*="width: 2"], .p70-timed-bar[style*="width: 1"],
+.p70-timed-bar[style*="width: 0"] { background: #ef4444; }
+
+.p70-timed-num {
+    font-size:   .85rem;
+    font-weight: 700;
+    color:       var(--text-muted);
+    min-width:   24px;
+    text-align:  right;
+    font-variant-numeric: tabular-nums;
+}
+
+/* ================================================================
+   FLASHCARD IMAGE SUPPORT
+   ================================================================ */
+.p70-img-inputs {
+    padding:    8px 0 4px;
+    border-top: 1px solid var(--glass-border);
+    margin-top: 6px;
+}
+
+.p70-card-img-wrap {
+    width:         100%;
+    max-height:    160px;
+    overflow:      hidden;
+    border-radius: 10px;
+    margin-bottom: 10px;
+    background:    var(--glass-panel);
+    display:       flex;
+    align-items:   center;
+    justify-content: center;
+}
+
+.p70-card-img {
+    width:      100%;
+    height:     100%;
+    max-height: 160px;
+    object-fit: contain;
+    display:    block;
+}
+
+/* ================================================================
+   DECK SHARE CONTROLS  (injected into each deck card)
+   ================================================================ */
+.p70-deck-share { animation: p67fadeIn .2s ease; }
+
+.p70-share-btn {
+    display:       inline-flex;
+    align-items:   center;
+    gap:           7px;
+    padding:       7px 14px;
+    border:        1px solid var(--glass-border);
+    border-radius: 10px;
+    background:    var(--glass-panel);
+    color:         var(--text-muted);
+    font-size:     .78rem;
+    font-weight:   600;
+    cursor:        pointer;
+    transition:    background .15s, color .15s, border-color .15s;
+}
+.p70-share-btn:hover {
+    background:   var(--glass-hover);
+    color:        var(--text-main);
+    border-color: rgba(255,255,255,.15);
+}
+
+.p70-share-icon-btn {
+    background:    none;
+    border:        none;
+    color:         var(--text-muted);
+    cursor:        pointer;
+    font-size:     .9rem;
+    padding:       4px 6px;
+    border-radius: 7px;
+    transition:    color .15s, background .15s;
+}
+.p70-share-icon-btn:hover {
+    color:      var(--accent, #3b82f6);
+    background: rgba(59,130,246,.08);
+}
+
+/* ================================================================
+   SHARE MODAL  (link + QR code)
+   ================================================================ */
+.p70-share-overlay {
+    position:         fixed;
+    inset:            0;
+    z-index:          1600000;
+    display:          flex;
+    align-items:      center;
+    justify-content:  center;
+    background:       rgba(0,0,0,.6);
+    backdrop-filter:  blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    padding:          16px;
+    animation:        p67fadeIn .15s ease;
+}
+
+.p70-share-card {
+    background:    var(--bg-color);
+    border:        1px solid var(--glass-border);
+    border-radius: 20px;
+    padding:       24px;
+    max-width:     480px;
+    width:         100%;
+    box-shadow:    0 24px 64px rgba(0,0,0,.4);
+    animation:     p67slideUp .2s cubic-bezier(.16,1,.3,1);
+}
+
+.p70-share-head {
+    display:         flex;
+    align-items:     center;
+    justify-content: space-between;
+    font-weight:     700;
+    color:           var(--text-main);
+    font-size:       .95rem;
+    margin-bottom:   14px;
+}
+
+.p70-share-close {
+    background:    none;
+    border:        none;
+    color:         var(--text-muted);
+    cursor:        pointer;
+    font-size:     .9rem;
+    padding:       4px 7px;
+    border-radius: 7px;
+    transition:    background .15s;
+}
+.p70-share-close:hover { background: var(--glass-hover); color: var(--text-main); }
+
+.p70-share-deck-name {
+    font-size:     1rem;
+    font-weight:   600;
+    color:         var(--text-main);
+    margin-bottom: 16px;
+}
+
+.p70-share-body {
+    display:     flex;
+    gap:         18px;
+    align-items: flex-start;
+    flex-wrap:   wrap;
+}
+
+.p70-share-qr-wrap {
+    display:        flex;
+    flex-direction: column;
+    align-items:    center;
+    flex-shrink:    0;
+}
+
+.p70-qr-img {
+    width:         150px;
+    height:        150px;
+    border-radius: 10px;
+    background:    #fff;
+    padding:       6px;
+    display:       block;
+}
+
+.p70-share-link-wrap { flex: 1; min-width: 180px; }
+
+.p70-share-link-row {
+    display:   flex;
+    gap:       8px;
+    margin-top: 6px;
+}
+
+.p70-copy-btn {
+    padding:       8px 12px;
+    background:    var(--glass-hover);
+    border:        1px solid var(--glass-border);
+    border-radius: 10px;
+    color:         var(--text-muted);
+    cursor:        pointer;
+    font-size:     .85rem;
+    flex-shrink:   0;
+    transition:    background .15s, color .15s;
+}
+.p70-copy-btn:hover { background: var(--accent, #3b82f6); color: #fff; border-color: transparent; }
+
+/* ================================================================
+   COMMUNITY DECKS BROWSER
+   ================================================================ */
+.p70-community-overlay {
+    position:         fixed;
+    inset:            0;
+    z-index:          1600000;
+    display:          flex;
+    align-items:      center;
+    justify-content:  center;
+    background:       rgba(0,0,0,.6);
+    backdrop-filter:  blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    padding:          16px;
+    animation:        p67fadeIn .15s ease;
+}
+
+.p70-community-card {
+    background:     var(--bg-color);
+    border:         1px solid var(--glass-border);
+    border-radius:  22px;
+    max-width:      680px;
+    width:          100%;
+    max-height:     82vh;
+    display:        flex;
+    flex-direction: column;
+    overflow:       hidden;
+    box-shadow:     0 24px 64px rgba(0,0,0,.4);
+    animation:      p67slideUp .2s cubic-bezier(.16,1,.3,1);
+}
+
+.p70-community-head {
+    display:         flex;
+    align-items:     center;
+    justify-content: space-between;
+    font-weight:     700;
+    color:           var(--text-main);
+    font-size:       .95rem;
+    padding:         18px 20px 12px;
+    border-bottom:   1px solid var(--glass-border);
+    flex-shrink:     0;
+}
+
+.p70-community-head button {
+    background:    none;
+    border:        none;
+    color:         var(--text-muted);
+    cursor:        pointer;
+    font-size:     .9rem;
+    padding:       4px 7px;
+    border-radius: 7px;
+    transition:    background .15s;
+}
+.p70-community-head button:hover { background: var(--glass-hover); color: var(--text-main); }
+
+.p70-community-search-row {
+    display:     flex;
+    align-items: center;
+    gap:         10px;
+    padding:     10px 18px;
+    border-bottom: 1px solid var(--glass-border);
+    flex-shrink: 0;
+}
+
+.p70-community-search-row input {
+    flex:       1;
+    border:     none !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    padding:    4px 0 !important;
+    font-size:  .88rem !important;
+}
+
+.p70-comm-grid {
+    padding:         16px;
+    overflow-y:      auto;
+    flex:            1;
+    display:         flex;
+    flex-direction:  column;
+    gap:             10px;
+}
+
+.p70-comm-loading {
+    display:         flex;
+    align-items:     center;
+    gap:             12px;
+    color:           var(--text-muted);
+    font-size:       .85rem;
+    padding:         20px;
+    justify-content: center;
+}
+
+.p70-comm-deck-card {
+    background:    var(--glass-panel);
+    border:        1px solid var(--glass-border);
+    border-radius: 14px;
+    padding:       14px 16px;
+    transition:    border-color .15s, box-shadow .15s;
+}
+.p70-comm-deck-card:hover {
+    border-color: rgba(255,255,255,.14);
+    box-shadow:   0 2px 12px rgba(0,0,0,.1);
+}
+
+.p70-comm-deck-title {
+    font-size:     .92rem;
+    font-weight:   600;
+    color:         var(--text-main);
+    margin-bottom: 5px;
+}
+
+.p70-comm-deck-meta {
+    display:       flex;
+    gap:           14px;
+    font-size:     .74rem;
+    color:         var(--text-muted);
+    margin-bottom: 10px;
+    flex-wrap:     wrap;
+}
+
+.p70-comm-deck-actions {
+    display:     flex;
+    align-items: center;
+    gap:         8px;
+}
+
+.p70-upvote-btn {
+    display:       inline-flex;
+    align-items:   center;
+    gap:           5px;
+    padding:       6px 12px;
+    border:        1px solid var(--glass-border);
+    border-radius: 8px;
+    background:    var(--glass-hover);
+    color:         var(--text-muted);
+    cursor:        pointer;
+    font-size:     .78rem;
+    font-weight:   600;
+    transition:    background .15s, color .15s, border-color .15s;
+}
+.p70-upvote-btn:hover  { color: #f87171; border-color: rgba(248,113,113,.3); }
+.p70-upvote-btn.upvoted { background: rgba(248,113,113,.1); color: #f87171; border-color: rgba(248,113,113,.3); }
+
+.p70-add-btn {
+    display:       inline-flex;
+    align-items:   center;
+    gap:           6px;
+    padding:       7px 14px;
+    border:        none;
+    border-radius: 9px;
+    background:    var(--accent, #3b82f6);
+    color:         #fff;
+    cursor:        pointer;
+    font-size:     .78rem;
+    font-weight:   700;
+    margin-left:   auto;
+    transition:    opacity .15s;
+}
+.p70-add-btn:hover    { opacity: .85; }
+.p70-add-btn:disabled { opacity: .5; cursor: default; background: var(--glass-hover); color: var(--text-muted); }
+
+/* ================================================================
+   LIGHT MODE  — all new elements
+   ================================================================ */
+[data-theme="light"] .p70-mode-card,
+[data-theme="light"] .p70-share-card,
+[data-theme="light"] .p70-community-card {
+    background: #f4f6fb;
+}
+
+[data-theme="light"] .p70-mode-opt {
+    background: rgba(255,255,255,.88);
+    border-color: rgba(0,0,0,.1);
+}
+[data-theme="light"] .p70-mode-opt.active {
+    background: rgba(59,130,246,.06);
+}
+
+[data-theme="light"] .p70-comm-deck-card {
+    background: rgba(255,255,255,.9);
+    border-color: rgba(0,0,0,.08);
+}
+
+[data-theme="light"] .p70-mc-opt {
+    background:   rgba(255,255,255,.88);
+    border-color: rgba(0,0,0,.1);
+}
+
+[data-theme="light"] .p70-qr-img { box-shadow: 0 2px 8px rgba(0,0,0,.12); }

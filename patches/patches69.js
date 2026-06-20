@@ -1,3 +1,17 @@
+/* ================================================================
+   StudentOS — patches69.js
+   Final polish pass
+
+   FIX-01  Loading blank screen — splash overlay while Firebase boots
+   FIX-02  Brain Dump note open — reliable multi-strategy open
+   FIX-03  AI sidebar — student-friendly label, compact, blends in
+   FIX-04  Calculator — complete rebuild with Basic + Scientific + Graphing
+   FIX-05  Black belt at bottom — CSS + layout audit (companion CSS)
+   FIX-06  Login screen polish — refined two-card layout
+   FIX-07  Brain Dump toggle in Settings > Widgets section
+   FEATURE-17  Cornell Notes template + Print button in Notes
+   ================================================================ */
+
 (function _p69_init() {
     'use strict';
 
